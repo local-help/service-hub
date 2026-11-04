@@ -76,12 +76,6 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemo = (demoEmail: string, demoPass: string) => {
-    setTab('password');
-    setEmail(demoEmail);
-    setPassword(demoPass);
-  };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF]">
       <div className="w-full max-w-md space-y-6">
@@ -236,36 +230,6 @@ export default function LoginPage() {
               </button>
             </form>
           )}
-
-          {/* Quick Demo Logins for Testing */}
-          <div className="pt-4 border-t border-[#E7E2D8] space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block text-center">
-              Quickfill Demo Credentials
-            </span>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-semibold">
-              <button
-                type="button"
-                onClick={() => fillDemo('customer@example.com', 'Customer@123456')}
-                className="p-1.5 rounded-lg border border-[#E7E2D8] hover:bg-[#F7F5EF] text-[#242D2B] transition cursor-pointer text-center"
-              >
-                Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('admin@localhelp.com', 'Admin@123456')}
-                className="p-1.5 rounded-lg border border-[#B0DCD7] hover:bg-[#F0F8F7] text-[#176B65] transition cursor-pointer text-center font-bold"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('superadmin@localhelp.com', 'Admin@123456')}
-                className="p-1.5 rounded-lg border border-[#E7E2D8] hover:bg-[#F7F5EF] text-[#242D2B] transition cursor-pointer text-center font-bold"
-              >
-                Super Admin
-              </button>
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-xs text-slate-600">

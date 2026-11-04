@@ -85,19 +85,6 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
     }
   };
 
-  const handleFillDemo = async (role: 'customer' | 'admin') => {
-    if (role === 'customer') {
-      setMode('otp');
-      setPhone('+919876543210');
-      setOtp('123456');
-      setOtpSent(true);
-    } else {
-      setMode('password');
-      setLoginEmail('admin@localhelp.in');
-      setLoginPass('password123');
-    }
-  };
-
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -230,25 +217,6 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Quick Demo Credentials */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Quick Demo Credentials</Text>
-          <View style={styles.demoRow}>
-            <TouchableOpacity
-              style={styles.demoBtn}
-              onPress={() => handleFillDemo('customer')}
-            >
-              <Text style={styles.demoBtnText}>Fill Customer (OTP)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.demoBtn}
-              onPress={() => handleFillDemo('admin')}
-            >
-              <Text style={styles.demoBtnText}>Fill Admin</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Register Prompt */}
         <View style={styles.footerRow}>
