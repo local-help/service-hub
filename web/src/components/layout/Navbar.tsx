@@ -12,22 +12,29 @@ import {
   ShoppingBag, 
   Calendar, 
   MapPin, 
-  Phone
+  Phone,
+  Briefcase,
+  Layers,
+  Clock,
+  Building2,
+  ClipboardList
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, ViewMode } from '../../contexts/AuthContext';
 import { useSupport } from '../../contexts/SupportContext';
 
 export const Navbar: React.FC = () => {
-  const { user, isAdmin, viewMode, setViewMode, logout } = useAuth();
+  const { user, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
   const { supportInfo, getCallUrl } = useSupport();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleModeSwitch = (mode: 'customer' | 'admin') => {
+  const handleModeSwitch = (mode: ViewMode) => {
     setViewMode(mode);
     if (mode === 'admin') {
       router.push('/admin');
+    } else if (mode === 'provider') {
+      router.push('/provider');
     } else {
       router.push('/');
     }
@@ -64,8 +71,8 @@ export const Navbar: React.FC = () => {
               />
             </Link>
 
-            {/* Admin Switcher Pill for Admins */}
-            {isAdmin && (
+            {/* Mode Switcher Pill */}
+            {(isAdmin || isProvider) && (
               <div className="hidden md:flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold">
                 <button
                   onClick={() => handleModeSwitch('customer')}
@@ -77,17 +84,34 @@ export const Navbar: React.FC = () => {
                 >
                   Customer View
                 </button>
-                <button
-                  onClick={() => handleModeSwitch('admin')}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition cursor-pointer ${
-                    viewMode === 'admin'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Admin Dashboard
-                </button>
+
+                {isProvider && (
+                  <button
+                    onClick={() => handleModeSwitch('provider')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition cursor-pointer ${
+                      viewMode === 'provider'
+                        ? 'bg-[#176B65] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    Provider Portal
+                  </button>
+                )}
+
+                {isAdmin && (
+                  <button
+                    onClick={() => handleModeSwitch('admin')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition cursor-pointer ${
+                      viewMode === 'admin'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Admin Dashboard
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -153,13 +177,49 @@ export const Navbar: React.FC = () => {
                 >
                   Settings
                 </Link>
+              </>
+            ) : viewMode === 'provider' ? (
+              // Provider Links
+              <>
                 <Link
-                  href="/admin/architecture"
+                  href="/provider"
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    isActive('/admin/architecture') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                    isActive('/provider') ? 'text-[#176B65] bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  Architecture
+                  Dashboard
+                </Link>
+                <Link
+                  href="/provider/requests"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    isActive('/provider/requests') ? 'text-[#176B65] bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Assigned Jobs
+                </Link>
+                <Link
+                  href="/provider/services"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    isActive('/provider/services') ? 'text-[#176B65] bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Services & Pricing
+                </Link>
+                <Link
+                  href="/provider/availability"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    isActive('/provider/availability') ? 'text-[#176B65] bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Availability
+                </Link>
+                <Link
+                  href="/provider/profile"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    isActive('/provider/profile') ? 'text-[#176B65] bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Profile
                 </Link>
               </>
             ) : (
@@ -168,17 +228,18 @@ export const Navbar: React.FC = () => {
                 <Link
                   href="/"
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    isActive('/') ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-100'
+                    isActive('/') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   Services
                 </Link>
+
                 {user && (
                   <>
                     <Link
                       href="/requests"
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                        isActive('/requests') ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-100'
+                        isActive('/requests') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <ShoppingBag className="w-4 h-4 text-slate-500" />
@@ -187,7 +248,7 @@ export const Navbar: React.FC = () => {
                     <Link
                       href="/bookings"
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                        isActive('/bookings') ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-100'
+                        isActive('/bookings') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <Calendar className="w-4 h-4 text-slate-500" />
@@ -196,7 +257,7 @@ export const Navbar: React.FC = () => {
                     <Link
                       href="/addresses"
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                        isActive('/addresses') ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-100'
+                        isActive('/addresses') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <MapPin className="w-4 h-4 text-slate-500" />
@@ -234,7 +295,7 @@ export const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm hover:shadow transition"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-[#176B65] hover:bg-[#12534E] rounded-xl shadow-xs hover:shadow transition"
                 >
                   Sign Up
                 </Link>
@@ -244,12 +305,18 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="flex md:hidden items-center gap-2">
-            {isAdmin && (
+            {(isAdmin || isProvider) && (
               <button
-                onClick={() => handleModeSwitch(viewMode === 'admin' ? 'customer' : 'admin')}
+                onClick={() => {
+                  if (viewMode === 'customer') {
+                    handleModeSwitch(isProvider ? 'provider' : 'admin');
+                  } else {
+                    handleModeSwitch('customer');
+                  }
+                }}
                 className="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 bg-slate-100 text-slate-700"
               >
-                {viewMode === 'admin' ? 'Customer' : 'Admin'}
+                {viewMode === 'customer' ? (isProvider ? 'Provider' : 'Admin') : 'Customer'}
               </button>
             )}
             <button
@@ -271,7 +338,7 @@ export const Navbar: React.FC = () => {
                 <p className="text-sm font-bold text-slate-900">{user.name}</p>
                 <p className="text-xs text-slate-500">{user.phone || user.email}</p>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 uppercase">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-[#176B65] uppercase">
                 {user.role}
               </span>
             </div>
@@ -299,42 +366,60 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                Bookings & Payments
+                Bookings
               </Link>
               <Link
                 href="/admin/providers"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                Provider Directory
-              </Link>
-              <Link
-                href="/admin/customers"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
-              >
-                Customers
+                Providers
               </Link>
               <Link
                 href="/admin/catalogue"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                Catalogue Manager
+                Catalogue Management
               </Link>
+            </div>
+          ) : viewMode === 'provider' ? (
+            <div className="space-y-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-teal-700 px-2 py-1">Provider Portal</p>
               <Link
-                href="/admin/settings"
+                href="/provider"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                Platform Settings
+                Dashboard
               </Link>
               <Link
-                href="/admin/architecture"
+                href="/provider/requests"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-teal-700 hover:bg-teal-50"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                Architecture Review
+                Assigned Requests
+              </Link>
+              <Link
+                href="/provider/services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                My Services & Pricing
+              </Link>
+              <Link
+                href="/provider/availability"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Availability & Schedule
+              </Link>
+              <Link
+                href="/provider/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Organisation Profile
               </Link>
             </div>
           ) : (
@@ -362,49 +447,39 @@ export const Navbar: React.FC = () => {
                   >
                     My Bookings
                   </Link>
-                  <Link
-                    href="/addresses"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
-                  >
-                    Saved Addresses
-                  </Link>
                 </>
               )}
             </div>
           )}
 
-          <div className="pt-3 border-t border-slate-200">
-            {user ? (
+          {user ? (
+            <div className="pt-3 border-t border-slate-200">
               <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 rounded-xl"
+                onClick={logout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 text-sm font-semibold rounded-xl hover:bg-rose-100 transition"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Log Out</span>
+                Sign Out
               </button>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-slate-200 grid grid-cols-2 gap-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center px-4 py-2 text-sm font-semibold text-white bg-[#176B65] rounded-xl"
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </header>

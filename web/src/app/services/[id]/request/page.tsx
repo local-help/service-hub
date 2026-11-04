@@ -3,12 +3,12 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  CheckCircle2, 
-  MapPin, 
-  Calendar, 
-  Plus, 
-  ArrowLeft, 
+import {
+  CheckCircle2,
+  MapPin,
+  Calendar,
+  Plus,
+  ArrowLeft,
   AlertCircle,
   Sparkles,
   Car,
@@ -36,7 +36,7 @@ function CreateRequestContent() {
   const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
-  
+
   // New address form state
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({
@@ -334,11 +334,10 @@ function CreateRequestContent() {
                 <div
                   key={addr.id}
                   onClick={() => setSelectedAddressId(addr.id)}
-                  className={`p-3.5 rounded-2xl border cursor-pointer transition ${
-                    selectedAddressId === addr.id
-                      ? 'border-[#176B65] bg-[#F7F5EF] shadow-xs'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition ${selectedAddressId === addr.id
+                    ? 'border-[#176B65] bg-[#F7F5EF] shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-slate-800">{addr.label || 'Address'}</span>

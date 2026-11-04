@@ -37,3 +37,4 @@ class ServicePricing < ApplicationRecord
     total
   end
 end
+

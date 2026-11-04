@@ -133,3 +133,4 @@ RSpec.describe 'Service Catalogue Hierarchy & Pricing', type: :request do
     end
   end
 end
+

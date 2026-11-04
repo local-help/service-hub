@@ -799,71 +799,202 @@ puts "== Seeding Providers =="
 providers_data = [
   {
     name: 'Apex Car Detailing & Wash',
+    business_name: 'Apex Car Detailing & Wash',
     phone: '+919811122233',
     email: 'contact@apexwash.com',
+    contact_person: 'Rajesh Sharma',
+    contact_phone: '+919811122233',
+    contact_email: 'apex_provider@localhelp.com',
     address: 'MG Marg, Civil Lines',
+    business_address: 'Plot 14, MG Marg, Civil Lines, Prayagraj',
     city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211001',
     service_area: 'Civil Lines, Ashok Nagar, Georgetown',
     notes: 'Equipped with mobile water tanks and high-pressure steam washers. Highly reliable for doorstep jobs.',
+    verification_status: 'verified',
+    operational_status: 'active',
+    onboarding_status: 'completed',
+    user_email: 'apex_provider@localhelp.com',
+    user_name: 'Rajesh Sharma',
     service_slugs: ['car-wash', 'car-servicing-maintenance', 'car-detailing']
   },
   {
     name: 'SparklePro Cleaning Services',
+    business_name: 'SparklePro Cleaning Services',
     phone: '+919822233344',
     email: 'info@sparklepro.in',
+    contact_person: 'Pooja Verma',
+    contact_phone: '+919822233344',
+    contact_email: 'sparkle_provider@localhelp.com',
     address: 'Tagore Town, Near Colonelganj',
+    business_address: '52/3 Tagore Town, Near Colonelganj, Prayagraj',
     city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211002',
     service_area: 'Tagore Town, Katra, Mumfordganj',
     notes: 'Team of 8 trained cleaning professionals with commercial scrubbing machines.',
+    verification_status: 'verified',
+    operational_status: 'active',
+    onboarding_status: 'completed',
+    user_email: 'sparkle_provider@localhelp.com',
+    user_name: 'Pooja Verma',
     service_slugs: ['general-home-cleaning', 'deep-cleaning']
   },
   {
     name: 'MasterFlow Plumbers',
+    business_name: 'MasterFlow Plumbers',
     phone: '+919833344455',
     email: 'support@masterflow.co',
+    contact_person: 'Ramesh Patel',
+    contact_phone: '+919833344455',
+    contact_email: 'support@masterflow.co',
     address: 'Katra Main Market',
+    business_address: '12 Katra Main Market, Prayagraj',
     city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211002',
     service_area: 'Katra, Civil Lines, University Area',
     notes: 'Certified plumbers, 15+ years experience. Available for emergency blockages.',
+    verification_status: 'verified',
+    operational_status: 'active',
+    onboarding_status: 'completed',
     service_slugs: ['plumbing-repair', 'plumbing-installation', 'other-plumbing-work']
   },
   {
     name: 'VoltCare Electrical Works',
+    business_name: 'VoltCare Electrical Works',
     phone: '+919844455566',
     email: 'voltcare@gmail.com',
+    contact_person: 'Anil Kumar',
+    contact_phone: '+919844455566',
+    contact_email: 'voltcare@gmail.com',
     address: 'Leader Road, Near Junction',
+    business_address: 'Leader Road, Near Junction, Prayagraj',
     city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211003',
     service_area: 'All Prayagraj & Naini',
     notes: 'Licensed wiremen for domestic and commercial electrical maintenance.',
+    verification_status: 'under_review',
+    operational_status: 'active',
+    onboarding_status: 'under_review',
     service_slugs: ['electrical-repair', 'electrical-installation', 'other-electrical-work']
   },
   {
     name: 'QuickFix Appliance Clinic',
+    business_name: 'QuickFix Appliance Clinic',
     phone: '+919855566677',
     email: 'quickfix.appliances@gmail.com',
+    contact_person: 'Suresh Gupta',
+    contact_phone: '+919855566677',
+    contact_email: 'quickfix.appliances@gmail.com',
     address: 'Ashok Nagar Chauraha',
+    business_address: 'Ashok Nagar Chauraha, Prayagraj',
     city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211001',
     service_area: 'Ashok Nagar, Civil Lines, Lukerganj',
     notes: 'Specializes in Daikin, LG, Samsung, Voltas split ACs and inverter refrigerators.',
-    service_slugs: ['split-ac-installation', 'window-ac-installation', 'ac-repair-servicing', 'refrigerator-repair']
+    verification_status: 'pending',
+    operational_status: 'inactive',
+    onboarding_status: 'pending',
+    service_slugs: ['split-ac-installation', 'window-ac-installation', 'ac-repair-servicing']
   }
 ]
 
+super_admin = User.find_by(role: :super_admin)
+
 providers_data.each do |p_data|
   slugs = p_data.delete(:service_slugs)
-  provider = Provider.find_or_create_by!(phone: p_data[:phone]) do |p|
-    p.name = p_data[:name]
-    p.email = p_data[:email]
-    p.address = p_data[:address]
-    p.city = p_data[:city]
-    p.service_area = p_data[:service_area]
-    p.notes = p_data[:notes]
-    p.active = true
+  user_email = p_data.delete(:user_email)
+  user_name = p_data.delete(:user_name)
+
+  provider = Provider.find_or_initialize_by(phone: p_data[:phone])
+  provider.assign_attributes(p_data.merge(active: p_data[:operational_status] == 'active'))
+  provider.approved_by = super_admin if provider.verification_status == 'verified'
+  provider.approved_at = Time.current if provider.verification_status == 'verified'
+  provider.save!
+
+  # Provider Availability
+  ProviderAvailability.find_or_create_by!(provider: provider) do |avail|
+    avail.is_available = provider.operational_active?
+    avail.operating_days = %w[monday tuesday wednesday thursday friday saturday sunday]
+    avail.working_hours_start = '08:00'
+    avail.working_hours_end = '20:00'
   end
 
   slugs&.each do |s_slug|
     svc = Service.find_by(slug: s_slug)
-    ProviderService.find_or_create_by!(provider: provider, service: svc) if svc
+    if svc
+      ps = ProviderService.find_or_initialize_by(provider: provider, service: svc)
+      ps.active = true
+      ps.save!
+    end
+  end
+
+  if user_email.present?
+    prov_user = User.find_or_create_by!(email: user_email) do |u|
+      u.name = user_name
+      u.phone = p_data[:contact_phone]
+      u.role = 'provider'
+      u.password = 'Provider@123456'
+      u.status = 'active'
+      u.email_verified = true
+      u.phone_verified = true
+    end
+
+    pu = ProviderUser.find_or_initialize_by(provider: provider, user: prov_user)
+    pu.role = 'owner'
+    pu.active = true
+    pu.save!
+  end
+end
+
+puts "== Seeding Sample Requests and Assignments =="
+customer = User.find_by(role: :customer) || User.first
+cust_address = customer.addresses.first || customer.addresses.create!(
+  label: 'Home',
+  address_type: 'home',
+  line1: '12 Tagore Town, Near Colonelganj',
+  city: 'Prayagraj',
+  state: 'Uttar Pradesh',
+  postal_code: '211002',
+  is_default: true
+)
+
+car_wash_svc = Service.find_by(slug: 'car-wash') || Service.first
+hatchback_var = car_wash_svc.service_variants.first
+apex_prov = Provider.find_by(phone: '+919811122233')
+
+if car_wash_svc && apex_prov && super_admin
+  # Request 1: Assigned to Apex, pending acceptance
+  sr1 = ServiceRequest.find_or_create_by!(reference_number: 'LH-10101') do |r|
+    r.user = customer
+    r.service = car_wash_svc
+    r.service_variant = hatchback_var
+    r.address = cust_address
+    r.description = 'Complete Car Wash with interior vacuum and body polish'
+    r.status = 'contacting_provider'
+    r.preferred_at = 1.day.from_now
+  end
+
+  ProviderAssignment.find_or_create_by!(service_request: sr1, provider: apex_prov) do |a|
+    a.assigned_by = super_admin
+    a.assigned_at = Time.current
+    a.status = 'assigned'
+    a.internal_notes = 'High priority customer in Civil Lines'
+  end
+
+  # Request 2: Unassigned, pending admin assignment
+  sr2 = ServiceRequest.find_or_create_by!(reference_number: 'LH-10102') do |r|
+    r.user = customer
+    r.service = car_wash_svc
+    r.service_variant = hatchback_var
+    r.address = cust_address
+    r.description = 'Doorstep express car wash required before weekend'
+    r.status = 'pending_review'
+    r.preferred_at = 2.days.from_now
   end
 end
 
@@ -874,4 +1005,5 @@ puts "Services: #{Service.count}"
 puts "Variants: #{ServiceVariant.count}"
 puts "Service Pricing entries: #{ServicePricing.count}"
 puts "Providers: #{Provider.count}"
+puts "Provider Users: #{ProviderUser.count}"
 puts "== Seeding Complete! =="

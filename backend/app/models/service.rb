@@ -3,6 +3,7 @@ class Service < ApplicationRecord
   belongs_to :subcategory, optional: true
 
   has_many :variants, -> { sorted }, class_name: 'ServiceVariant', dependent: :destroy
+  alias_method :service_variants, :variants
   has_many :service_pricings, through: :variants
   has_many :provider_services, dependent: :destroy
   has_many :providers, through: :provider_services

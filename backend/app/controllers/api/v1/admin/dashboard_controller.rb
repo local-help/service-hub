@@ -17,7 +17,7 @@ module Api
           cancelled_bookings = Booking.where(status: 'cancelled').count
 
           total_revenue = Payment.where(status: 'paid').sum(:amount).to_f
-          total_providers = Provider.active.count
+          total_providers = ::Provider.active.count
           total_customers = User.customers.count
 
           recent_requests = ServiceRequest.includes(:service, :user).recent.limit(5)

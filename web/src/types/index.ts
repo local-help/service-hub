@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'admin' | 'super_admin';
+export type UserRole = 'customer' | 'admin' | 'super_admin' | 'provider';
 
 export interface User {
   id: number;
@@ -10,6 +10,9 @@ export interface User {
   phone_verified: boolean;
   email_verified: boolean;
   avatar_url?: string | null;
+  provider_id?: number | null;
+  provider_name?: string | null;
+  provider_role?: 'owner' | 'manager' | 'staff' | null;
   created_at: string;
 }
 
@@ -191,16 +194,116 @@ export interface Payment {
   created_at: string;
 }
 
+export interface ProviderAvailability {
+  id: number;
+  provider_id: number;
+  is_available: boolean;
+  operating_days: string[];
+  working_hours_start: string;
+  working_hours_end: string;
+  temporary_unavailability_start?: string | null;
+  temporary_unavailability_end?: string | null;
+  unavailability_reason?: string | null;
+  currently_available: boolean;
+}
+
+export interface ProviderAssignment {
+  id: number;
+  service_request_id: number;
+  provider_id: number;
+  assigned_by_id: number;
+  status: 'assigned' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled' | 'reassigned';
+  assigned_at: string;
+  accepted_at?: string | null;
+  rejected_at?: string | null;
+  completed_at?: string | null;
+  rejection_reason?: string | null;
+  internal_notes?: string | null;
+  provider_name?: string;
+  service_request?: {
+    id: number;
+    reference_number: string;
+    status: RequestStatus;
+    description: string;
+    preferred_at?: string | null;
+    customer_name: string;
+    customer_phone: string;
+    service_id: number;
+    service_name: string;
+    service_category: string;
+    service_variant_name?: string;
+    pricing_type: 'fixed_price' | 'quotation';
+    fixed_price?: number | null;
+    address?: {
+      id: number;
+      label?: string | null;
+      address_line?: string;
+      landmark?: string | null;
+      city?: string;
+      state?: string;
+      postal_code?: string;
+      formatted?: string;
+    };
+    active_quotation?: {
+      id: number;
+      amount: number;
+      description?: string | null;
+      status: string;
+      valid_until: string;
+    };
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProviderUser {
+  id: number;
+  user_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'owner' | 'manager' | 'staff';
+  active: boolean;
+  joined_at?: string;
+}
+
+export interface ProviderServiceItem {
+  id: number;
+  service_id: number;
+  service_name: string;
+  category_name: string;
+  pricing_type: string;
+  base_price?: number | null;
+  active: boolean;
+  provider_specific_pricing?: Record<string, any>;
+  variants?: Array<{ id: number; name: string; vehicle_type?: string; price: number | null }>;
+}
+
 export interface Provider {
   id: number;
   name: string;
+  slug?: string;
+  description?: string | null;
   phone: string;
   email?: string | null;
+  contact_person?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
   address?: string | null;
+  business_address?: string | null;
   city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
   service_area?: string | null;
   notes?: string | null;
   active: boolean;
+  verification_status?: 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
+  operational_status?: 'active' | 'inactive' | 'suspended';
+  onboarding_status?: 'pending' | 'under_review' | 'completed';
+  approved_at?: string | null;
+  suspended_at?: string | null;
+  suspension_reason?: string | null;
+  availability?: ProviderAvailability;
   services?: Service[];
   created_at: string;
 }

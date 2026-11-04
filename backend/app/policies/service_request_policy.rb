@@ -4,11 +4,14 @@ class ServiceRequestPolicy < ApplicationPolicy
   end
 
   def show?
-    owner? || admin?
+    return true if admin?
+    return true if owner?
+    return true if user&.provider? && provider_assigned?
+    false
   end
 
   def create?
-    true
+    user.customer? || admin?
   end
 
   def update?
@@ -23,14 +26,25 @@ class ServiceRequestPolicy < ApplicationPolicy
     admin?
   end
 
+  private
+
+  def provider_assigned?
+    prov = user.service_provider
+    return false unless prov.present? && prov.eligible_for_assignment?
+    record.provider_assignments.where(provider_id: prov.id, status: %w[assigned accepted in_progress completed]).exists?
+  end
+
   class Scope < Scope
     def resolve
       if user.admin_or_super_admin?
         scope.all
+      elsif user.provider?
+        prov = user.service_provider
+        return scope.none unless prov.present?
+        scope.assigned_to_provider(prov.id)
       else
         scope.where(user_id: user.id)
       end
     end
   end
 end
-

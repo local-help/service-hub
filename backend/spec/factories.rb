@@ -64,10 +64,36 @@ FactoryBot.define do
   factory :provider do
     name { Faker::Company.name }
     phone { "+91#{Faker::Number.unique.number(digits: 10)}" }
-    email { Faker::Internet.email }
+    email { Faker::Internet.unique.email }
     city { 'Prayagraj' }
     service_area { 'Civil Lines & Katra' }
     active { true }
+    verification_status { 'verified' }
+    operational_status { 'active' }
+    onboarding_status { 'completed' }
+
+    trait :suspended do
+      verification_status { 'suspended' }
+      operational_status { 'suspended' }
+      active { false }
+      suspended_at { Time.current }
+      suspension_reason { 'Policy violation' }
+    end
+  end
+
+  factory :provider_user do
+    user
+    provider
+    role { 'owner' }
+    active { true }
+  end
+
+  factory :provider_assignment do
+    service_request
+    provider
+    assigned_by factory: [:user, :admin]
+    assigned_at { Time.current }
+    status { 'assigned' }
   end
 
   factory :service_request do

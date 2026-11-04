@@ -5,3 +5,4 @@ class ServicePricingSerializer < ActiveModel::Serializer
     object.price&.to_f
   end
 end
+

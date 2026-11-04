@@ -4,13 +4,19 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, UserRole } from '../types';
 import { apiRequest } from '../api/client';
 
+export type ViewMode = 'customer' | 'admin' | 'provider';
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
-  viewMode: 'customer' | 'admin';
-  setViewMode: (mode: 'customer' | 'admin') => void;
+  isProvider: boolean;
+  providerId: number | null;
+  providerName: string | null;
+  providerRole: string | null;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   loginWithEmail: (email: string, password: string) => Promise<User>;
   sendOtp: (phone: string) => Promise<{ cooldown: number }>;
   verifyOtp: (phone: string, otp: string) => Promise<User>;
@@ -24,16 +30,16 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [viewMode, setViewModeState] = useState<'customer' | 'admin'>('customer');
+  const [viewMode, setViewModeState] = useState<ViewMode>('customer');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('localhelp_view_mode') as 'customer' | 'admin';
+      const savedMode = localStorage.getItem('localhelp_view_mode') as ViewMode;
       if (savedMode) setViewModeState(savedMode);
     }
   }, []);
 
-  const setViewMode = (mode: 'customer' | 'admin') => {
+  const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
     if (typeof window !== 'undefined') {
       localStorage.setItem('localhelp_view_mode', mode);
@@ -55,10 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     apiRequest<{ user: User }>('/auth/me')
       .then((data) => {
         setUser(data.user);
-        // If admin, default to admin view mode if previously set or if on /admin
         if (data.user.role === 'admin' || data.user.role === 'super_admin') {
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
             setViewMode('admin');
+          }
+        } else if (data.user.role === 'provider') {
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/provider')) {
+            setViewMode('provider');
           }
         }
       })
@@ -86,6 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (data.user.role === 'admin' || data.user.role === 'super_admin') {
       setViewMode('admin');
+    } else if (data.user.role === 'provider') {
+      setViewMode('provider');
     }
 
     return data.user;
@@ -112,6 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (data.user.role === 'admin' || data.user.role === 'super_admin') {
       setViewMode('admin');
+    } else if (data.user.role === 'provider') {
+      setViewMode('provider');
     }
 
     return data.user;
@@ -160,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isSuperAdmin = user?.role === 'super_admin';
+  const isProvider = user?.role === 'provider';
 
   return (
     <AuthContext.Provider
@@ -168,6 +182,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         isAdmin,
         isSuperAdmin,
+        isProvider,
+        providerId: user?.provider_id || null,
+        providerName: user?.provider_name || null,
+        providerRole: user?.provider_role || null,
         viewMode,
         setViewMode,
         loginWithEmail,
@@ -184,4 +202,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => useContext(AuthContext);
-

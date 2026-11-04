@@ -21,3 +21,4 @@ class Subcategory < ApplicationRecord
     self.slug = name.to_s.parameterize if slug.blank? && name.present?
   end
 end
+

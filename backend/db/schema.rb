@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -161,14 +161,62 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
     t.index ["key"], name: "index_platform_settings_on_key", unique: true
   end
 
+  create_table "provider_assignments", force: :cascade do |t|
+    t.bigint "service_request_id", null: false
+    t.bigint "provider_id", null: false
+    t.bigint "assigned_by_id", null: false
+    t.datetime "assigned_at", null: false
+    t.datetime "accepted_at"
+    t.datetime "rejected_at"
+    t.datetime "completed_at"
+    t.string "status", default: "assigned", null: false
+    t.text "rejection_reason"
+    t.text "internal_notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id"], name: "index_provider_assignments_on_provider_id"
+    t.index ["service_request_id"], name: "index_provider_assignments_on_service_request_id"
+    t.index ["status"], name: "index_provider_assignments_on_status"
+  end
+
+  create_table "provider_availabilities", force: :cascade do |t|
+    t.bigint "provider_id", null: false
+    t.boolean "is_available", default: true, null: false
+    t.jsonb "operating_days", default: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    t.string "working_hours_start", default: "09:00"
+    t.string "working_hours_end", default: "20:00"
+    t.datetime "temporary_unavailability_start"
+    t.datetime "temporary_unavailability_end"
+    t.text "unavailability_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id"], name: "index_provider_availabilities_on_provider_id", unique: true
+  end
+
   create_table "provider_services", force: :cascade do |t|
     t.bigint "provider_id", null: false
     t.bigint "service_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "active", default: true, null: false
+    t.jsonb "provider_specific_pricing", default: {}
+    t.index ["active"], name: "index_provider_services_on_active"
     t.index ["provider_id", "service_id"], name: "index_provider_services_on_provider_id_and_service_id", unique: true
     t.index ["provider_id"], name: "index_provider_services_on_provider_id"
     t.index ["service_id"], name: "index_provider_services_on_service_id"
+  end
+
+  create_table "provider_users", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "provider_id", null: false
+    t.string "role", default: "owner", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_provider_users_on_active"
+    t.index ["provider_id"], name: "index_provider_users_on_provider_id"
+    t.index ["user_id", "provider_id"], name: "index_provider_users_on_user_id_and_provider_id", unique: true
+    t.index ["user_id"], name: "index_provider_users_on_user_id"
   end
 
   create_table "providers", force: :cascade do |t|
@@ -182,9 +230,26 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "slug"
+    t.string "contact_person"
+    t.string "contact_phone"
+    t.string "contact_email"
+    t.text "business_address"
+    t.string "state", default: "Uttar Pradesh"
+    t.string "postal_code", default: "211001"
+    t.string "verification_status", default: "verified", null: false
+    t.string "operational_status", default: "active", null: false
+    t.string "onboarding_status", default: "completed", null: false
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.datetime "suspended_at"
+    t.text "suspension_reason"
     t.index ["active"], name: "index_providers_on_active"
     t.index ["city"], name: "index_providers_on_city"
+    t.index ["operational_status"], name: "index_providers_on_operational_status"
     t.index ["phone"], name: "index_providers_on_phone"
+    t.index ["slug"], name: "index_providers_on_slug", unique: true
+    t.index ["verification_status"], name: "index_providers_on_verification_status"
   end
 
   create_table "quotations", force: :cascade do |t|
@@ -196,7 +261,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
     t.bigint "created_by", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["service_request_id"], name: "index_quotations_on_service_request_id", unique: true
+    t.bigint "provider_id"
+    t.bigint "provider_assignment_id"
+    t.string "estimated_completion_time"
+    t.bigint "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.index ["provider_assignment_id"], name: "index_quotations_on_provider_assignment_id"
+    t.index ["provider_id"], name: "index_quotations_on_provider_id"
+    t.index ["service_request_id"], name: "index_quotations_on_active_per_request", unique: true, where: "((status)::text = ANY ((ARRAY['draft'::character varying, 'submitted'::character varying, 'pending'::character varying, 'approved'::character varying])::text[]))"
     t.index ["status"], name: "index_quotations_on_status"
   end
 
@@ -367,10 +439,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
   add_foreign_key "notifications", "users"
   add_foreign_key "payments", "bookings"
   add_foreign_key "payments", "users", column: "recorded_by"
+  add_foreign_key "provider_assignments", "providers"
+  add_foreign_key "provider_assignments", "service_requests"
+  add_foreign_key "provider_assignments", "users", column: "assigned_by_id"
+  add_foreign_key "provider_availabilities", "providers"
   add_foreign_key "provider_services", "providers"
   add_foreign_key "provider_services", "services"
+  add_foreign_key "provider_users", "providers"
+  add_foreign_key "provider_users", "users"
+  add_foreign_key "providers", "users", column: "approved_by_id"
+  add_foreign_key "quotations", "provider_assignments"
+  add_foreign_key "quotations", "providers"
   add_foreign_key "quotations", "service_requests"
   add_foreign_key "quotations", "users", column: "created_by"
+  add_foreign_key "quotations", "users", column: "reviewed_by_id"
   add_foreign_key "refresh_tokens", "users"
   add_foreign_key "request_attachments", "service_requests"
   add_foreign_key "service_pricing", "service_variants"

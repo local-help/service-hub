@@ -5,3 +5,4 @@ class SubcategorySerializer < ActiveModel::Serializer
     object.services.active.count
   end
 end
+

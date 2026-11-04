@@ -15,6 +15,10 @@ module Api
             requests = requests.joins(:service).where(services: { category_id: params[:category_id] })
           end
 
+          if params[:provider_id].present?
+            requests = requests.where(provider_id: params[:provider_id])
+          end
+
           if params[:q].present?
             q = "%#{params[:q]}%"
             requests = requests.joins(:user).where(
@@ -59,32 +63,53 @@ module Api
 
         def assign_provider
           service_request = ServiceRequest.find(params[:id])
-          provider = Provider.active.find(params[:provider_id])
+          provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
 
           ActiveRecord::Base.transaction do
-            service_request.update!(
-              provider: provider,
-              assigned_by: current_user.id,
-              assigned_at: Time.current
+            service_request.assign_provider!(
+              provider,
+              assigned_by: current_user,
+              notes: params[:notes]
             )
-
-            if service_request.status == 'pending_review'
-              service_request.transition_to!(
-                'contacting_provider',
-                changed_by: current_user,
-                notes: "Assigned provider: #{provider.name}"
-              )
-            end
 
             AdminActivityLog.log!(
               admin: current_user,
               action: 'assign_provider',
               entity: service_request,
-              metadata: { provider_id: provider.id, provider_name: provider.name }
+              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
             )
           end
 
           render json: service_request, serializer: ServiceRequestDetailSerializer
+        end
+
+        def reassign_provider
+          service_request = ServiceRequest.find(params[:id])
+          provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
+
+          ActiveRecord::Base.transaction do
+            service_request.assign_provider!(
+              provider,
+              assigned_by: current_user,
+              notes: params[:notes] || 'Reassigned by admin'
+            )
+
+            AdminActivityLog.log!(
+              admin: current_user,
+              action: 'reassign_provider',
+              entity: service_request,
+              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
+            )
+          end
+
+          render json: service_request, serializer: ServiceRequestDetailSerializer
+        end
+
+        def assignment_history
+          service_request = ServiceRequest.find(params[:id])
+          assignments = service_request.provider_assignments.order(created_at: :desc)
+
+          render json: assignments, each_serializer: ProviderAssignmentSerializer
         end
 
         private
@@ -104,4 +129,3 @@ module Api
     end
   end
 end
-

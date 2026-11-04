@@ -31,11 +31,13 @@ export default function AdminRequestDetailPage() {
 
   const [request, setRequest] = useState<ServiceRequest | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [assignmentHistory, setAssignmentHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Assign provider state
   const [selectedProviderId, setSelectedProviderId] = useState<number | ''>('');
+  const [assignNotes, setAssignNotes] = useState('');
 
   // Quotation form state
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -58,10 +60,12 @@ export default function AdminRequestDetailPage() {
     setLoading(true);
     Promise.all([
       apiRequest<ServiceRequest>(`/admin/service_requests/${id}`),
-      apiRequest<{ providers: Provider[] } | Provider[]>('/admin/providers?active=true'),
+      apiRequest<any[]>(`/admin/service_requests/${id}/assignment_history`).catch(() => []),
+      apiRequest<Provider[]>(`/admin/providers/eligible?city=Prayagraj`).catch(() => []),
     ])
-      .then(([reqData, provData]) => {
+      .then(([reqData, historyData, provData]) => {
         setRequest(reqData);
+        setAssignmentHistory(historyData || []);
         setAdminNotes(reqData.admin_notes || '');
         if (reqData.provider_id) setSelectedProviderId(reqData.provider_id);
         const pList = Array.isArray(provData) ? provData : (provData as any).providers || [];
@@ -85,8 +89,9 @@ export default function AdminRequestDetailPage() {
     try {
       await apiRequest(`/admin/service_requests/${id}/assign_provider`, {
         method: 'POST',
-        body: JSON.stringify({ provider_id: selectedProviderId }),
+        body: JSON.stringify({ provider_id: selectedProviderId, notes: assignNotes }),
       });
+      setAssignNotes('');
       alert('Provider assigned successfully');
       fetchRequest();
     } catch (err: any) {
@@ -275,29 +280,79 @@ export default function AdminRequestDetailPage() {
               Select one suitable provider from the directory. Call the technician externally to confirm availability and quoted cost.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <select
-                value={selectedProviderId}
-                onChange={(e) => setSelectedProviderId(Number(e.target.value) || '')}
-                className="w-full sm:flex-1 px-3 py-2 text-xs border border-slate-300 rounded-xl outline-none bg-white"
-              >
-                <option value="">-- Choose Specialist from Directory --</option>
-                {providers.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.phone}) — Area: {p.service_area || p.city}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <select
+                  value={selectedProviderId}
+                  onChange={(e) => setSelectedProviderId(Number(e.target.value) || '')}
+                  className="w-full sm:flex-1 px-3 py-2 text-xs border border-slate-300 rounded-xl outline-none bg-white"
+                >
+                  <option value="">-- Choose Specialist from Directory --</option>
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.phone}) — Area: {p.service_area || p.city} {p.verification_status ? `[${p.verification_status}]` : ''}
+                    </option>
+                  ))}
+                </select>
 
-              <button
-                type="button"
-                onClick={handleAssignProvider}
-                disabled={actionLoading || !selectedProviderId}
-                className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition cursor-pointer"
-              >
-                {request.provider ? 'Reassign' : 'Assign Specialist'}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleAssignProvider}
+                  disabled={actionLoading || !selectedProviderId}
+                  className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  {request.provider ? 'Reassign Specialist' : 'Assign Specialist'}
+                </button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Routing notes for provider (e.g. priority customer, specific gate code)"
+                value={assignNotes}
+                onChange={(e) => setAssignNotes(e.target.value)}
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400"
+              />
             </div>
+
+            {/* Assignment History Timeline */}
+            {assignmentHistory.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <span className="text-xs font-bold text-slate-700 block">
+                  Provider Assignment Audit Trail ({assignmentHistory.length})
+                </span>
+                <div className="space-y-2">
+                  {assignmentHistory.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-slate-800">{item.provider_name}</strong>
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                            item.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                            item.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                            item.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
+                            'bg-amber-100 text-amber-800'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+                        {item.internal_notes && (
+                          <p className="text-slate-600 text-[11px] mt-0.5">Notes: {item.internal_notes}</p>
+                        )}
+                        {item.rejection_reason && (
+                          <p className="text-rose-600 text-[11px] mt-0.5">Reason: {item.rejection_reason}</p>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 shrink-0">
+                        {new Date(item.assigned_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Step B: Create One Quotation (V1 Strict Business Rule) */}
