@@ -13,13 +13,19 @@ import {
   Clock, 
   Search,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import { Category, Service } from '../types';
 import { apiRequest } from '../api/client';
 import { CustomerSupportButtons } from '../components/ui/SupportButtons';
+import { useLocation } from '../contexts/LocationContext';
+import { useSupport } from '../contexts/SupportContext';
 
 export default function HomePage() {
+  const { location, setIsModalOpen } = useLocation();
+  const { supportInfo, getCallUrl } = useSupport();
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,22 +87,63 @@ export default function HomePage() {
             From doorstep car detailing to home deep cleaning and electrical repairs. Submit a request, your request is automatically matched with a verified local technician, and delivers transparent pricing.
           </p>
 
-          {/* Search Bar */}
-          <div className="max-w-xl mx-auto pt-4">
-            <div className="relative flex items-center bg-white rounded-2xl shadow-xl overflow-hidden p-1.5 border border-[#E7E2D8] text-[#242D2B]">
-              <Search className="w-5 h-5 text-slate-400 ml-3 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search for 'car wash', 'ac repair', 'drain cleaning'..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm bg-transparent outline-none placeholder:text-slate-400 text-[#242D2B]"
-              />
-              <button 
-                className="bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shrink-0 shadow-sm"
+          {/* Integrated Location & Service Search Bar */}
+          <div className="max-w-2xl mx-auto pt-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-xl overflow-hidden p-1.5 border border-[#E7E2D8] text-[#242D2B] gap-1 sm:gap-2">
+              {/* Step 1: Doorstep Location Selector */}
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#F7F5EF] text-slate-700 transition cursor-pointer shrink-0 border-b sm:border-b-0 sm:border-r border-slate-200 text-left group"
+                title="Click to detect or change exact doorstep location in Prayagraj"
               >
-                Find Service
+                <MapPin className="w-4 h-4 text-[#176B65] shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Your Doorstep</span>
+                  <span className="text-xs font-bold text-slate-900 truncate max-w-[130px] sm:max-w-[150px]">
+                    {location.locality || location.city || 'Prayagraj'} {location.postal_code ? `(${location.postal_code})` : ''}
+                  </span>
+                </div>
+                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-[#176B65] border border-teal-200 ml-1">
+                  GPS
+                </span>
               </button>
+
+              {/* Step 2: Search Input */}
+              <div className="flex items-center flex-1 min-w-0 px-2 py-1">
+                <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search for 'car wash', 'ac repair', 'plumbing'..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-xs sm:text-sm bg-transparent outline-none placeholder:text-slate-400 text-[#242D2B]"
+                />
+              </div>
+
+              {/* Step 3: Find Service CTA */}
+              <button 
+                type="button"
+                className="bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shrink-0 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Find Service</span>
+              </button>
+            </div>
+
+            {/* Coordination Guarantee & Support Helpline Pill */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs text-[#E7E2D8]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#8BE3D9] animate-pulse" />
+                <span>Doorstep local service coordination</span>
+              </span>
+              <span className="text-[#E7E2D8]/40 hidden sm:inline">•</span>
+              <a
+                href={getCallUrl()}
+                className="inline-flex items-center gap-1.5 text-[#F7F5EF] hover:text-[#8BE3D9] transition font-medium bg-black/20 px-3 py-1 rounded-full backdrop-blur-xs border border-white/10"
+              >
+                <Phone className="w-3.5 h-3.5 text-[#8BE3D9]" />
+                <span>Support Helpline: <strong>{supportInfo.phone}</strong></span>
+              </a>
             </div>
           </div>
 

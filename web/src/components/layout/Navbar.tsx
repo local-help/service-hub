@@ -48,37 +48,9 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#FDFCF9]/95 backdrop-blur-md border-b border-[#E7E2D8]">
-      {/* Top micro banner for support */}
-      <div className="bg-[#242D2B] text-[#E7E2D8] text-xs py-1.5 px-4 hidden md:flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 hover:text-[#8BE3D9] transition cursor-pointer text-xs"
-            title="Click to detect or change exact doorstep location"
-          >
-            <MapPin className="w-3.5 h-3.5 text-[#25877C]" />
-            <span>
-              Location: <strong>{location.locality || location.city || 'Prayagraj'}</strong>
-              {location.postal_code ? ` (${location.postal_code})` : ''}
-            </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#176B65] text-white font-medium ml-1">
-              Change / GPS
-            </span>
-          </button>
-          <span className="text-[#6C7B77]">•</span>
-          <span>Doorstep local service coordination</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a href={getCallUrl()} className="flex items-center gap-1.5 hover:text-[#F7F5EF] transition">
-            <Phone className="w-3.5 h-3.5 text-[#25877C]" />
-            <span>Support Helpline: <strong>{supportInfo.phone}</strong></span>
-          </a>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Scope Badge */}
+          {/* Logo & Scope Badge & Location */}
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href={viewMode === 'admin' ? '/admin' : (viewMode === 'provider' ? '/provider' : '/')}
@@ -102,6 +74,27 @@ export const Navbar: React.FC = () => {
                 <Briefcase className="w-3 h-3 text-[#8BE3D9]" />
                 Provider
               </span>
+            )}
+
+            {/* Doorstep Location Selector Pill */}
+            {viewMode === 'customer' && (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#F7F5EF] hover:bg-[#EAE6DC] border border-[#E7E2D8] text-slate-700 transition cursor-pointer text-xs group"
+                title="Click to detect or change exact doorstep location in Prayagraj"
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#176B65] shrink-0 group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Doorstep</span>
+                  <span className="font-bold text-slate-900 text-xs truncate max-w-[120px] md:max-w-[150px]">
+                    {location.locality || location.city || 'Prayagraj'} {location.postal_code ? `(${location.postal_code})` : ''}
+                  </span>
+                </div>
+                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-[#176B65] border border-teal-200 ml-0.5">
+                  GPS
+                </span>
+              </button>
             )}
           </div>
 
@@ -251,6 +244,16 @@ export const Navbar: React.FC = () => {
 
           {/* User actions & Mode Switcher */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Direct Support Helpline */}
+            <a
+              href={getCallUrl()}
+              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-[#176B65] hover:bg-[#F7F5EF] transition mr-1"
+              title="24/7 Support Helpline"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#176B65]" />
+              <span>{supportInfo.phone}</span>
+            </a>
+
             {/* View Mode Switcher Button for Admins */}
             {isAdmin && (
               viewMode === 'admin' ? (
@@ -333,6 +336,18 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="flex md:hidden items-center gap-2">
+            {viewMode === 'customer' && (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F7F5EF] border border-[#E7E2D8] text-xs font-bold text-[#176B65] max-w-[120px]"
+                title="Change doorstep location"
+              >
+                <MapPin className="w-3 h-3 text-[#176B65] shrink-0" />
+                <span className="truncate">{location.locality || 'Prayagraj'}</span>
+              </button>
+            )}
+
             {(isAdmin || isProvider) && (
               <button
                 onClick={() => {
