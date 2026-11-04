@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView 
+  ScrollView,
+  Image 
 } from 'react-native';
 import { Phone, Lock, Sparkles, CheckCircle2 } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -104,9 +105,11 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <View style={styles.logoWrap}>
-            <Text style={styles.logoText}>LH</Text>
-          </View>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Welcome to LocalHelp</Text>
           <Text style={styles.subtitle}>
             Book verified local home services with central customer care support.
@@ -272,19 +275,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  logoWrap: {
-    width: 60,
-    height: 60,
+  logoImage: {
+    width: 64,
+    height: 64,
     borderRadius: 16,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 12,
-  },
-  logoText: {
-    color: '#ffffff',
-    fontSize: 24,
-    fontWeight: '900',
   },
   title: {
     fontSize: 22,

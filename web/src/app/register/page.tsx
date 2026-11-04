@@ -37,9 +37,13 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF]">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#176B65] to-[#25877C] text-[#F7F5EF] flex items-center justify-center mx-auto shadow-md">
-            <Wrench className="w-6 h-6" />
-          </div>
+          <Link href="/" className="inline-block group mb-1">
+            <img
+              src="/local-logo.svg"
+              alt="LocalHelp"
+              className="h-12 w-auto mx-auto object-contain transition group-hover:opacity-90"
+            />
+          </Link>
           <h1 className="text-2xl font-black text-[#242D2B] tracking-tight">Create Account</h1>
           <p className="text-xs text-slate-500">Sign up for verified local services coordination</p>
         </div>

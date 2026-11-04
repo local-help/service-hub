@@ -46,13 +46,12 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Brand */}
         <div className="space-y-4 md:col-span-1">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#176B65] flex items-center justify-center text-[#F7F5EF]">
-              <Wrench className="w-4 h-4" />
-            </div>
-            <span className="text-lg font-extrabold text-[#F7F5EF]">
-              Local<span className="text-[#8BE3D9]">Help</span>
-            </span>
+          <Link href="/" className="inline-block group">
+            <img
+              src="/local-logo-dark.svg"
+              alt="LocalHelp — Happy to Help"
+              className="h-10 w-auto max-w-[160px] object-contain transition group-hover:opacity-90"
+            />
           </Link>
           <p className="text-xs leading-relaxed text-[#D5CEC0]/90">
             Connecting homeowners and car owners with verified local technicians through a coordinated customer service experience.

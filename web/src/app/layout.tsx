@@ -8,6 +8,17 @@ import { Footer } from '../components/layout/Footer';
 export const metadata: Metadata = {
   title: 'LocalHelp — Local Services Booking & Coordination',
   description: 'Doorstep car detailing, home deep cleaning, plumbing, electrical and appliance repairs in Bengaluru.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({

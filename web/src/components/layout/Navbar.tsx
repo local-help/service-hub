@@ -56,18 +56,12 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#176B65] to-[#25877C] flex items-center justify-center text-[#F7F5EF] shadow-md shadow-[#176B65]/20">
-                <Wrench className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-extrabold tracking-tight text-[#242D2B] leading-none">
-                  Local<span className="text-[#176B65]">Help</span>
-                </span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">
-                  Local Services
-                </span>
-              </div>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img
+                src="/local-logo.svg"
+                alt="LocalHelp — Happy to Help"
+                className="h-10 w-auto max-w-[140px] sm:max-w-[160px] object-contain transition group-hover:opacity-90"
+              />
             </Link>
 
             {/* Admin Switcher Pill for Admins */}
