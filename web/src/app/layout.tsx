@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SupportProvider } from '../contexts/SupportContext';
+import { LocationProvider } from '../contexts/LocationContext';
+import { LocationModal } from '../components/ui/LocationModal';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 
@@ -31,13 +33,15 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
         <AuthProvider>
           <SupportProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <LocationProvider>
+              <Navbar />
+              <LocationModal />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </LocationProvider>
           </SupportProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
-

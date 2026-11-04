@@ -19,3 +19,4 @@ class ProviderAvailability < ApplicationRecord
     true
   end
 end
+

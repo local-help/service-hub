@@ -17,6 +17,8 @@ interface Props {
 }
 
 export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onRequestBooking }) => {
+  const isQuotation = service.pricing_model === 'quotation' || service.pricing_type === 'quotation' || service.booking_type === 'quotation';
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -34,16 +36,20 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
           
           <View style={styles.pricingSection}>
             <Text style={styles.pricingLabel}>Pricing Model</Text>
-            {service.pricing_model === 'fixed' ? (
-              <View style={styles.fixedPricingWrap}>
-                <Text style={styles.priceAmount}>₹{service.base_price}</Text>
-                <Text style={styles.priceSubtitle}>Standard fixed rate</Text>
-              </View>
-            ) : (
+            {isQuotation ? (
               <View style={styles.quotePricingWrap}>
                 <Text style={styles.quoteAmount}>Quotation-Based</Text>
                 <Text style={styles.priceSubtitle}>
-                  Admin inspects requirement & contacts 1 verified provider to send quotation.
+                  Direct online booking is reserved for fixed-price and hourly packages. Please call or WhatsApp LocalHelp support to arrange custom quotation requests.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.fixedPricingWrap}>
+                <Text style={styles.priceAmount}>
+                  {service.fixed_price || service.base_price ? `₹${service.fixed_price || service.base_price}` : 'Hourly Package'}
+                </Text>
+                <Text style={styles.priceSubtitle}>
+                  {service.booking_type === 'time_based' ? 'Time-based package pricing' : 'Transparent standard rate'}
                 </Text>
               </View>
             )}
@@ -72,15 +78,15 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
           <Text style={styles.cardTitle}>How LocalHelp Coordination Works</Text>
           <View style={styles.stepRow}>
             <View style={styles.stepNum}><Text style={styles.stepNumText}>1</Text></View>
-            <Text style={styles.stepText}>Submit your service request & photos</Text>
+            <Text style={styles.stepText}>Select service package & doorstep address</Text>
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepNum}><Text style={styles.stepNumText}>2</Text></View>
-            <Text style={styles.stepText}>Admin confirms 1 provider & creates quotation</Text>
+            <Text style={styles.stepText}>Verified local provider is dispatched to your GPS location</Text>
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepNum}><Text style={styles.stepNumText}>3</Text></View>
-            <Text style={styles.stepText}>Approve quote on phone to confirm booking</Text>
+            <Text style={styles.stepText}>Pay securely after work completion & inspect</Text>
           </View>
         </View>
 
@@ -90,14 +96,15 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
       {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={styles.bookButton}
-          onPress={onRequestBooking}
+          style={[styles.bookButton, isQuotation && { backgroundColor: '#94a3b8' }]}
+          onPress={isQuotation ? undefined : onRequestBooking}
+          disabled={isQuotation}
           activeOpacity={0.8}
         >
           <Text style={styles.bookButtonText}>
-            {service.pricing_model === 'fixed' ? 'Book Service Now' : 'Request Quotation'}
+            {isQuotation ? 'Online Booking Paused' : 'Book Service Now'}
           </Text>
-          <ChevronRight size={18} color="#ffffff" />
+          {!isQuotation && <ChevronRight size={18} color="#ffffff" />}
         </TouchableOpacity>
       </View>
     </View>

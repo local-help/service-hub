@@ -366,18 +366,18 @@ export default function ServiceDetailPage() {
             </span>
           ) : (
             <div>
-              <span className="text-lg font-bold text-indigo-700">Free Quotation</span>
-              <span className="text-[11px] text-slate-500 block">Admin coordinates with provider</span>
+              <span className="text-sm font-bold text-slate-500">Quotation Service</span>
+              <span className="text-[11px] text-slate-400 block">Direct booking enabled for fixed/hourly only</span>
             </div>
           )}
         </div>
 
-        {isComingSoon ? (
+        {isComingSoon || bType === 'quotation' ? (
           <button
             disabled
             className="px-6 py-3 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed border border-slate-200"
           >
-            Service Coming Soon
+            {isComingSoon ? 'Service Coming Soon' : 'Online Booking Paused (Call Helpline)'}
           </button>
         ) : (
           <button
@@ -385,11 +385,7 @@ export default function ServiceDetailPage() {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#176B65] hover:bg-[#135752] text-white font-bold text-sm rounded-xl transition shadow-sm cursor-pointer"
           >
             <span>
-              {bType === 'fixed_price'
-                ? 'Proceed to Booking'
-                : bType === 'time_based'
-                ? 'Book Driver Shift'
-                : 'Request Free Quotation'}
+              {bType === 'time_based' ? 'Book Driver Shift' : 'Proceed to Booking'}
             </span>
             <ArrowRight className="w-4 h-4" />
           </button>

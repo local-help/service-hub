@@ -12,12 +12,15 @@ import {
   AlertCircle,
   Sparkles,
   Car,
-  Clock
+  Clock,
+  Crosshair
 } from 'lucide-react';
 import { Service, Address, ServiceRequest, ServiceVariant } from '../../../../types';
 import { apiRequest } from '../../../../api/client';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { CustomerSupportButtons } from '../../../../components/ui/SupportButtons';
+import { GpsButton } from '../../../../components/ui/GpsButton';
+import { LocationData } from '../../../../contexts/LocationContext';
 
 function CreateRequestContent() {
   const params = useParams();
@@ -46,8 +49,21 @@ function CreateRequestContent() {
     city: 'Prayagraj',
     state: 'Uttar Pradesh',
     postal_code: '211001',
+    latitude: 25.4519 as number | null,
+    longitude: 81.8340 as number | null,
     is_default: true,
   });
+
+  const handleGpsDetected = (loc: LocationData) => {
+    setNewAddress((prev) => ({
+      ...prev,
+      address_line: loc.address_line,
+      landmark: loc.landmark || loc.locality,
+      postal_code: loc.postal_code || prev.postal_code,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    }));
+  };
 
   // Request form state
   const [description, setDescription] = useState('');
@@ -226,10 +242,10 @@ function CreateRequestContent() {
           <span>Back to Service</span>
         </Link>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] tracking-tight">
-          Request Service
+          Book Service
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          {service?.name} • {service?.booking_type === 'fixed_price' ? `Fixed Price ₹${service.fixed_price}` : service?.booking_type === 'time_based' ? 'Time-Based Driver Service' : 'Quotation Based'}
+          {service?.name} • {service?.booking_type === 'time_based' ? 'Time-Based Driver Shift' : `Fixed Price ₹${service?.fixed_price || 299}`}
         </p>
       </div>
 
@@ -288,7 +304,18 @@ function CreateRequestContent() {
           {/* New Address Sub-form */}
           {showNewAddress ? (
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-              <p className="text-xs font-bold text-slate-700">Add Service Address (Prayagraj, Allahabad)</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                <p className="text-xs font-bold text-slate-700">Add Service Address (Prayagraj, Allahabad)</p>
+                <GpsButton onLocationDetected={handleGpsDetected} label="Detect Exact GPS" />
+              </div>
+
+              {newAddress.latitude && newAddress.longitude && (
+                <div className="p-2 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-800 flex items-center justify-between">
+                  <span>📍 GPS Coordinates: <strong>{newAddress.latitude.toFixed(4)}, {newAddress.longitude.toFixed(4)}</strong></span>
+                  <span className="text-[10px] font-bold uppercase text-teal-600">Doorstep Pin</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"

@@ -91,3 +91,4 @@ class CreateMultiProviderArchitecture < ActiveRecord::Migration[8.0]
               name: "index_quotations_on_active_per_request"
   end
 end
+

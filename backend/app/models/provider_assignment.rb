@@ -129,3 +129,4 @@ class ProviderAssignment < ApplicationRecord
     end
   end
 end
+

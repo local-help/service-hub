@@ -21,10 +21,12 @@ import {
 } from 'lucide-react';
 import { useAuth, ViewMode } from '../../contexts/AuthContext';
 import { useSupport } from '../../contexts/SupportContext';
+import { useLocation } from '../../contexts/LocationContext';
 
 export const Navbar: React.FC = () => {
   const { user, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
   const { supportInfo, getCallUrl } = useSupport();
+  const { location, setIsModalOpen } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -47,7 +49,20 @@ export const Navbar: React.FC = () => {
       {/* Top micro banner for support */}
       <div className="bg-[#242D2B] text-[#E7E2D8] text-xs py-1.5 px-4 hidden md:flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span>📍 Operating in <strong>Prayagraj (Allahabad)</strong></span>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 hover:text-[#8BE3D9] transition cursor-pointer text-xs"
+            title="Click to detect or change exact doorstep location"
+          >
+            <MapPin className="w-3.5 h-3.5 text-[#25877C]" />
+            <span>
+              Location: <strong>{location.locality || location.city || 'Prayagraj'}</strong>
+              {location.postal_code ? ` (${location.postal_code})` : ''}
+            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#176B65] text-white font-medium ml-1">
+              Change / GPS
+            </span>
+          </button>
           <span className="text-[#6C7B77]">•</span>
           <span>Doorstep local service coordination</span>
         </div>

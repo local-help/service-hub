@@ -34,10 +34,15 @@ export const HomeScreen: React.FC<Props> = ({ onSelectCategory, onSelectService 
       ]);
 
       const catList = Array.isArray(catsRes) ? catsRes : (catsRes as any).categories || [];
-      const svcList = Array.isArray(svcsRes) ? svcsRes : (svcsRes as any).services || [];
+      const svcList: Service[] = Array.isArray(svcsRes) ? svcsRes : (svcsRes as any).services || [];
+
+      // Filter out quotation-based services from customer UI - direct booking only
+      const directSvcs = svcList.filter(
+        (s) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation' && s.pricing_model !== 'quotation'
+      );
 
       setCategories(catList);
-      setFeaturedServices(svcList.slice(0, 6));
+      setFeaturedServices(directSvcs.slice(0, 6));
     } catch (err) {
       console.error(err);
     } finally {
@@ -80,7 +85,7 @@ export const HomeScreen: React.FC<Props> = ({ onSelectCategory, onSelectService 
         </View>
         <Text style={styles.heroTitle}>Local Services, Coordinated with Care</Text>
         <Text style={styles.heroSubtitle}>
-          Verified technicians, upfront quotation coordination, and dedicated phone support.
+          Verified technicians, upfront transparent pricing, and instant doorstep service booking.
         </Text>
 
         {/* Search Input */}
@@ -143,9 +148,13 @@ export const HomeScreen: React.FC<Props> = ({ onSelectCategory, onSelectService 
                   {svc.description || 'Reliable local home service'}
                 </Text>
                 <View style={styles.badgeRow}>
-                  <View style={[styles.pricingBadge, svc.pricing_model === 'fixed' ? styles.fixedBadge : styles.quoteBadge]}>
-                    <Text style={[styles.pricingBadgeText, svc.pricing_model === 'fixed' ? styles.fixedBadgeText : styles.quoteBadgeText]}>
-                      {svc.pricing_model === 'fixed' ? `₹${svc.base_price}` : 'Quotation Required'}
+                  <View style={[styles.pricingBadge, styles.fixedBadge]}>
+                    <Text style={[styles.pricingBadgeText, styles.fixedBadgeText]}>
+                      {svc.fixed_price || svc.base_price
+                        ? `₹${svc.fixed_price || svc.base_price}`
+                        : svc.booking_type === 'time_based'
+                        ? 'Hourly Package'
+                        : 'Fixed Price'}
                     </Text>
                   </View>
                   {svc.estimated_duration_minutes && (

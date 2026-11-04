@@ -33,3 +33,4 @@ class ProviderAssignmentPolicy < ApplicationPolicy
     end
   end
 end
+

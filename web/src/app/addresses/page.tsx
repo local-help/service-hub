@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MapPin, Plus, Trash2, ArrowLeft, Check } from 'lucide-react';
+import { MapPin, Plus, Trash2, ArrowLeft, Check, Crosshair } from 'lucide-react';
 import { Address } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { GpsButton } from '../../components/ui/GpsButton';
+import { LocationData } from '../../contexts/LocationContext';
 
 export default function AddressesPage() {
   const { user } = useAuth();
@@ -23,8 +25,21 @@ export default function AddressesPage() {
     city: 'Prayagraj',
     state: 'Uttar Pradesh',
     postal_code: '211001',
+    latitude: 25.4519 as number | null,
+    longitude: 81.8340 as number | null,
     is_default: false,
   });
+
+  const handleGpsDetected = (loc: LocationData) => {
+    setForm((prev) => ({
+      ...prev,
+      address_line: loc.address_line,
+      landmark: loc.landmark || loc.locality,
+      postal_code: loc.postal_code || prev.postal_code,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    }));
+  };
 
   const fetchAddresses = () => {
     apiRequest<Address[]>('/addresses')
@@ -57,6 +72,8 @@ export default function AddressesPage() {
         city: 'Prayagraj',
         state: 'Uttar Pradesh',
         postal_code: '211001',
+        latitude: null,
+        longitude: null,
         is_default: false,
       });
       fetchAddresses();
@@ -108,7 +125,18 @@ export default function AddressesPage() {
 
       {showAdd && (
         <form onSubmit={handleCreate} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900">Add New Service Address</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-bold text-slate-900">Add New Service Address</h3>
+            <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS Location" />
+          </div>
+
+          {form.latitude && form.longitude && (
+            <div className="p-2.5 rounded-xl bg-teal-50/70 border border-teal-200 text-xs text-teal-800 flex items-center justify-between">
+              <span>📍 Pinned Coordinates: <strong>{form.latitude.toFixed(4)}, {form.longitude.toFixed(4)}</strong></span>
+              <span className="text-[11px] text-teal-600 font-medium">Exact Doorstep GPS</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 block mb-1">Address Label</label>

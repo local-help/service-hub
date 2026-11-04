@@ -23,6 +23,18 @@ interface Props {
   onComplete: (request: ServiceRequest) => void;
 }
 
+const PRAYAGRAJ_LOCALITIES = [
+  { name: 'Civil Lines', pin: '211001' },
+  { name: 'Katra', pin: '211002' },
+  { name: 'Tagore Town', pin: '211002' },
+  { name: 'Ashok Nagar', pin: '211001' },
+  { name: 'Georgetown', pin: '211002' },
+  { name: 'Mumfordganj', pin: '211002' },
+  { name: 'Naini', pin: '211008' },
+  { name: 'Jhunsi', pin: '211019' },
+  { name: 'Dhoomanganj', pin: '211011' },
+];
+
 export const CreateRequestScreen: React.FC<Props> = ({ service, onBack, onComplete }) => {
   const { user } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -248,6 +260,40 @@ export const CreateRequestScreen: React.FC<Props> = ({ service, onBack, onComple
             </View>
           ) : (
             <View style={styles.newAddressBox}>
+              <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: '600' }}>
+                Quick Locality Selection (Prayagraj):
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                {PRAYAGRAJ_LOCALITIES.map((loc) => (
+                  <TouchableOpacity
+                    key={loc.name}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 14,
+                      backgroundColor: newLandmark === loc.name ? '#176B65' : '#f1f5f9',
+                      marginRight: 6,
+                      borderWidth: 1,
+                      borderColor: newLandmark === loc.name ? '#176B65' : '#e2e8f0'
+                    }}
+                    onPress={() => {
+                      setNewLandmark(loc.name);
+                      setNewPincode(loc.pin);
+                      if (!newAddressLine) {
+                        setNewAddressLine(`${loc.name}, Prayagraj`);
+                      }
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: newLandmark === loc.name ? '#ffffff' : '#334155'
+                    }}>
+                      📍 {loc.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
               <TextInput
                 placeholder="Flat / House #, Street Name *"
                 placeholderTextColor="#94a3b8"

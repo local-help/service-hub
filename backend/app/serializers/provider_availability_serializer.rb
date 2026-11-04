@@ -16,3 +16,4 @@ class ProviderAvailabilitySerializer < ActiveModel::Serializer
     object.temporary_unavailability_end&.iso8601
   end
 end
+

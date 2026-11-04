@@ -16,7 +16,7 @@ export default function CategoryPage() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedSubcat, setSelectedSubcat] = useState<number | 'all'>('all');
   const [selectedVehicle, setSelectedVehicle] = useState<string>('all');
-  const [filterType, setFilterType] = useState<'all' | 'fixed_price' | 'quotation' | 'time_based'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'fixed_price' | 'time_based'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +26,11 @@ export default function CategoryPage() {
       .then((data) => {
         setCategory(data);
         setSubcategories(data.subcategories || []);
-        setServices(data.active_services || []);
+        // Filter out quotation-based services from UI (kept in backend for future use)
+        const directServices = (data.active_services || []).filter(
+          (s) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation'
+        );
+        setServices(directServices);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -113,7 +117,7 @@ export default function CategoryPage() {
                 filterType === 'all' ? 'bg-[#176B65] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All ({services.length})
+              All Direct ({services.length})
             </button>
             <button
               onClick={() => setFilterType('fixed_price')}
@@ -122,14 +126,6 @@ export default function CategoryPage() {
               }`}
             >
               Fixed Price
-            </button>
-            <button
-              onClick={() => setFilterType('quotation')}
-              className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-                filterType === 'quotation' ? 'bg-[#176B65] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Request Quote
             </button>
             <button
               onClick={() => setFilterType('time_based')}
@@ -222,19 +218,15 @@ export default function CategoryPage() {
                     <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                       isComingSoon
                         ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                        : bType === 'fixed_price'
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
                         : bType === 'time_based'
                         ? 'bg-teal-50 text-teal-800 border border-teal-200/60'
-                        : 'bg-indigo-50 text-indigo-800 border border-indigo-200/60'
+                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
                     }`}>
                       {isComingSoon
                         ? 'Coming Soon'
-                        : bType === 'fixed_price'
-                        ? 'Fixed Price'
                         : bType === 'time_based'
                         ? 'Time Based'
-                        : 'Quotation Required'}
+                        : 'Fixed Price'}
                     </span>
                     {service.estimated_duration_minutes && (
                       <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">

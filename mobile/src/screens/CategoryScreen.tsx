@@ -24,10 +24,14 @@ export const CategoryScreen: React.FC<Props> = ({ category, onBack, onSelectServ
   useEffect(() => {
     apiRequest<any>(`/categories/${category.id}`)
       .then((data) => {
-        const list = Array.isArray(data)
+        const list: Service[] = Array.isArray(data)
           ? data
           : data.active_services || data.services || data.category?.services || [];
-        setServices(list);
+        // Filter out quotation services from customer browsing - direct booking only
+        const directSvcs = list.filter(
+          (s) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation' && s.pricing_model !== 'quotation'
+        );
+        setServices(directSvcs);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -73,9 +77,13 @@ export const CategoryScreen: React.FC<Props> = ({ category, onBack, onSelectServ
                     <Text style={styles.serviceDesc} numberOfLines={2}>{svc.description}</Text>
                   )}
                   <View style={styles.badgeRow}>
-                    <View style={[styles.badge, svc.pricing_model === 'fixed' ? styles.fixedBadge : styles.quoteBadge]}>
-                      <Text style={[styles.badgeText, svc.pricing_model === 'fixed' ? styles.fixedBadgeText : styles.quoteBadgeText]}>
-                        {svc.pricing_model === 'fixed' ? `₹${svc.base_price}` : 'Quotation Required'}
+                    <View style={[styles.badge, styles.fixedBadge]}>
+                      <Text style={[styles.badgeText, styles.fixedBadgeText]}>
+                        {svc.fixed_price || svc.base_price
+                          ? `₹${svc.fixed_price || svc.base_price}`
+                          : svc.booking_type === 'time_based'
+                          ? 'Hourly Package'
+                          : 'Fixed Price'}
                       </Text>
                     </View>
                     {svc.estimated_duration_minutes && (

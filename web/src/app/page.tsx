@@ -28,11 +28,15 @@ export default function HomePage() {
   useEffect(() => {
     Promise.all([
       apiRequest<Category[]>('/categories'),
-      apiRequest<{ services: Service[] } | Service[]>('/services?per_page=6')
+      apiRequest<{ services: Service[] } | Service[]>('/services?per_page=20')
     ]).then(([catData, svcData]) => {
       setCategories(catData || []);
       const svcs = Array.isArray(svcData) ? svcData : (svcData as any).services || [];
-      setServices(svcs);
+      // Filter out quotation-based services from UI
+      const directServices = svcs.filter(
+        (s: Service) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation'
+      );
+      setServices(directServices.slice(0, 6));
     }).catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -103,16 +107,16 @@ export default function HomePage() {
               <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Verified Local Providers</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">1 Quote</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">No Spam or Bidding Wars</p>
+              <p className="text-2xl font-black text-[#F7F5EF]">GPS Pinned</p>
+              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Doorstep Accuracy</p>
             </div>
             <div>
               <p className="text-2xl font-black text-[#F7F5EF]">Prayagraj</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Doorstep Coverage</p>
+              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Full City Coverage</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">Phone & WA</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Direct Human Helpline</p>
+              <p className="text-2xl font-black text-[#F7F5EF]">Direct</p>
+              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Fixed Upfront Rates</p>
             </div>
           </div>
         </div>
@@ -161,7 +165,7 @@ export default function HomePage() {
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-2xl font-extrabold text-[#242D2B] tracking-tight">Popular Services</h2>
-            <p className="text-sm text-slate-500 mt-1">Fixed-price packages and tailored quotation repairs</p>
+            <p className="text-sm text-slate-500 mt-1">Direct-booking fixed price & time-based packages</p>
           </div>
         </div>
 
@@ -173,12 +177,8 @@ export default function HomePage() {
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                    service.pricing_type === 'fixed_price'
-                      ? 'bg-[#E6F3F1] text-[#176B65] border border-[#B0DCD7]'
-                      : 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]'
-                  }`}>
-                    {service.pricing_type === 'fixed_price' ? 'Fixed Price' : 'Quotation Required'}
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-[#E6F3F1] text-[#176B65] border border-[#B0DCD7]">
+                    {service.booking_type === 'time_based' ? 'Time Based' : 'Fixed Price'}
                   </span>
                   {service.estimated_duration_minutes && (
                     <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
@@ -199,13 +199,13 @@ export default function HomePage() {
               <div className="pt-6 mt-6 border-t border-[#E7E2D8]/70 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-bold block">Pricing</span>
-                  {service.pricing_type === 'fixed_price' ? (
+                  {service.fixed_price ? (
                     <span className="text-lg font-black text-[#176B65]">
                       ₹{service.fixed_price}
                     </span>
                   ) : (
                     <span className="text-sm font-bold text-[#25877C]">
-                      Free Quotation
+                      Dynamic Tariff
                     </span>
                   )}
                 </div>
@@ -214,7 +214,7 @@ export default function HomePage() {
                   href={`/services/${service.id}`}
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] text-xs font-semibold rounded-xl transition shadow-xs"
                 >
-                  <span>{service.pricing_type === 'fixed_price' ? 'Book Service' : 'Get Quote'}</span>
+                  <span>Book Now</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -230,7 +230,7 @@ export default function HomePage() {
             <span className="text-xs font-extrabold uppercase tracking-widest text-[#176B65]">Streamlined Marketplace</span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] mt-1">How LocalHelp Works for You</h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-2">
-              Unlike open bidding platforms that flood you with spam calls, LocalHelp acts as your personal local service manager.
+              Unlike open bidding platforms that flood you with spam calls, LocalHelp coordinates directly with certified local professionals.
             </p>
           </div>
 
@@ -239,9 +239,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-xl bg-[#176B65] text-[#F7F5EF] flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
                 1
               </div>
-              <h4 className="text-base font-bold text-[#242D2B]">Submit Request</h4>
+              <h4 className="text-base font-bold text-[#242D2B]">Select Service & Options</h4>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Choose your service, specify preferred timing, and attach any photos or details. A unique LH reference number is generated instantly.
+                Choose your service, select vehicle type or hourly driver duration, and pinpoint your doorstep via GPS.
               </p>
             </div>
 
@@ -249,9 +249,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-xl bg-[#25877C] text-[#F7F5EF] flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
                 2
               </div>
-              <h4 className="text-base font-bold text-[#242D2B]">Admin Coordinates 1 Provider</h4>
+              <h4 className="text-base font-bold text-[#242D2B]">Verified Specialist Dispatched</h4>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Our care team contacts one verified local professional, confirms their schedule and pricing, and creates a clear quotation for you.
+                Our operations team assigns a verified local provider in Prayagraj equipped for your specific request.
               </p>
             </div>
 
