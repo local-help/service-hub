@@ -54,7 +54,7 @@ export const Footer: React.FC = () => {
             />
           </Link>
           <p className="text-xs leading-relaxed text-[#D5CEC0]/90">
-            Connecting homeowners and car owners with verified local technicians through a coordinated customer service experience.
+            Connecting homeowners and car owners with verified local technicians through an instant, seamless matching experience.
           </p>
           <p className="text-xs text-[#9DA8A4]">
             Operating exclusively in Prayagraj (Allahabad), Uttar Pradesh.

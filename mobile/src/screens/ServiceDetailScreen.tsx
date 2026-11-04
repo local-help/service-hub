@@ -82,7 +82,7 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepNum}><Text style={styles.stepNumText}>2</Text></View>
-            <Text style={styles.stepText}>Verified local provider is dispatched to your GPS location</Text>
+            <Text style={styles.stepText}>Your request is automatically assigned to a verified local professional, who reviews the details</Text>
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepNum}><Text style={styles.stepNumText}>3</Text></View>

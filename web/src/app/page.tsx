@@ -67,7 +67,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#25877C]/25 border border-[#25877C]/40 text-[#F7F5EF] text-xs font-semibold backdrop-blur-md">
             <span>📍 Prayagraj (Allahabad) Coverage</span>
             <span className="text-[#E7E2D8]/60">•</span>
-            <span>Manual Admin Coordination</span>
+            <span>Smart Instant Matching</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F7F5EF] leading-tight">
@@ -78,7 +78,7 @@ export default function HomePage() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#E7E2D8] font-normal leading-relaxed">
-            From doorstep car detailing to home deep cleaning and electrical repairs. Submit a request, our dedicated customer-care team coordinates with a verified local technician, and delivers transparent pricing.
+            From doorstep car detailing to home deep cleaning and electrical repairs. Submit a request, your request is automatically matched with a verified local technician, and delivers transparent pricing.
           </p>
 
           {/* Search Bar */}
@@ -251,7 +251,7 @@ export default function HomePage() {
               </div>
               <h4 className="text-base font-bold text-[#242D2B]">Verified Specialist Dispatched</h4>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Our operations team assigns a verified local provider in Prayagraj equipped for your specific request.
+                Your request is automatically assigned to a verified local professional, who reviews the details and prepares for your doorstep visit.
               </p>
             </div>
 
