@@ -1,6 +1,7 @@
 class ServiceRequest < ApplicationRecord
   belongs_to :user
   belongs_to :service
+  belongs_to :service_variant, optional: true
   belongs_to :address
   belongs_to :provider, optional: true
   belongs_to :assigned_by_user, class_name: 'User', foreign_key: :assigned_by, optional: true

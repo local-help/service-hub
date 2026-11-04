@@ -27,27 +27,75 @@ export interface Address {
   full_address: string;
 }
 
+export interface Subcategory {
+  id: number;
+  category_id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  position: number;
+  active: boolean;
+  services_count?: number;
+}
+
+export interface ServicePricing {
+  id: number;
+  service_variant_id: number;
+  price: number | null;
+  pricing_type: string;
+  applicable_conditions: Record<string, any>;
+  active: boolean;
+}
+
+export interface ServiceVariant {
+  id: number;
+  service_id: number;
+  name: string;
+  description?: string;
+  variant_attributes: Record<string, any>;
+  position: number;
+  active: boolean;
+  primary_price: number | null;
+  service_pricings?: ServicePricing[];
+}
+
 export interface Category {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   image_url?: string | null;
   icon_name?: string | null;
+  icon?: string | null;
+  position?: number;
+  active?: boolean;
+  coming_soon?: boolean;
   services_count?: number;
+  subcategories_count?: number;
+  subcategories?: Subcategory[];
   active_services?: Service[];
 }
 
 export interface Service {
   id: number;
   category_id: number;
+  subcategory_id?: number | null;
   name: string;
+  slug?: string;
   description?: string;
   short_description?: string;
   pricing_type: 'fixed_price' | 'quotation';
+  booking_type?: 'fixed_price' | 'quotation' | 'time_based';
   fixed_price: number | null;
   image_url?: string | null;
   estimated_duration_minutes?: number | null;
+  position?: number;
+  active?: boolean;
+  coming_soon?: boolean;
+  supported_vehicle_types?: string[];
   category?: Category;
+  subcategory?: Subcategory;
+  variants?: ServiceVariant[];
 }
 
 export type RequestStatus =

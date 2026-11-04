@@ -25,9 +25,9 @@ module Api
         private
 
         def service_params
-          params.permit(:category_id, :name, :description, :short_description,
-                        :pricing_type, :fixed_price, :image_url, :sort_order,
-                        :active, :estimated_duration_minutes)
+          params.permit(:category_id, :subcategory_id, :name, :slug, :description, :short_description,
+                        :pricing_type, :booking_type, :fixed_price, :image_url, :position, :sort_order,
+                        :active, :coming_soon, :estimated_duration_minutes, supported_vehicle_types: [])
         end
 
         def skip_authorization?

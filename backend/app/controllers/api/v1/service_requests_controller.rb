@@ -19,15 +19,31 @@ module Api
         a_id = params[:address_id] || params.dig(:service_request, :address_id)
         desc = params[:description] || params.dig(:service_request, :description)
         pref = params[:preferred_at] || params.dig(:service_request, :preferred_at) || params[:preferred_date] || params.dig(:service_request, :preferred_date)
+        v_id = params[:service_variant_id] || params.dig(:service_request, :service_variant_id)
+        v_type = params[:vehicle_type] || params.dig(:service_request, :vehicle_type)
+        dur = params[:duration_hours] || params.dig(:service_request, :duration_hours)
+        opts = params[:selected_options] || params.dig(:service_request, :selected_options) || {}
 
         service = Service.active.find(s_id)
+        if service.coming_soon?
+          skip_authorization
+          render json: { error: 'This service is coming soon and cannot be booked yet.' }, status: :unprocessable_entity
+          return
+        end
+
         address = current_user.addresses.find(a_id)
+        variant = v_id.present? ? service.variants.find_by(id: v_id) : nil
 
         service_request = current_user.service_requests.build(
           service: service,
+          service_variant: variant,
           address: address,
           description: desc,
-          preferred_at: pref
+          preferred_at: pref,
+          booking_type: service.booking_type,
+          vehicle_type: v_type,
+          duration_hours: dur,
+          selected_options: opts
         )
         authorize service_request
 

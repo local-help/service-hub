@@ -25,7 +25,7 @@ module Api
         private
 
         def category_params
-          params.permit(:name, :description, :image_url, :icon_name, :sort_order, :active)
+          params.permit(:name, :slug, :description, :icon, :image_url, :icon_name, :position, :sort_order, :active, :coming_soon)
         end
 
         def skip_authorization?

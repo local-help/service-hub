@@ -4,7 +4,7 @@ module Api
       skip_before_action :authenticate_user!
 
       def index
-        categories = Category.active.sorted.includes(:services)
+        categories = Category.active.sorted.includes(:services, :subcategories)
         render json: categories, each_serializer: CategorySerializer
       end
 

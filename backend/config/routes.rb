@@ -18,7 +18,10 @@ Rails.application.routes.draw do
 
       # Public
       resources :categories, only: [:index, :show]
-      resources :services, only: [:index, :show]
+      resources :subcategories, only: [:index, :show]
+      resources :services, only: [:index, :show] do
+        post :calculate_price, on: :member
+      end
       get 'platform/support_info', to: 'platform#support_info'
 
       # Customer
@@ -76,7 +79,13 @@ Rails.application.routes.draw do
           post :invite, on: :collection
         end
         resources :categories, only: [:create, :update]
-        resources :services, only: [:create, :update]
+        resources :subcategories, only: [:create, :update, :destroy]
+        resources :services, only: [:create, :update] do
+          resources :variants, controller: 'service_variants', only: [:create, :update, :destroy]
+        end
+        resources :service_variants, only: [:update, :destroy] do
+          resources :pricings, controller: 'service_pricings', only: [:create, :update, :destroy]
+        end
         resources :platform_settings, only: [:index, :update], param: :key
       end
     end

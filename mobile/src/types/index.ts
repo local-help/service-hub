@@ -19,21 +19,56 @@ export interface Category {
   description?: string | null;
   icon?: string | null;
   active: boolean;
-  display_order: number;
+  display_order?: number;
+  coming_soon?: boolean;
   services_count?: number;
+  subcategories_count?: number;
+  subcategories?: Subcategory[];
+}
+
+export interface Subcategory {
+  id: number;
+  category_id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  position: number;
+  active: boolean;
+  services_count?: number;
+}
+
+export interface ServiceVariant {
+  id: number;
+  service_id: number;
+  name: string;
+  description?: string;
+  variant_attributes: Record<string, any>;
+  position: number;
+  active: boolean;
+  primary_price: number | null;
 }
 
 export interface Service {
   id: number;
   category_id: number;
+  subcategory_id?: number | null;
   name: string;
   slug: string;
   description?: string | null;
-  pricing_model: 'fixed' | 'quotation';
+  short_description?: string;
+  pricing_model?: 'fixed' | 'quotation';
+  pricing_type?: 'fixed_price' | 'quotation';
+  booking_type?: 'fixed_price' | 'quotation' | 'time_based';
   base_price?: number | null;
+  fixed_price?: number | null;
   estimated_duration_minutes?: number | null;
   active: boolean;
+  coming_soon?: boolean;
+  supported_vehicle_types?: string[];
   category_name?: string;
+  category?: Category;
+  subcategory?: Subcategory;
+  variants?: ServiceVariant[];
 }
 
 export interface Address {

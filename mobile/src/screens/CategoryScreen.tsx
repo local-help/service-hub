@@ -22,9 +22,11 @@ export const CategoryScreen: React.FC<Props> = ({ category, onBack, onSelectServ
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiRequest<{ services: Service[] } | Service[]>(`/categories/${category.id}`)
+    apiRequest<any>(`/categories/${category.id}`)
       .then((data) => {
-        const list = Array.isArray(data) ? data : (data as any).services || (data as any).category?.services || [];
+        const list = Array.isArray(data)
+          ? data
+          : data.active_services || data.services || data.category?.services || [];
         setServices(list);
       })
       .catch(console.error)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_04_130002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,8 +69,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "slug"
+    t.string "icon"
+    t.integer "position", default: 0, null: false
+    t.boolean "coming_soon", default: false, null: false
     t.index ["active"], name: "index_categories_on_active"
+    t.index ["coming_soon"], name: "index_categories_on_coming_soon"
     t.index ["name"], name: "index_categories_on_name", unique: true
+    t.index ["position"], name: "index_categories_on_position"
+    t.index ["slug"], name: "index_categories_on_slug", unique: true
     t.index ["sort_order"], name: "index_categories_on_sort_order"
   end
 
@@ -218,6 +225,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
     t.index ["service_request_id"], name: "index_request_attachments_on_service_request_id"
   end
 
+  create_table "service_pricing", force: :cascade do |t|
+    t.bigint "service_variant_id", null: false
+    t.decimal "price", precision: 10, scale: 2
+    t.string "pricing_type", default: "fixed", null: false
+    t.jsonb "applicable_conditions", default: {}
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_service_pricing_on_active"
+    t.index ["pricing_type"], name: "index_service_pricing_on_pricing_type"
+    t.index ["service_variant_id"], name: "index_service_pricing_on_service_variant_id"
+  end
+
   create_table "service_requests", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "service_id", null: false
@@ -233,14 +253,34 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
     t.text "cancellation_reason"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "service_variant_id"
+    t.string "booking_type"
+    t.string "vehicle_type"
+    t.integer "duration_hours"
+    t.jsonb "selected_options", default: {}
     t.index ["address_id"], name: "index_service_requests_on_address_id"
     t.index ["preferred_at"], name: "index_service_requests_on_preferred_at"
     t.index ["provider_id"], name: "index_service_requests_on_provider_id"
     t.index ["reference_number"], name: "index_service_requests_on_reference_number", unique: true
     t.index ["service_id"], name: "index_service_requests_on_service_id"
+    t.index ["service_variant_id"], name: "index_service_requests_on_service_variant_id"
     t.index ["status"], name: "index_service_requests_on_status"
     t.index ["user_id", "status"], name: "index_service_requests_on_user_id_and_status"
     t.index ["user_id"], name: "index_service_requests_on_user_id"
+  end
+
+  create_table "service_variants", force: :cascade do |t|
+    t.bigint "service_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.jsonb "variant_attributes", default: {}
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_service_variants_on_active"
+    t.index ["position"], name: "index_service_variants_on_position"
+    t.index ["service_id"], name: "index_service_variants_on_service_id"
   end
 
   create_table "services", force: :cascade do |t|
@@ -256,10 +296,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
     t.integer "estimated_duration_minutes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "subcategory_id"
+    t.string "slug"
+    t.string "booking_type", default: "quotation", null: false
+    t.boolean "coming_soon", default: false, null: false
+    t.integer "position", default: 0, null: false
+    t.jsonb "supported_vehicle_types", default: []
     t.index ["active"], name: "index_services_on_active"
+    t.index ["booking_type"], name: "index_services_on_booking_type"
     t.index ["category_id", "active"], name: "index_services_on_category_id_and_active"
     t.index ["category_id"], name: "index_services_on_category_id"
+    t.index ["coming_soon"], name: "index_services_on_coming_soon"
+    t.index ["position"], name: "index_services_on_position"
     t.index ["pricing_type"], name: "index_services_on_pricing_type"
+    t.index ["slug"], name: "index_services_on_slug"
+    t.index ["subcategory_id"], name: "index_services_on_subcategory_id"
   end
 
   create_table "status_histories", force: :cascade do |t|
@@ -271,6 +322,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.index ["entity_type", "entity_id"], name: "index_status_histories_on_entity_type_and_entity_id"
+  end
+
+  create_table "subcategories", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_subcategories_on_active"
+    t.index ["category_id", "slug"], name: "index_subcategories_on_category_id_and_slug", unique: true
+    t.index ["category_id"], name: "index_subcategories_on_category_id"
+    t.index ["position"], name: "index_subcategories_on_position"
   end
 
   create_table "users", force: :cascade do |t|
@@ -307,11 +373,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_120019) do
   add_foreign_key "quotations", "users", column: "created_by"
   add_foreign_key "refresh_tokens", "users"
   add_foreign_key "request_attachments", "service_requests"
+  add_foreign_key "service_pricing", "service_variants"
   add_foreign_key "service_requests", "addresses"
   add_foreign_key "service_requests", "providers"
+  add_foreign_key "service_requests", "service_variants"
   add_foreign_key "service_requests", "services"
   add_foreign_key "service_requests", "users"
   add_foreign_key "service_requests", "users", column: "assigned_by"
+  add_foreign_key "service_variants", "services"
   add_foreign_key "services", "categories"
+  add_foreign_key "services", "subcategories"
   add_foreign_key "status_histories", "users", column: "changed_by"
+  add_foreign_key "subcategories", "categories"
 end
