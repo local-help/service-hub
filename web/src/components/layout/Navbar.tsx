@@ -151,6 +151,14 @@ export const Navbar: React.FC = () => {
                 >
                   Settings
                 </Link>
+                <Link
+                  href="/admin/architecture"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    isActive('/admin/architecture') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Architecture
+                </Link>
               </>
             ) : (
               // Customer Links
@@ -311,6 +319,13 @@ export const Navbar: React.FC = () => {
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
                 Platform Settings
+              </Link>
+              <Link
+                href="/admin/architecture"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-teal-700 hover:bg-teal-50"
+              >
+                Architecture Review
               </Link>
             </div>
           ) : (
