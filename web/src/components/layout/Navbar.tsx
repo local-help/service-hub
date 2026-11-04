@@ -240,15 +240,6 @@ export const Navbar: React.FC = () => {
             ) : (
               // Customer Links
               <>
-                <Link
-                  href="/"
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    isActive('/') ? 'text-teal-700 bg-teal-50 font-semibold' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  Services
-                </Link>
-
                 {user && (
                   <>
                     <Link
