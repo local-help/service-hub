@@ -24,8 +24,8 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
   const [showAddAddr, setShowAddAddr] = useState(false);
   const [addrLine, setAddrLine] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [city, setCity] = useState('Bengaluru');
-  const [pincode, setPincode] = useState('560034');
+  const [city, setCity] = useState('Prayagraj');
+  const [pincode, setPincode] = useState('211001');
 
   const fetchAddresses = async () => {
     try {
@@ -55,7 +55,7 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
             landmark: landmark || null,
             city,
             postal_code: pincode,
-            state: 'Karnataka',
+            state: 'Uttar Pradesh',
             is_default: addresses.length === 0,
           }
         })
@@ -103,7 +103,7 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
           </View>
           <Text style={styles.userName}>{user?.name || 'Customer'}</Text>
           <Text style={styles.userRole}>
-            {user?.role.toUpperCase()} • Bengaluru
+            {user?.role.toUpperCase()} • Prayagraj
           </Text>
 
           <View style={styles.divider} />

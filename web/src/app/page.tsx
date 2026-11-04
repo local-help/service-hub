@@ -61,7 +61,7 @@ export default function HomePage() {
         
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#25877C]/25 border border-[#25877C]/40 text-[#F7F5EF] text-xs font-semibold backdrop-blur-md">
-            <span>📍 Bengaluru City Coverage</span>
+            <span>📍 Prayagraj (Allahabad) Coverage</span>
             <span className="text-[#E7E2D8]/60">•</span>
             <span>Manual Admin Coordination</span>
           </div>
@@ -107,7 +107,7 @@ export default function HomePage() {
               <p className="text-xs text-[#E7E2D8]/80 mt-0.5">No Spam or Bidding Wars</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">Bengaluru</p>
+              <p className="text-2xl font-black text-[#F7F5EF]">Prayagraj</p>
               <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Doorstep Coverage</p>
             </div>
             <div>

@@ -325,7 +325,7 @@ export default function AdminSettingsPage() {
                     value={editableValues['default_city'] || ''}
                     onChange={(e) => setEditableValues({ ...editableValues, default_city: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
-                    placeholder="Bengaluru"
+                    placeholder="Prayagraj"
                   />
                   <div className="flex justify-end">
                     <button

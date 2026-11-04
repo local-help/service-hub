@@ -32,8 +32,8 @@ export const CreateRequestScreen: React.FC<Props> = ({ service, onBack, onComple
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [newAddressLine, setNewAddressLine] = useState('');
   const [newLandmark, setNewLandmark] = useState('');
-  const [newCity, setNewCity] = useState('Bengaluru');
-  const [newPincode, setNewPincode] = useState('560034');
+  const [newCity, setNewCity] = useState('Prayagraj');
+  const [newPincode, setNewPincode] = useState('211001');
 
   const [description, setDescription] = useState('');
   const [preferredDate, setPreferredDate] = useState('');
@@ -96,7 +96,7 @@ export const CreateRequestScreen: React.FC<Props> = ({ service, onBack, onComple
             landmark: newLandmark || null,
             city: newCity,
             postal_code: newPincode,
-            state: 'Karnataka',
+            state: 'Uttar Pradesh',
             is_default: addresses.length === 0,
           }
         })
@@ -133,7 +133,7 @@ export const CreateRequestScreen: React.FC<Props> = ({ service, onBack, onComple
               landmark: newLandmark || null,
               city: newCity,
               postal_code: newPincode,
-              state: 'Karnataka',
+              state: 'Uttar Pradesh',
               is_default: addresses.length === 0,
             }
           })

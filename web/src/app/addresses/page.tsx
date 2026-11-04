@@ -20,9 +20,9 @@ export default function AddressesPage() {
     label: 'Home',
     address_line: '',
     landmark: '',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    postal_code: '560001',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211001',
     is_default: false,
   });
 
@@ -54,9 +54,9 @@ export default function AddressesPage() {
         label: 'Home',
         address_line: '',
         landmark: '',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        postal_code: '560001',
+        city: 'Prayagraj',
+        state: 'Uttar Pradesh',
+        postal_code: '211001',
         is_default: false,
       });
       fetchAddresses();
@@ -93,7 +93,7 @@ export default function AddressesPage() {
               Saved Service Addresses
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Manage your residential and commercial service locations in Bengaluru
+              Manage your residential and commercial service locations in Prayagraj (Allahabad)
             </p>
           </div>
           <button
@@ -157,7 +157,7 @@ export default function AddressesPage() {
               <input
                 type="text"
                 disabled
-                value="Bengaluru, Karnataka"
+                value="Prayagraj (Allahabad), Uttar Pradesh"
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500"
               />
             </div>

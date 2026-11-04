@@ -76,7 +76,7 @@ export const HomeScreen: React.FC<Props> = ({ onSelectCategory, onSelectService 
       {/* Header Banner */}
       <View style={styles.header}>
         <View style={styles.cityPill}>
-          <Text style={styles.cityPillText}>📍 Bengaluru</Text>
+          <Text style={styles.cityPillText}>📍 Prayagraj (Allahabad)</Text>
         </View>
         <Text style={styles.heroTitle}>Local Services, Coordinated with Care</Text>
         <Text style={styles.heroSubtitle}>

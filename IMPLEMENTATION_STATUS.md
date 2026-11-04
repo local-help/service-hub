@@ -31,7 +31,7 @@ Last updated: V1 Complete (All 8 Phases Delivered & Verified)
 ### 2. Next.js Web Application & Admin Dashboard (`web/`)
 - Built with **Next.js 15 (App Router)** and **Tailwind CSS**.
 - **Customer Pages**:
-  - `/`: Hero, city banner (Bengaluru), category grid, popular services, dynamic support links.
+  - `/`: Hero, city banner (Prayagraj / Allahabad), category grid, popular services, dynamic support links.
   - `/categories/[id]`: Category services list with fixed rate vs quotation filter.
   - `/services/[id]`: Service details, pricing model, duration, booking trigger.
   - `/services/[id]/request`: Address selection/creation, requirement description, photo picker, slot selection, and `LH-XXXXX` confirmation screen.

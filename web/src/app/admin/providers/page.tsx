@@ -42,7 +42,7 @@ export default function AdminProvidersPage() {
     phone: '',
     email: '',
     address: '',
-    city: 'Bengaluru',
+    city: 'Prayagraj',
     service_area: '',
     notes: '',
     active: true,
@@ -90,7 +90,7 @@ export default function AdminProvidersPage() {
       phone: '',
       email: '',
       address: '',
-      city: 'Bengaluru',
+      city: 'Prayagraj',
       service_area: '',
       notes: '',
       active: true,
@@ -107,7 +107,7 @@ export default function AdminProvidersPage() {
       phone: p.phone,
       email: p.email || '',
       address: p.address || '',
-      city: p.city || 'Bengaluru',
+      city: p.city || 'Prayagraj',
       service_area: p.service_area || '',
       notes: p.notes || '',
       active: p.active,
@@ -281,7 +281,7 @@ export default function AdminProvidersPage() {
                       <h3 className="font-bold text-slate-900 text-lg leading-snug">{p.name}</h3>
                       <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
                         <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{p.city || 'Bengaluru'} {p.service_area ? `• ${p.service_area}` : ''}</span>
+                        <span>{p.city || 'Prayagraj'} {p.service_area ? `• ${p.service_area}` : ''}</span>
                       </div>
                     </div>
                     <button

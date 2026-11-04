@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5">
           <span className="text-xs text-slate-500 font-bold block mb-1">Registered Customers</span>
           <p className="text-2xl font-black text-slate-900">{m?.total_customers || 0}</p>
-          <span className="text-[11px] text-slate-400">Bengaluru clients</span>
+          <span className="text-[11px] text-slate-400">Prayagraj clients</span>
         </div>
       </div>
 

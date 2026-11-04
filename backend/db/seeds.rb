@@ -4,7 +4,7 @@ puts "== Seeding Platform Settings =="
 PlatformSetting.set('support_phone', '+919876543210', value_type: 'string', description: 'Customer care phone number')
 PlatformSetting.set('support_whatsapp', '+919876543210', value_type: 'string', description: 'Customer care WhatsApp number')
 PlatformSetting.set('platform_name', 'LocalHelp', value_type: 'string', description: 'Platform brand name')
-PlatformSetting.set('city', 'Bengaluru', value_type: 'string', description: 'Operating city')
+PlatformSetting.set('city', 'Prayagraj', value_type: 'string', description: 'Operating city')
 
 puts "== Seeding Users =="
 super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.com') do |u|
@@ -37,14 +37,14 @@ customer = User.find_or_create_by!(email: 'customer@example.com') do |u|
   u.phone_verified = true
 end
 
-Address.find_or_create_by!(user: customer, address_line: 'Flat 402, Green Glen Heights, Bellandur') do |a|
+Address.find_or_create_by!(user: customer, address_line: 'Flat 402, Triveni Heights, Civil Lines') do |a|
   a.label = 'Home'
-  a.landmark = 'Near Central Mall'
-  a.city = 'Bengaluru'
-  a.state = 'Karnataka'
-  a.postal_code = '560103'
-  a.latitude = 12.9298
-  a.longitude = 77.6744
+  a.landmark = 'Near Subhash Chauraha'
+  a.city = 'Prayagraj'
+  a.state = 'Uttar Pradesh'
+  a.postal_code = '211001'
+  a.latitude = 25.4519
+  a.longitude = 81.8340
   a.is_default = true
 end
 
@@ -281,9 +281,9 @@ providers_data = [
     name: 'Apex Car Detailing & Wash',
     phone: '+919811122233',
     email: 'contact@apexwash.com',
-    address: '14th Main, HSR Layout Sector 4',
-    city: 'Bengaluru',
-    service_area: 'HSR Layout, Bellandur, Koramangala',
+    address: 'MG Marg, Civil Lines',
+    city: 'Prayagraj',
+    service_area: 'Civil Lines, Ashok Nagar, Georgetown',
     notes: 'Equipped with mobile water tanks and high-pressure steam washers. Highly reliable for doorstep jobs.',
     service_names: ['Doorstep Eco Car Wash & Wax', 'Deep Interior Spa & Sanitization', 'Car Ceramic Coating & Scratch Removal']
   },
@@ -291,9 +291,9 @@ providers_data = [
     name: 'SparklePro Cleaning Services',
     phone: '+919822233344',
     email: 'info@sparklepro.in',
-    address: 'BTM 2nd Stage, Outer Ring Road',
-    city: 'Bengaluru',
-    service_area: 'South Bengaluru, Indiranagar, Whitefield',
+    address: 'Tagore Town, Near Colonelganj',
+    city: 'Prayagraj',
+    service_area: 'Tagore Town, Katra, Mumfordganj',
     notes: 'Team of 8 trained cleaning professionals with commercial scrubbing machines.',
     service_names: ['Complete Home Deep Cleaning (2 BHK)', 'Intensive Bathroom Cleaning', 'Post-Renovation / Move-in Cleaning']
   },
@@ -301,9 +301,9 @@ providers_data = [
     name: 'MasterFlow Plumbers',
     phone: '+919833344455',
     email: 'support@masterflow.co',
-    address: 'Indiranagar 100ft Road',
-    city: 'Bengaluru',
-    service_area: 'Central & East Bengaluru',
+    address: 'Katra Main Market',
+    city: 'Prayagraj',
+    service_area: 'Katra, Civil Lines, University Area',
     notes: 'Certified plumbers, 15+ years experience. Available for emergency blockages.',
     service_names: ['Tap / Mixer Repair & Replacement', 'Drain Blockage Clearance', 'Full Bathroom Repiping & Water Tank Overhaul']
   },
@@ -311,9 +311,9 @@ providers_data = [
     name: 'VoltCare Electrical Works',
     phone: '+919844455566',
     email: 'voltcare@gmail.com',
-    address: 'Koramangala 5th Block',
-    city: 'Bengaluru',
-    service_area: 'All Bengaluru',
+    address: 'Leader Road, Near Junction',
+    city: 'Prayagraj',
+    service_area: 'All Prayagraj & Naini',
     notes: 'Licensed wiremen for domestic and commercial electrical maintenance.',
     service_names: ['Switchboard / Socket Installation & Repair', 'Ceiling Fan Installation / Motor Repair', 'Complete Home Rewiring & Inverter Setup']
   },
@@ -321,9 +321,9 @@ providers_data = [
     name: 'QuickFix Appliance Clinic',
     phone: '+919855566677',
     email: 'quickfix.appliances@gmail.com',
-    address: 'Marathahalli Bridge',
-    city: 'Bengaluru',
-    service_area: 'Marathahalli, Whitefield, Kadubeesanahalli',
+    address: 'Ashok Nagar Chauraha',
+    city: 'Prayagraj',
+    service_area: 'Ashok Nagar, Civil Lines, Lukerganj',
     notes: 'Specializes in Daikin, LG, Samsung, Voltas split ACs and inverter refrigerators.',
     service_names: ['AC Jet Pump Service & Gas Check', 'Refrigerator Not Cooling / Compressor Repair', 'Washing Machine Drum & PCB Diagnostic']
   }

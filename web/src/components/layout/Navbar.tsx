@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
       {/* Top micro banner for support */}
       <div className="bg-[#242D2B] text-[#E7E2D8] text-xs py-1.5 px-4 hidden md:flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span>📍 Operating in <strong>Bengaluru</strong></span>
+          <span>📍 Operating in <strong>Prayagraj (Allahabad)</strong></span>
           <span className="text-[#6C7B77]">•</span>
           <span>Doorstep local service coordination</span>
         </div>

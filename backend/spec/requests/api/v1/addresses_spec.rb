@@ -19,10 +19,10 @@ RSpec.describe 'Api::V1::Addresses', type: :request do
     it 'creates an address for the authenticated user' do
       params = {
         label: 'Office',
-        address_line: 'Embassy Tech Village',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        postal_code: '560103',
+        address_line: 'Civil Lines Plaza',
+        city: 'Prayagraj',
+        state: 'Uttar Pradesh',
+        postal_code: '211001',
         is_default: true
       }
       post '/api/v1/addresses', params: params, headers: auth_headers(customer1)

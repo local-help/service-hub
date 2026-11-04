@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
             Connecting homeowners and car owners with verified local technicians through a coordinated customer service experience.
           </p>
           <p className="text-xs text-[#9DA8A4]">
-            Operating exclusively in Bengaluru, Karnataka.
+            Operating exclusively in Prayagraj (Allahabad), Uttar Pradesh.
           </p>
         </div>
 

@@ -7,7 +7,7 @@ import { Footer } from '../components/layout/Footer';
 
 export const metadata: Metadata = {
   title: 'LocalHelp — Local Services Booking & Coordination',
-  description: 'Doorstep car detailing, home deep cleaning, plumbing, electrical and appliance repairs in Bengaluru.',
+  description: 'Doorstep car detailing, home deep cleaning, plumbing, electrical and appliance repairs in Prayagraj (Allahabad).',
   icons: {
     icon: [
       { url: '/favicon.ico' },

@@ -32,9 +32,9 @@ export default function CreateRequestPage() {
     label: 'Home',
     address_line: '',
     landmark: '',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    postal_code: '560001',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    postal_code: '211001',
     is_default: true,
   });
 
@@ -247,7 +247,7 @@ export default function CreateRequestPage() {
           {/* New Address Sub-form */}
           {showNewAddress ? (
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-              <p className="text-xs font-bold text-slate-700">Add Service Address (Bengaluru)</p>
+              <p className="text-xs font-bold text-slate-700">Add Service Address (Prayagraj, Allahabad)</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"

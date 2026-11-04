@@ -32,11 +32,11 @@ FactoryBot.define do
     label { 'Home' }
     address_line { Faker::Address.street_address }
     landmark { Faker::Address.community }
-    city { 'Bengaluru' }
-    state { 'Karnataka' }
-    postal_code { '560001' }
-    latitude { 12.9716 }
-    longitude { 77.5946 }
+    city { 'Prayagraj' }
+    state { 'Uttar Pradesh' }
+    postal_code { '211001' }
+    latitude { 25.4519 }
+    longitude { 81.8340 }
     is_default { false }
   end
 
@@ -65,8 +65,8 @@ FactoryBot.define do
     name { Faker::Company.name }
     phone { "+91#{Faker::Number.unique.number(digits: 10)}" }
     email { Faker::Internet.email }
-    city { 'Bengaluru' }
-    service_area { 'Central Bengaluru' }
+    city { 'Prayagraj' }
+    service_area { 'Civil Lines & Katra' }
     active { true }
   end
 
