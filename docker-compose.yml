@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: localhelp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: localhelp
+      POSTGRES_PASSWORD: localhelp_dev
+      POSTGRES_DB: localhelp_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U localhelp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: localhelp_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgresql://localhelp:localhelp_dev@db:5432/localhelp_development
+      PORT: 3000
+      SECRET_KEY_BASE: 09a63ec59a42be4e2d3dfae9743a4115160fa47ee6bfbe9fe0b3d63bdf9bf0907e5e3ffc1ab80ab4417ba119cff75df5b61031d7ec00a8864cefaadcb6018335
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: localhelp_web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      BACKEND_URL: http://backend:3000
+      PORT: 3001
+    ports:
+      - "3001:3001"
+
+volumes:
+  postgres_data:

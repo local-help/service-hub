@@ -1,0 +1,187 @@
+'use client';
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, UserRole } from '../types';
+import { apiRequest } from '../api/client';
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  viewMode: 'customer' | 'admin';
+  setViewMode: (mode: 'customer' | 'admin') => void;
+  loginWithEmail: (email: string, password: string) => Promise<User>;
+  sendOtp: (phone: string) => Promise<{ cooldown: number }>;
+  verifyOtp: (phone: string, otp: string) => Promise<User>;
+  register: (data: { name: string; email?: string; phone: string; password?: string }) => Promise<User>;
+  logout: () => Promise<void>;
+  updateUser: (updated: Partial<User>) => void;
+}
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [viewMode, setViewModeState] = useState<'customer' | 'admin'>('customer');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('localhelp_view_mode') as 'customer' | 'admin';
+      if (savedMode) setViewModeState(savedMode);
+    }
+  }, []);
+
+  const setViewMode = (mode: 'customer' | 'admin') => {
+    setViewModeState(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('localhelp_view_mode', mode);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
+    const token = localStorage.getItem('localhelp_access_token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    apiRequest<{ user: User }>('/auth/me')
+      .then((data) => {
+        setUser(data.user);
+        // If admin, default to admin view mode if previously set or if on /admin
+        if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            setViewMode('admin');
+          }
+        }
+      })
+      .catch(() => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('localhelp_access_token');
+          localStorage.removeItem('localhelp_refresh_token');
+        }
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const loginWithEmail = async (email: string, password: string): Promise<User> => {
+    const data = await apiRequest<{ user: User; access_token: string; refresh_token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('localhelp_access_token', data.access_token);
+      localStorage.setItem('localhelp_refresh_token', data.refresh_token);
+    }
+    setUser(data.user);
+
+    if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+      setViewMode('admin');
+    }
+
+    return data.user;
+  };
+
+  const sendOtp = async (phone: string): Promise<{ cooldown: number }> => {
+    return await apiRequest<{ message: string; cooldown: number }>('/auth/otp/send', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  };
+
+  const verifyOtp = async (phone: string, otp: string): Promise<User> => {
+    const data = await apiRequest<{ user: User; access_token: string; refresh_token: string }>('/auth/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp }),
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('localhelp_access_token', data.access_token);
+      localStorage.setItem('localhelp_refresh_token', data.refresh_token);
+    }
+    setUser(data.user);
+
+    if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+      setViewMode('admin');
+    }
+
+    return data.user;
+  };
+
+  const register = async (formData: { name: string; email?: string; phone: string; password?: string }): Promise<User> => {
+    const data = await apiRequest<{ user: User; access_token: string; refresh_token: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(formData),
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('localhelp_access_token', data.access_token);
+      localStorage.setItem('localhelp_refresh_token', data.refresh_token);
+    }
+    setUser(data.user);
+    return data.user;
+  };
+
+  const logout = async () => {
+    try {
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('localhelp_refresh_token') : null;
+      await apiRequest('/auth/logout', {
+        method: 'DELETE',
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+    } catch (err) {
+      // Ignore network errors on logout
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('localhelp_access_token');
+        localStorage.removeItem('localhelp_refresh_token');
+        localStorage.removeItem('localhelp_view_mode');
+        setUser(null);
+        setViewModeState('customer');
+        window.location.href = '/';
+      }
+    }
+  };
+
+  const updateUser = (updated: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...updated });
+    }
+  };
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isSuperAdmin = user?.role === 'super_admin';
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAdmin,
+        isSuperAdmin,
+        viewMode,
+        setViewMode,
+        loginWithEmail,
+        sendOtp,
+        verifyOtp,
+        register,
+        logout,
+        updateUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+
