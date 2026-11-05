@@ -106,6 +106,10 @@ module Api
             )
           end
 
+          if service_request.booking.present?
+            NotificationService.notify_provider_assigned(service_request.booking, provider)
+          end
+
           render json: service_request, serializer: ServiceRequestDetailSerializer
         end
 

@@ -37,12 +37,25 @@ class NotificationService
           }
         )
       end
+
+      # 4. In-app notification for Administrators
+      notify_admins(
+        type: 'new_booking',
+        title: "New Booking: #{booking.service&.name} (#{booking.reference_number})",
+        body: "Customer #{booking.user&.name} confirmed booking in #{booking.address&.landmark || booking.address&.city || 'Prayagraj'} for #{formatted_time(booking.scheduled_at)}.",
+        metadata: {
+          booking_id: booking.id,
+          reference_number: booking.reference_number,
+          action_url: '/admin/bookings'
+        }
+      )
     end
 
     # ── CUSTOMER: Request Submitted (Quote-based / Review) ────────
     def notify_request_submitted(service_request)
       return unless service_request&.user
 
+      # 1. Customer notification
       create_notification(
         user: service_request.user,
         type: 'request_submitted',
@@ -53,6 +66,19 @@ class NotificationService
           booking_id: service_request.booking&.id,
           reference_number: service_request.reference_number,
           action_url: '/bookings'
+        }
+      )
+
+      # 2. In-app notification for Administrators
+      notify_admins(
+        type: 'new_service_request',
+        title: "New Request: #{service_request.service&.name} (#{service_request.reference_number})",
+        body: "Customer #{service_request.user&.name} submitted a service request in #{service_request.address&.landmark || service_request.address&.city || 'Prayagraj'}.",
+        metadata: {
+          service_request_id: service_request.id,
+          booking_id: service_request.booking&.id,
+          reference_number: service_request.reference_number,
+          action_url: '/admin/requests'
         }
       )
     end
@@ -88,6 +114,19 @@ class NotificationService
           booking_id: booking.id,
           reference_number: booking.reference_number,
           action_url: '/provider/requests'
+        }
+      )
+
+      # 3. In-app notification for Administrators
+      notify_admins(
+        type: 'provider_assigned',
+        title: "Provider Assigned: #{provider.name}",
+        body: "#{provider.name} was assigned to booking #{booking.reference_number} (#{booking.service&.name}).",
+        metadata: {
+          booking_id: booking.id,
+          provider_id: provider.id,
+          reference_number: booking.reference_number,
+          action_url: '/admin/bookings'
         }
       )
     end
@@ -130,6 +169,22 @@ class NotificationService
           }
         )
       end
+
+      # 4. In-app notification for Administrators
+      if %w[in_progress completed rescheduled].include?(new_status)
+        notify_admins(
+          type: "admin_booking_#{new_status}",
+          title: "Booking #{new_status.titleize}: #{booking.reference_number}",
+          body: "#{booking.service&.name} (#{booking.reference_number}) updated to #{new_status.humanize.downcase} by #{booking.provider&.name || 'provider'}.",
+          metadata: {
+            booking_id: booking.id,
+            reference_number: booking.reference_number,
+            old_status: old_status,
+            new_status: new_status,
+            action_url: '/admin/bookings'
+          }
+        )
+      end
     end
 
     # ── CUSTOMER: Quotation Received ──────────────────────────────
@@ -137,6 +192,7 @@ class NotificationService
       user = quotation.booking&.user || quotation.service_request&.user
       return unless user.present?
 
+      # 1. Customer notification
       create_notification(
         user: user,
         type: 'quotation_received',
@@ -148,6 +204,20 @@ class NotificationService
           reference_number: quotation.reference_number,
           amount: quotation.amount,
           action_url: '/bookings'
+        }
+      )
+
+      # 2. In-app notification for Administrators
+      notify_admins(
+        type: 'quote_received',
+        title: "Quote Submitted: ₹#{quotation.amount.to_i} by #{quotation.provider&.name}",
+        body: "Quotation #{quotation.reference_number} submitted for #{quotation.booking&.service&.name || 'service request'}.",
+        metadata: {
+          quotation_id: quotation.id,
+          booking_id: quotation.booking_id,
+          reference_number: quotation.reference_number,
+          amount: quotation.amount,
+          action_url: '/admin/requests'
         }
       )
     end
@@ -185,21 +255,48 @@ class NotificationService
           }
         )
       end
+
+      # 3. In-app notification for Administrators
+      notify_admins(
+        type: 'quote_approved',
+        title: "Quote Approved: #{quotation.reference_number} (₹#{quotation.amount.to_i})",
+        body: "Customer approved quote #{quotation.reference_number} from #{quotation.provider&.name}.",
+        metadata: {
+          quotation_id: quotation.id,
+          booking_id: quotation.booking_id,
+          reference_number: quotation.reference_number,
+          amount: quotation.amount,
+          action_url: '/admin/bookings'
+        }
+      )
     end
 
     # ── PROVIDER: Quotation Rejected by Customer ──────────────────
     def notify_quotation_rejected(quotation, reason = nil)
-      return unless quotation.provider.present?
+      if quotation.provider.present?
+        notify_provider_users(
+          quotation.provider,
+          type: 'quote_rejected',
+          title: "Quote Declined: #{quotation.reference_number}",
+          body: "Customer declined quotation for #{quotation.booking&.service&.name || 'service request'}.#{reason.present? ? " Note: #{reason}" : ''}",
+          metadata: {
+            quotation_id: quotation.id,
+            booking_id: quotation.booking_id,
+            action_url: '/provider/requests'
+          }
+        )
+      end
 
-      notify_provider_users(
-        quotation.provider,
+      # In-app notification for Administrators
+      notify_admins(
         type: 'quote_rejected',
         title: "Quote Declined: #{quotation.reference_number}",
-        body: "Customer declined quotation for #{quotation.booking&.service&.name || 'service request'}.#{reason.present? ? " Note: #{reason}" : ''}",
+        body: "Customer declined quotation from #{quotation.provider&.name}.#{reason.present? ? " Reason: #{reason}" : ''}",
         metadata: {
           quotation_id: quotation.id,
           booking_id: quotation.booking_id,
-          action_url: '/provider/requests'
+          reference_number: quotation.reference_number,
+          action_url: '/admin/requests'
         }
       )
     end
@@ -237,6 +334,19 @@ class NotificationService
           }
         )
       end
+
+      # 3. In-app notification for Administrators
+      notify_admins(
+        type: 'booking_cancelled',
+        title: "Booking Cancelled: #{booking.reference_number}",
+        body: "Booking for #{booking.service&.name} was cancelled#{cancelled_by.present? ? " by #{cancelled_by.name}" : ''}.#{reason.present? ? " Reason: #{reason}" : ''}",
+        metadata: {
+          booking_id: booking.id,
+          reference_number: booking.reference_number,
+          reason: reason,
+          action_url: '/admin/bookings'
+        }
+      )
     end
 
     # ── WELCOME NOTIFICATION ──────────────────────────────────────
@@ -283,6 +393,21 @@ class NotificationService
       end
     rescue StandardError => e
       Rails.logger.error("[NotificationService] Error notifying provider #{provider&.id} users: #{e.message}")
+    end
+
+    # ── HELPER: Notify all active administrators ──────────────────
+    def notify_admins(type:, title:, body:, metadata: {})
+      User.admins.status_active.find_each do |admin|
+        create_notification(
+          user: admin,
+          type: type,
+          title: title,
+          body: body,
+          metadata: metadata.reverse_merge(action_url: '/admin')
+        )
+      end
+    rescue StandardError => e
+      Rails.logger.error("[NotificationService] Error notifying admins: #{e.message}")
     end
 
     private

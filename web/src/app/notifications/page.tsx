@@ -41,7 +41,9 @@ function formatFullTime(dateString: string): string {
 function getNotificationIcon(type: string) {
   switch (type) {
     case 'request_submitted':
+    case 'new_service_request':
       return <Clock className="w-5 h-5 text-teal-600" />;
+    case 'new_booking':
     case 'booking_confirmed':
       return <CalendarCheck className="w-5 h-5 text-emerald-600" />;
     case 'provider_assigned':
@@ -49,10 +51,13 @@ function getNotificationIcon(type: string) {
     case 'job_assigned':
       return <Briefcase className="w-5 h-5 text-teal-600" />;
     case 'booking_in_progress':
+    case 'admin_booking_in_progress':
       return <Wrench className="w-5 h-5 text-blue-600" />;
     case 'booking_completed':
+    case 'admin_booking_completed':
       return <CheckCircle2 className="w-5 h-5 text-emerald-600" />;
     case 'quotation_received':
+    case 'quote_received':
     case 'quotation_approved':
     case 'quote_approved':
       return <Receipt className="w-5 h-5 text-amber-600" />;
@@ -69,7 +74,7 @@ function getNotificationIcon(type: string) {
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, isProvider, loading: authLoading } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
 
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
@@ -84,6 +89,8 @@ export default function NotificationsPage() {
     const meta = notification.metadata || {};
     if (meta.action_url) {
       router.push(meta.action_url);
+    } else if (isAdmin) {
+      router.push('/admin/bookings');
     } else if (
       notification.notification_type.startsWith('job_') ||
       notification.notification_type.startsWith('quote_')
@@ -128,14 +135,16 @@ export default function NotificationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <Link
-            href="/"
+            href={isAdmin ? "/admin" : isProvider ? "/provider" : "/"}
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-teal-700 transition mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to home</span>
+            <span>{isAdmin ? "Back to admin dashboard" : isProvider ? "Back to provider dashboard" : "Back to home"}</span>
           </Link>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
+            <h1 className="text-xl font-bold text-slate-900">
+              {isAdmin ? 'Operational Notifications' : 'Notifications'}
+            </h1>
             {unreadCount > 0 && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800">
                 {unreadCount} unread
@@ -143,7 +152,9 @@ export default function NotificationsPage() {
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time updates on your bookings, quotes, and provider status.
+            {isAdmin
+              ? 'Real-time operational alerts for bookings, quotations, service requests, and provider status.'
+              : 'Real-time updates on your bookings, quotes, and provider status.'}
           </p>
         </div>
 
@@ -201,11 +212,13 @@ export default function NotificationsPage() {
             <CheckCircle2 className="w-6 h-6 text-emerald-600" />
           </div>
           <h3 className="text-sm font-semibold text-slate-900 mb-1">
-            {activeTab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
+            {activeTab === 'unread' ? 'No unread notifications' : isAdmin ? 'No operational alerts yet' : 'No notifications yet'}
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             {activeTab === 'unread'
               ? 'You have reviewed all your latest alerts. Great job staying up to date!'
+              : isAdmin
+              ? 'Platform operations alerts for new bookings, service requests, quotes, and provider status will appear here.'
               : 'When you create a booking or when jobs are assigned, you will see notifications here.'}
           </p>
         </div>

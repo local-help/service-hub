@@ -84,6 +84,7 @@ module Api
 
         def reschedule
           booking = Booking.find(params[:id])
+          old_status = booking.status
 
           ActiveRecord::Base.transaction do
             booking.transition_to!('rescheduled', changed_by: current_user, notes: "Rescheduled by admin to #{params[:scheduled_at]}")
@@ -96,6 +97,8 @@ module Api
               metadata: { new_time: params[:scheduled_at] }
             )
           end
+
+          NotificationService.notify_booking_status_updated(booking, old_status, 'rescheduled')
 
           render json: booking, serializer: BookingDetailSerializer
         end
@@ -118,6 +121,8 @@ module Api
               metadata: { reason: params[:reason] }
             )
           end
+
+          NotificationService.notify_booking_cancelled(booking, params[:reason], current_user)
 
           render json: booking, serializer: BookingDetailSerializer
         end

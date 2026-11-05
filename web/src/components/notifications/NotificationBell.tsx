@@ -19,6 +19,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { AppNotification } from '../../types';
 
 function formatRelativeTime(dateString: string): string {
@@ -40,7 +41,9 @@ function formatRelativeTime(dateString: string): string {
 function getNotificationIcon(type: string) {
   switch (type) {
     case 'request_submitted':
+    case 'new_service_request':
       return <Clock className="w-4 h-4 text-teal-600" />;
+    case 'new_booking':
     case 'booking_confirmed':
       return <CalendarCheck className="w-4 h-4 text-emerald-600" />;
     case 'provider_assigned':
@@ -48,10 +51,13 @@ function getNotificationIcon(type: string) {
     case 'job_assigned':
       return <Briefcase className="w-4 h-4 text-teal-600" />;
     case 'booking_in_progress':
+    case 'admin_booking_in_progress':
       return <Wrench className="w-4 h-4 text-blue-600" />;
     case 'booking_completed':
+    case 'admin_booking_completed':
       return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
     case 'quotation_received':
+    case 'quote_received':
     case 'quotation_approved':
     case 'quote_approved':
       return <Receipt className="w-4 h-4 text-amber-600" />;
@@ -68,6 +74,7 @@ function getNotificationIcon(type: string) {
 
 export const NotificationBell: React.FC = () => {
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +124,8 @@ export const NotificationBell: React.FC = () => {
     const meta = notification.metadata || {};
     if (meta.action_url) {
       router.push(meta.action_url);
+    } else if (isAdmin) {
+      router.push('/admin/requests');
     } else if (notification.notification_type.startsWith('job_') || notification.notification_type.startsWith('quote_')) {
       router.push('/provider/requests');
     } else if (notification.notification_type.startsWith('booking_')) {
@@ -152,7 +161,9 @@ export const NotificationBell: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/70">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-900">Notifications</span>
+              <span className="text-xs font-semibold text-slate-900">
+                {isAdmin ? 'Admin Alerts' : 'Notifications'}
+              </span>
               {unreadCount > 0 && (
                 <span className="text-[10px] font-medium bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded-full">
                   {unreadCount} unread
@@ -183,9 +194,13 @@ export const NotificationBell: React.FC = () => {
                 <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5">
                   <Bell className="w-5 h-5" />
                 </div>
-                <p className="text-xs font-medium text-slate-700">No notifications yet</p>
+                <p className="text-xs font-medium text-slate-700">
+                  {isAdmin ? 'No operational alerts yet' : 'No notifications yet'}
+                </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  You'll be notified about your doorstep bookings and jobs here.
+                  {isAdmin
+                    ? 'Incoming requests, quotes, and provider status changes will appear here.'
+                    : "You'll be notified about your doorstep bookings and jobs here."}
                 </p>
               </div>
             ) : (

@@ -4,15 +4,15 @@ class NotificationPolicy < ApplicationPolicy
   end
 
   def show?
-    owner?
+    admin? || owner?
   end
 
   def read?
-    owner?
+    admin? || owner?
   end
 
   def update?
-    owner?
+    admin? || owner?
   end
 
   def read_all?
