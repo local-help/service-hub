@@ -3,6 +3,7 @@ class User < ApplicationRecord
 
   # Associations
   has_many :addresses, dependent: :destroy
+  has_many :bookings, dependent: :restrict_with_error
   has_many :service_requests, dependent: :restrict_with_error
   has_many :refresh_tokens, dependent: :destroy
   has_many :notifications, dependent: :destroy

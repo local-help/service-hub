@@ -94,7 +94,6 @@ export const Navbar: React.FC = () => {
               <>
                 {user && (
                   <>
-                    <Link href="/requests" className={linkClass('/requests')}>Requests</Link>
                     <Link href="/bookings" className={linkClass('/bookings')}>Bookings</Link>
                     <Link href="/addresses" className={linkClass('/addresses')}>Addresses</Link>
                     <Link href="/profile" className={linkClass('/profile')}>Profile</Link>
@@ -346,9 +345,6 @@ export const Navbar: React.FC = () => {
                 >Home</Link>
                 {user && (
                   <>
-                    <Link href="/requests" onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
-                    >My Requests</Link>
                     <Link href="/bookings" onClick={() => setMobileMenuOpen(false)}
                       className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
                     >Bookings</Link>

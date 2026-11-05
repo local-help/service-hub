@@ -220,36 +220,40 @@ function CreateRequestContent() {
 
         <div className="space-y-1">
           <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
-            Request Submitted
+            {createdRequest.status === 'booking_confirmed' || createdRequest.booking_status === 'confirmed'
+              ? 'Booking Confirmed'
+              : 'Request Received'}
           </h1>
           <p className="text-xs text-slate-500">
-            Your request has been matched and is being coordinated with a local technician.
+            {createdRequest.status === 'booking_confirmed' || createdRequest.booking_status === 'confirmed'
+              ? 'Your booking is confirmed. A verified local technician has been assigned.'
+              : 'Your service request has been received and is being matched with a verified technician.'}
           </p>
         </div>
 
         {/* Reference Code Card */}
         <div className="p-5 border border-slate-200 rounded-xl space-y-2 text-center bg-slate-50/50">
-          <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Reference Number</span>
+          <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Booking Reference</span>
           <p className="text-2xl font-mono font-semibold text-slate-900">
             {createdRequest.reference_number}
           </p>
           <div className="text-xs text-slate-500 pt-1">
-            Status: <span className="font-medium text-slate-800 capitalize">{createdRequest.status.replace('_', ' ')}</span>
+            Status: <span className="font-medium text-slate-800 capitalize">{createdRequest.status.replace(/_/g, ' ')}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-3 text-xs font-medium pt-2">
           <Link
-            href={`/requests/${createdRequest.id}`}
+            href={`/bookings/${createdRequest.booking?.id || createdRequest.id}`}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition"
           >
-            View Details
+            Manage Booking
           </Link>
           <Link
-            href="/requests"
+            href="/bookings"
             className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition"
           >
-            All Requests
+            All Bookings
           </Link>
         </div>
       </div>

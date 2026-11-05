@@ -62,14 +62,26 @@ module Api
             end
           end
 
-          # If fixed price, automatically create confirmed booking
-          if service.fixed_price?
-            booking = service_request.create_booking!(
-              scheduled_at: service_request.preferred_at || 1.day.from_now,
-              status: 'confirmed'
-            )
-            service_request.update!(status: 'booking_confirmed')
-          end
+          # Synchronize unified booking record
+          booking = service_request.create_booking!(
+            user: current_user,
+            service: service,
+            service_variant: service_request.service_variant,
+            address: address,
+            reference_number: service_request.reference_number,
+            description: service_request.description,
+            preferred_at: service_request.preferred_at,
+            scheduled_at: service_request.preferred_at || 1.day.from_now,
+            booking_type: service.booking_type,
+            vehicle_type: service_request.vehicle_type,
+            duration_hours: service_request.duration_hours,
+            selected_options: service_request.selected_options,
+            status: service.fixed_price? ? 'confirmed' : 'pending_review'
+          )
+          service_request.update!(status: 'booking_confirmed') if service.fixed_price?
+
+          # Link attachments to booking as well
+          service_request.request_attachments.update_all(booking_id: booking.id)
 
           StatusHistory.create!(
             entity_type: 'ServiceRequest',

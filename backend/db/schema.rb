@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_05_090001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,7 +44,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   end
 
   create_table "bookings", force: :cascade do |t|
-    t.bigint "service_request_id", null: false
+    t.bigint "service_request_id"
     t.bigint "quotation_id"
     t.datetime "scheduled_at"
     t.string "status", default: "confirmed", null: false
@@ -54,10 +54,31 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
     t.text "feedback"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "service_id"
+    t.bigint "service_variant_id"
+    t.bigint "address_id"
+    t.bigint "provider_id"
+    t.string "reference_number"
+    t.text "description"
+    t.datetime "preferred_at"
+    t.string "booking_type"
+    t.string "vehicle_type"
+    t.integer "duration_hours"
+    t.jsonb "selected_options", default: {}
+    t.decimal "total_amount", precision: 10, scale: 2
+    t.bigint "assigned_by"
+    t.datetime "assigned_at"
+    t.index ["address_id"], name: "index_bookings_on_address_id"
+    t.index ["provider_id"], name: "index_bookings_on_provider_id"
     t.index ["quotation_id"], name: "index_bookings_on_quotation_id"
+    t.index ["reference_number"], name: "index_bookings_on_reference_number", unique: true
     t.index ["scheduled_at"], name: "index_bookings_on_scheduled_at"
+    t.index ["service_id"], name: "index_bookings_on_service_id"
     t.index ["service_request_id"], name: "index_bookings_on_service_request_id", unique: true
+    t.index ["service_variant_id"], name: "index_bookings_on_service_variant_id"
     t.index ["status"], name: "index_bookings_on_status"
+    t.index ["user_id"], name: "index_bookings_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -82,7 +103,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   end
 
   create_table "communications", force: :cascade do |t|
-    t.bigint "service_request_id", null: false
+    t.bigint "service_request_id"
     t.bigint "admin_user_id", null: false
     t.string "channel", null: false
     t.string "direction", null: false
@@ -91,6 +112,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
     t.datetime "communicated_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "booking_id"
+    t.index ["booking_id"], name: "index_communications_on_booking_id"
     t.index ["channel"], name: "index_communications_on_channel"
     t.index ["service_request_id"], name: "index_communications_on_service_request_id"
   end
@@ -162,7 +185,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   end
 
   create_table "provider_assignments", force: :cascade do |t|
-    t.bigint "service_request_id", null: false
+    t.bigint "service_request_id"
     t.bigint "provider_id", null: false
     t.bigint "assigned_by_id", null: false
     t.datetime "assigned_at", null: false
@@ -174,6 +197,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
     t.text "internal_notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "booking_id"
+    t.index ["booking_id"], name: "index_provider_assignments_on_booking_id"
     t.index ["provider_id"], name: "index_provider_assignments_on_provider_id"
     t.index ["service_request_id"], name: "index_provider_assignments_on_service_request_id"
     t.index ["status"], name: "index_provider_assignments_on_status"
@@ -253,7 +278,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   end
 
   create_table "quotations", force: :cascade do |t|
-    t.bigint "service_request_id", null: false
+    t.bigint "service_request_id"
     t.decimal "amount", precision: 10, scale: 2, null: false
     t.text "description"
     t.string "status", default: "pending", null: false
@@ -266,6 +291,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
     t.string "estimated_completion_time"
     t.bigint "reviewed_by_id"
     t.datetime "reviewed_at"
+    t.bigint "booking_id"
+    t.index ["booking_id"], name: "index_quotations_on_booking_id"
     t.index ["provider_assignment_id"], name: "index_quotations_on_provider_assignment_id"
     t.index ["provider_id"], name: "index_quotations_on_provider_id"
     t.index ["service_request_id"], name: "index_quotations_on_active_per_request", unique: true, where: "((status)::text = ANY ((ARRAY['draft'::character varying, 'submitted'::character varying, 'pending'::character varying, 'approved'::character varying])::text[]))"
@@ -287,13 +314,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   end
 
   create_table "request_attachments", force: :cascade do |t|
-    t.bigint "service_request_id", null: false
+    t.bigint "service_request_id"
     t.string "file_url", null: false
     t.string "file_name"
     t.string "content_type"
     t.integer "file_size"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "booking_id"
+    t.index ["booking_id"], name: "index_request_attachments_on_booking_id"
     t.index ["service_request_id"], name: "index_request_attachments_on_service_request_id"
   end
 
@@ -431,14 +460,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
 
   add_foreign_key "addresses", "users"
   add_foreign_key "admin_activity_logs", "users", column: "admin_user_id"
+  add_foreign_key "bookings", "addresses"
+  add_foreign_key "bookings", "providers"
   add_foreign_key "bookings", "quotations"
   add_foreign_key "bookings", "service_requests"
+  add_foreign_key "bookings", "service_variants"
+  add_foreign_key "bookings", "services"
+  add_foreign_key "bookings", "users"
+  add_foreign_key "communications", "bookings"
   add_foreign_key "communications", "service_requests"
   add_foreign_key "communications", "users", column: "admin_user_id"
   add_foreign_key "device_tokens", "users"
   add_foreign_key "notifications", "users"
   add_foreign_key "payments", "bookings"
   add_foreign_key "payments", "users", column: "recorded_by"
+  add_foreign_key "provider_assignments", "bookings"
   add_foreign_key "provider_assignments", "providers"
   add_foreign_key "provider_assignments", "service_requests"
   add_foreign_key "provider_assignments", "users", column: "assigned_by_id"
@@ -448,12 +484,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_04_140001) do
   add_foreign_key "provider_users", "providers"
   add_foreign_key "provider_users", "users"
   add_foreign_key "providers", "users", column: "approved_by_id"
+  add_foreign_key "quotations", "bookings"
   add_foreign_key "quotations", "provider_assignments"
   add_foreign_key "quotations", "providers"
   add_foreign_key "quotations", "service_requests"
   add_foreign_key "quotations", "users", column: "created_by"
   add_foreign_key "quotations", "users", column: "reviewed_by_id"
   add_foreign_key "refresh_tokens", "users"
+  add_foreign_key "request_attachments", "bookings"
   add_foreign_key "request_attachments", "service_requests"
   add_foreign_key "service_pricing", "service_variants"
   add_foreign_key "service_requests", "addresses"

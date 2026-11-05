@@ -82,12 +82,15 @@ module Api
 
           valid_until = params[:valid_until].present? ? Time.zone.parse(params[:valid_until].to_s) : 48.hours.from_now
 
+          booking = @assignment.booking || service_request.booking
+
           quotation = service_request.quotations.build(
             amount: params[:amount],
             description: params[:description],
             valid_until: valid_until,
             provider: current_provider,
             provider_assignment: @assignment,
+            booking: booking,
             created_by: current_user.id,
             status: 'submitted'
           )

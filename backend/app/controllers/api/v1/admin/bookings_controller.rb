@@ -5,13 +5,13 @@ module Api
         before_action :require_admin!
 
         def index
-          bookings = Booking.includes(service_request: [:service, :user, :provider]).recent
+          bookings = Booking.includes(:service, :user, :provider, service: :category).recent
           bookings = bookings.by_status(params[:status]) if params[:status].present?
 
           if params[:q].present?
             q = "%#{params[:q]}%"
-            bookings = bookings.joins(service_request: :user).where(
-              "service_requests.reference_number ILIKE :q OR users.name ILIKE :q OR users.phone ILIKE :q",
+            bookings = bookings.joins(:user).where(
+              "bookings.reference_number ILIKE :q OR users.name ILIKE :q OR users.phone ILIKE :q",
               q: q
             )
           end
@@ -36,11 +36,12 @@ module Api
                 notes: params[:admin_notes]
               )
 
-              # Sync service_request status if applicable
-              if params[:status] == 'in_progress' && booking.service_request.can_transition_to?('in_progress')
-                booking.service_request.transition_to!('in_progress', changed_by: current_user)
-              elsif params[:status] == 'completed' && booking.service_request.can_transition_to?('completed')
-                booking.service_request.transition_to!('completed', changed_by: current_user)
+              if booking.service_request.present?
+                if params[:status] == 'in_progress' && booking.service_request.can_transition_to?('in_progress')
+                  booking.service_request.transition_to!('in_progress', changed_by: current_user)
+                elsif params[:status] == 'completed' && booking.service_request.can_transition_to?('completed')
+                  booking.service_request.transition_to!('completed', changed_by: current_user)
+                end
               end
             end
 
@@ -51,6 +52,28 @@ module Api
               action: 'update_booking',
               entity: booking,
               metadata: { status: booking.status }
+            )
+          end
+
+          render json: booking, serializer: BookingDetailSerializer
+        end
+
+        def assign_provider
+          booking = Booking.find(params[:id])
+          provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
+
+          ActiveRecord::Base.transaction do
+            booking.assign_to_provider!(
+              provider,
+              assigned_by: current_user,
+              notes: params[:notes]
+            )
+
+            AdminActivityLog.log!(
+              admin: current_user,
+              action: 'assign_provider',
+              entity: booking,
+              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
             )
           end
 
@@ -82,7 +105,7 @@ module Api
             booking.transition_to!('cancelled', changed_by: current_user, notes: params[:reason] || 'Cancelled by admin')
             booking.update!(cancellation_reason: params[:reason])
 
-            if booking.service_request.can_transition_to?('cancelled')
+            if booking.service_request&.can_transition_to?('cancelled')
               booking.service_request.transition_to!('cancelled', changed_by: current_user, notes: 'Cancelled by admin')
             end
 
@@ -114,4 +137,3 @@ module Api
     end
   end
 end
-

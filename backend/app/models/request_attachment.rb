@@ -1,5 +1,6 @@
 class RequestAttachment < ApplicationRecord
-  belongs_to :service_request
+  belongs_to :service_request, optional: true
+  belongs_to :booking, optional: true
 
   validates :file_url, presence: true
   validates :content_type, inclusion: {

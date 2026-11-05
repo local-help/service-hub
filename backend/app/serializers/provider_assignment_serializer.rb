@@ -9,7 +9,7 @@ class ProviderAssignmentSerializer < ActiveModel::Serializer
   end
 
   def service_request
-    sr = object.service_request
+    sr = object.service_request || object.booking
     return nil unless sr
 
     {

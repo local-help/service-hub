@@ -8,7 +8,17 @@ import {
   Calendar, 
   CreditCard, 
   Star, 
-  CheckCircle2
+  CheckCircle2,
+  Clock,
+  MapPin,
+  ShieldCheck,
+  FileText,
+  AlertCircle,
+  Check,
+  X,
+  Phone,
+  User as UserIcon,
+  Briefcase
 } from 'lucide-react';
 import { Booking } from '../../../types';
 import { apiRequest } from '../../../api/client';
@@ -59,6 +69,36 @@ export default function BookingDetailPage() {
     }
     fetchBooking();
   }, [id, user]);
+
+  const handleApproveQuotation = async () => {
+    if (!confirm('Approve this quotation and confirm your booking?')) return;
+    setActionLoading(true);
+    try {
+      await apiRequest(`/bookings/${id}/approve_quotation`, { method: 'POST' });
+      fetchBooking();
+    } catch (err: any) {
+      alert(err.error || 'Failed to approve quotation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectQuotation = async () => {
+    const reason = prompt('Please provide a reason for declining this quotation:');
+    if (reason === null) return;
+    setActionLoading(true);
+    try {
+      await apiRequest(`/bookings/${id}/reject_quotation`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      });
+      fetchBooking();
+    } catch (err: any) {
+      alert(err.error || 'Failed to reject quotation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,8 +199,13 @@ export default function BookingDetailPage() {
     );
   }
 
+  const quotation = booking.quotation;
+  const serviceName = booking.service?.name || booking.service_name || 'Doorstep Service';
+  const referenceNumber = booking.reference_number;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Top Header */}
       <div>
         <Link
           href="/bookings"
@@ -172,54 +217,115 @@ export default function BookingDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 capitalize">
-                {booking.status}
+              <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold uppercase tracking-wider">
+                {booking.status.replace(/_/g, ' ')}
               </span>
               <span className="text-xs text-slate-400 font-mono">
-                #{booking.id}
+                {referenceNumber}
               </span>
             </div>
             <h1 className="text-xl font-semibold text-slate-900 mt-1">
-              {booking.service_request?.service_name || 'Doorstep Service'}
+              {serviceName}
             </h1>
           </div>
 
           <CustomerSupportButtons
-            referenceNumber={booking.service_request?.reference_number}
-            serviceName={booking.service_request?.service_name}
+            referenceNumber={referenceNumber}
+            serviceName={serviceName}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Details */}
+        {/* Left Column: Details & Quotation */}
         <div className="md:col-span-2 space-y-4">
-          {/* Schedule Banner */}
-          <div className="border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
-                Technician Schedule
-              </span>
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                <Calendar className="w-4 h-4 text-slate-500" />
-                <span>
-                  {new Date(booking.scheduled_at).toLocaleString('en-IN', {
-                    dateStyle: 'full',
-                    timeStyle: 'short',
-                  })}
+          {/* Quotation Card (if applicable) */}
+          {quotation && (
+            <div className="border border-purple-200 bg-purple-50/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-purple-600" />
+                  <span>Itemized Quotation</span>
+                </span>
+                <span className="text-xs font-medium capitalize px-2 py-0.5 rounded-md bg-white border border-purple-200 text-purple-800">
+                  {quotation.status}
                 </span>
               </div>
-            </div>
 
-            {['confirmed', 'rescheduled'].includes(booking.status) && (
-              <button
-                onClick={() => setShowReschedule(!showReschedule)}
-                className="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 px-3 py-1.5 rounded-lg transition cursor-pointer"
-              >
-                {showReschedule ? 'Close' : 'Reschedule'}
-              </button>
-            )}
-          </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900">₹{quotation.amount}</span>
+                <span className="text-xs text-slate-400">estimated total</span>
+              </div>
+
+              {quotation.description && (
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/70 p-3 rounded-lg border border-purple-100">
+                  {quotation.description}
+                </p>
+              )}
+
+              {quotation.valid_until && (
+                <div className="text-xs text-slate-400 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    Valid until: {new Date(quotation.valid_until).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {['pending', 'submitted'].includes(quotation.status) && (
+                <div className="flex items-center gap-2 pt-3 border-t border-purple-100">
+                  <button
+                    onClick={handleApproveQuotation}
+                    disabled={actionLoading}
+                    className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve & Confirm</span>
+                  </button>
+                  <button
+                    onClick={handleRejectQuotation}
+                    disabled={actionLoading}
+                    className="py-2 px-3 border border-slate-200 hover:bg-white text-slate-600 text-xs font-medium rounded-lg transition cursor-pointer"
+                  >
+                    <span>Reject</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Schedule Banner */}
+          {booking.scheduled_at && (
+            <div className="border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white shadow-xs">
+              <div>
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
+                  Confirmed Schedule
+                </span>
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Calendar className="w-4 h-4 text-slate-500" />
+                  <span>
+                    {new Date(booking.scheduled_at).toLocaleString('en-IN', {
+                      dateStyle: 'full',
+                      timeStyle: 'short',
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              {['confirmed', 'rescheduled'].includes(booking.status) && (
+                <button
+                  onClick={() => setShowReschedule(!showReschedule)}
+                  className="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 px-3 py-1.5 rounded-lg transition cursor-pointer"
+                >
+                  {showReschedule ? 'Close' : 'Reschedule'}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Reschedule Box */}
           {showReschedule && (
@@ -248,70 +354,137 @@ export default function BookingDetailPage() {
               <button
                 type="submit"
                 disabled={actionLoading}
-                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium transition cursor-pointer"
+                className="px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
-                {actionLoading ? 'Updating…' : 'Confirm Reschedule'}
+                Confirm Reschedule
               </button>
             </form>
           )}
 
-          {/* Service details */}
-          <div className="border border-slate-200 rounded-xl p-5 space-y-2">
-            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Service Request Details</h3>
-            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-              {booking.service_request?.description}
-            </p>
-            <div className="pt-2 text-xs text-slate-400">
-              Reference: <span className="font-mono text-slate-600">{booking.service_request?.reference_number}</span>
+          {/* Requirement Description & Photos */}
+          <div className="border border-slate-200 rounded-xl p-5 space-y-4 bg-white shadow-xs">
+            <div>
+              <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">
+                Requirement Details
+              </h3>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {booking.description || 'No additional notes provided.'}
+              </p>
             </div>
+
+            {/* Attached Photos */}
+            {booking.request_attachments && booking.request_attachments.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+                  Attached Photos ({booking.request_attachments.length})
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {booking.request_attachments.map((att) => (
+                    <a
+                      key={att.id}
+                      href={att.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-slate-200 rounded-lg p-1.5 bg-white hover:border-slate-400 transition block group overflow-hidden shadow-2xs"
+                    >
+                      <img
+                        src={att.file_url}
+                        alt={att.file_name || 'Attachment'}
+                        className="w-full h-24 object-cover rounded bg-slate-50"
+                      />
+                      <span className="text-[11px] text-slate-600 truncate block mt-1 group-hover:text-slate-900">
+                        {att.file_name || 'View photo'}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Feedback */}
+          {/* Payment Card */}
+          {booking.payment_amount && booking.payment_amount > 0 && (
+            <div className="border border-slate-200 rounded-xl p-5 space-y-3 bg-white shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                  Payment Summary
+                </span>
+                <span className={booking.fully_paid ? 'text-xs text-emerald-600 font-semibold' : 'text-xs text-amber-600 font-semibold'}>
+                  {booking.fully_paid ? 'Paid in Full' : 'Payment Due'}
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between pt-2">
+                <span className="text-xs text-slate-500">Service Charge</span>
+                <span className="text-lg font-bold text-slate-900">₹{booking.payment_amount}</span>
+              </div>
+
+              {booking.total_paid > 0 && (
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Amount Paid</span>
+                  <span className="text-emerald-600 font-medium">₹{booking.total_paid}</span>
+                </div>
+              )}
+
+              {!booking.fully_paid && (
+                <button
+                  onClick={handleInitiatePayment}
+                  disabled={actionLoading}
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pay ₹{(booking.payment_amount || 0) - (booking.total_paid || 0)}</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Rating & Feedback */}
           {booking.status === 'completed' && (
-            <div className="border border-slate-200 rounded-xl p-5 space-y-3">
-              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Rating & Feedback</h3>
+            <div className="border border-slate-200 rounded-xl p-5 space-y-3 bg-white shadow-xs">
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                Service Feedback
+              </span>
+
               {feedbackSubmitted ? (
-                <div className="p-3 bg-slate-50 rounded-lg space-y-1">
+                <div className="space-y-1">
                   <div className="flex items-center gap-1 text-amber-500">
-                    {[1, 2, 3, 4, 5].map((star) => (
+                    {[1, 2, 3, 4, 5].map((s) => (
                       <Star
-                        key={star}
-                        className={`w-3.5 h-3.5 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
+                        key={s}
+                        className={`w-4 h-4 ${s <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-slate-700">{feedback || 'No written feedback provided.'}</p>
+                  {feedback && <p className="text-xs text-slate-600 italic">"{feedback}"</p>}
                 </div>
               ) : (
                 <form onSubmit={handleSubmitFeedback} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">Rating:</span>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setRating(star)}
-                          className="cursor-pointer"
-                        >
-                          <Star
-                            className={`w-4 h-4 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setRating(s)}
+                        className="p-1 cursor-pointer"
+                      >
+                        <Star
+                          className={`w-5 h-5 ${s <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                        />
+                      </button>
+                    ))}
                   </div>
                   <textarea
                     rows={2}
-                    placeholder="Feedback on service quality…"
+                    placeholder="How was your experience?"
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    className="w-full p-2.5 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
                   />
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium cursor-pointer"
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
                   >
                     Submit Feedback
                   </button>
@@ -321,53 +494,39 @@ export default function BookingDetailPage() {
           )}
         </div>
 
-        {/* Right Column: Payment */}
+        {/* Right Column: Address, Provider & Actions */}
         <div className="space-y-4">
-          <div className="border border-slate-200 rounded-xl p-5 space-y-3">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-400 block">
-              Payment
-            </span>
+          {/* Service Address */}
+          {booking.address && (
+            <div className="border border-slate-200 rounded-xl p-4 space-y-1 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Doorstep Service Location
+              </span>
+              <p className="text-xs font-semibold text-slate-900">{booking.address.label || 'Service Address'}</p>
+              <p className="text-xs text-slate-500 leading-relaxed">{booking.address.full_address}</p>
+            </div>
+          )}
 
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Total:</span>
-                <span className="font-semibold text-slate-900">₹{booking.payment_amount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Paid:</span>
-                <span className="font-semibold text-emerald-600">₹{booking.total_paid}</span>
-              </div>
-              <div className="flex justify-between pt-1.5 border-t border-slate-100">
-                <span className="text-slate-500">Balance:</span>
-                <span className="font-semibold text-slate-900">
-                  ₹{Math.max(0, (booking.payment_amount || 0) - booking.total_paid)}
-                </span>
+          {/* Assigned Technician / Provider */}
+          {booking.provider && (
+            <div className="border border-slate-200 rounded-xl p-4 space-y-2 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Assigned Local Partner
+              </span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-900">{booking.provider.name}</p>
+                  <p className="text-[11px] text-slate-400">{booking.provider.service_area || 'Prayagraj Zone'}</p>
+                </div>
               </div>
             </div>
+          )}
 
-            {booking.fully_paid ? (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg">
-                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                <span>Fully Paid</span>
-              </div>
-            ) : (
-              <div className="space-y-1.5 pt-1">
-                <button
-                  onClick={handleInitiatePayment}
-                  disabled={actionLoading}
-                  className="w-full py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>Pay Online</span>
-                </button>
-                <p className="text-[11px] text-slate-400 text-center">
-                  Cash or UPI to technician on arrival also accepted.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {['confirmed', 'rescheduled'].includes(booking.status) && (
+          {/* Cancel Action */}
+          {!['completed', 'cancelled'].includes(booking.status) && (
             <div className="pt-2 text-center">
               <button
                 onClick={handleCancelBooking}

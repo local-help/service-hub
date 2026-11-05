@@ -1,10 +1,11 @@
 class Quotation < ApplicationRecord
-  belongs_to :service_request
+  belongs_to :service_request, optional: true
+  belongs_to :booking, optional: true
   belongs_to :creator, class_name: 'User', foreign_key: :created_by
   belongs_to :provider, optional: true
   belongs_to :provider_assignment, optional: true
   belongs_to :reviewed_by, class_name: 'User', optional: true
-  has_one :booking, dependent: :nullify
+  has_one :target_booking, class_name: 'Booking', foreign_key: :quotation_id, dependent: :nullify
 
   STATUSES = %w[draft submitted pending approved rejected expired withdrawn].freeze
 
@@ -37,7 +38,11 @@ class Quotation < ApplicationRecord
   def submit!(by_user:)
     transaction do
       update!(status: 'submitted', created_by: by_user.id)
-      service_request.transition_to!('quotation_sent', changed_by: by_user)
+      if booking.present? && booking.may_send_quotation?
+        booking.send_quotation!
+      elsif service_request.present?
+        service_request.transition_to!('quotation_sent', changed_by: by_user)
+      end
       StatusHistory.create!(
         entity_type: 'Quotation',
         entity_id: id,
@@ -68,7 +73,13 @@ class Quotation < ApplicationRecord
 
     transaction do
       update!(status: 'approved', reviewed_by: changed_by, reviewed_at: Time.current)
-      service_request.transition_to!('quotation_approved', changed_by: changed_by)
+      if booking.present?
+        booking.update!(total_amount: amount, quotation_id: id)
+        booking.approve_quotation! if booking.may_approve_quotation?
+      end
+      if service_request.present?
+        service_request.transition_to!('quotation_approved', changed_by: changed_by)
+      end
       StatusHistory.create!(
         entity_type: 'Quotation',
         entity_id: id,
@@ -84,7 +95,12 @@ class Quotation < ApplicationRecord
 
     transaction do
       update!(status: 'rejected', reviewed_by: changed_by, reviewed_at: Time.current)
-      service_request.transition_to!('quotation_rejected', changed_by: changed_by, notes: reason)
+      if booking.present? && booking.may_reject_quotation?
+        booking.reject_quotation!
+      end
+      if service_request.present?
+        service_request.transition_to!('quotation_rejected', changed_by: changed_by, notes: reason)
+      end
       StatusHistory.create!(
         entity_type: 'Quotation',
         entity_id: id,
@@ -105,7 +121,9 @@ class Quotation < ApplicationRecord
   end
 
   def only_one_active_quotation_per_request
-    if service_request && service_request.quotations.where(status: %w[draft submitted pending approved]).where.not(id: id).exists?
+    if booking && booking.quotations.where(status: %w[draft submitted pending approved]).where.not(id: id).exists?
+      errors.add(:booking_id, "already has an active quotation")
+    elsif service_request && service_request.quotations.where(status: %w[draft submitted pending approved]).where.not(id: id).exists?
       errors.add(:service_request_id, "already has an active quotation")
     end
   end

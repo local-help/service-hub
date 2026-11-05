@@ -1,5 +1,6 @@
 class Communication < ApplicationRecord
-  belongs_to :service_request
+  belongs_to :service_request, optional: true
+  belongs_to :booking, optional: true
   belongs_to :admin_user, class_name: 'User', foreign_key: :admin_user_id
 
   CHANNELS = %w[phone whatsapp].freeze

@@ -7,6 +7,7 @@ class Service < ApplicationRecord
   has_many :service_pricings, through: :variants
   has_many :provider_services, dependent: :destroy
   has_many :providers, through: :provider_services
+  has_many :bookings, dependent: :restrict_with_error
   has_many :service_requests, dependent: :restrict_with_error
 
   enum :pricing_type, { fixed_price: 'fixed_price', quotation: 'quotation' }

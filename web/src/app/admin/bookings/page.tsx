@@ -155,10 +155,10 @@ export default function AdminBookingsPage() {
                     {b.service_name}
                   </td>
                   <td className="py-3.5 px-4 font-medium text-slate-700">
-                    {new Date(b.scheduled_at).toLocaleString('en-IN', {
+                    {b.scheduled_at ? new Date(b.scheduled_at).toLocaleString('en-IN', {
                       dateStyle: 'medium',
                       timeStyle: 'short',
-                    })}
+                    }) : (b.preferred_at ? `Preferred: ${new Date(b.preferred_at).toLocaleDateString('en-IN')}` : 'Unscheduled')}
                   </td>
                   <td className="py-3.5 px-4">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase">

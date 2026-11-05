@@ -130,7 +130,7 @@ export interface ServiceRequest {
   provider_id?: number | null;
   provider_name?: string | null;
   has_quotation: boolean;
-  quotation_status?: 'pending' | 'approved' | 'rejected' | 'expired' | null;
+  quotation_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | 'expired' | null;
   quotation_amount?: number | null;
   has_booking: boolean;
   booking_status?: string | null;
@@ -161,27 +161,60 @@ export interface Quotation {
   created_at: string;
 }
 
-export type BookingStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled';
+export type BookingStatus =
+  | 'pending_review'
+  | 'contacting_provider'
+  | 'quotation_sent'
+  | 'quotation_approved'
+  | 'confirmed'
+  | 'in_progress'
+  | 'rescheduled'
+  | 'completed'
+  | 'cancelled';
 
 export interface Booking {
   id: number;
-  service_request_id: number;
-  quotation_id?: number | null;
-  scheduled_at: string;
+  reference_number: string;
   status: BookingStatus;
+  scheduled_at?: string | null;
+  preferred_at?: string | null;
+  description?: string;
+  booking_type?: string;
+  vehicle_type?: string;
+  duration_hours?: number;
+  selected_options?: Record<string, any>;
+  total_paid: number;
+  payment_amount: number | null;
+  fully_paid: boolean;
   rating?: number | null;
   feedback?: string | null;
   cancellation_reason?: string | null;
   admin_notes?: string | null;
-  total_paid: number;
-  payment_amount: number | null;
-  fully_paid: boolean;
+  service_id?: number;
   service_name?: string;
-  reference_number?: string;
+  service_category?: string;
+  service_image_url?: string | null;
+  pricing_type?: 'fixed_price' | 'quotation';
+  fixed_price?: number | null;
+  customer_name?: string;
+  customer_phone?: string;
+  provider_id?: number | null;
+  provider_name?: string | null;
+  has_quotation?: boolean;
+  quotation_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | 'expired' | null;
+  quotation_amount?: number | null;
   created_at: string;
-  service_request?: ServiceRequest;
+  user?: User;
+  service?: Service;
+  service_variant?: ServiceVariant;
+  address?: Address;
+  provider?: Provider;
   quotation?: Quotation;
   payments?: Payment[];
+  request_attachments?: { id: number; file_url: string; file_name?: string; content_type?: string; file_size?: number }[];
+  communications?: Communication[];
+  service_request_id?: number | null;
+  service_request?: ServiceRequest;
 }
 
 export interface Payment {

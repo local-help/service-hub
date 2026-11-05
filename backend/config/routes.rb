@@ -34,10 +34,14 @@ Rails.application.routes.draw do
           post :reject
         end
       end
-      resources :bookings, only: [:index, :show] do
-        post :reschedule, on: :member
-        post :cancel, on: :member
-        post :feedback, on: :member
+      resources :bookings, only: [:index, :show, :create] do
+        member do
+          post :reschedule
+          post :cancel
+          post :feedback
+          post :approve_quotation
+          post :reject_quotation
+        end
         resources :payments, only: [:index] do
           collection do
             post :initiate
@@ -106,8 +110,11 @@ Rails.application.routes.draw do
           end
         end
         resources :bookings, only: [:index, :show, :update] do
-          post :reschedule, on: :member
-          post :cancel, on: :member
+          member do
+            post :reschedule
+            post :cancel
+            post :assign_provider
+          end
         end
         resources :customers, only: [:index, :show]
         resources :payments, only: [:index] do

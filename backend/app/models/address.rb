@@ -1,6 +1,7 @@
 class Address < ApplicationRecord
   belongs_to :user
 
+  has_many :bookings, dependent: :restrict_with_error
   has_many :service_requests, dependent: :restrict_with_error
 
   validates :address_line, presence: true

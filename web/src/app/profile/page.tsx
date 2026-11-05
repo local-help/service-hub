@@ -570,7 +570,25 @@ export default function ProfilePage() {
       </div>
 
       {/* Section 3: Account Shortcuts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link
+          href="/bookings"
+          className="border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-400 transition group flex flex-col justify-between"
+        >
+          <div>
+            <div className="p-2 w-fit rounded-lg bg-slate-50 text-slate-700 mb-2 group-hover:bg-slate-100 transition">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <h4 className="text-xs font-semibold text-slate-900">My Bookings</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Track active requests, approve quotes, and view appointments
+            </p>
+          </div>
+          <span className="text-[11px] font-medium text-slate-900 mt-3 block">
+            View All Bookings →
+          </span>
+        </Link>
+
         <Link
           href="/addresses"
           className="border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-400 transition group flex flex-col justify-between"
@@ -586,42 +604,6 @@ export default function ProfilePage() {
           </div>
           <span className="text-[11px] font-medium text-slate-900 mt-3 block">
             Manage Addresses →
-          </span>
-        </Link>
-
-        <Link
-          href="/requests"
-          className="border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-400 transition group flex flex-col justify-between"
-        >
-          <div>
-            <div className="p-2 w-fit rounded-lg bg-slate-50 text-slate-700 mb-2 group-hover:bg-slate-100 transition">
-              <ClipboardList className="w-4 h-4" />
-            </div>
-            <h4 className="text-xs font-semibold text-slate-900">Service Requests</h4>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Track custom quotes & repairs
-            </p>
-          </div>
-          <span className="text-[11px] font-medium text-slate-900 mt-3 block">
-            View Requests →
-          </span>
-        </Link>
-
-        <Link
-          href="/bookings"
-          className="border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-400 transition group flex flex-col justify-between"
-        >
-          <div>
-            <div className="p-2 w-fit rounded-lg bg-slate-50 text-slate-700 mb-2 group-hover:bg-slate-100 transition">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <h4 className="text-xs font-semibold text-slate-900">Bookings</h4>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Confirmed appointments & history
-            </p>
-          </div>
-          <span className="text-[11px] font-medium text-slate-900 mt-3 block">
-            View Bookings →
           </span>
         </Link>
       </div>

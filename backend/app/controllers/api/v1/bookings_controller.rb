@@ -2,7 +2,7 @@ module Api
   module V1
     class BookingsController < ApplicationController
       def index
-        bookings = policy_scope(Booking).includes(service_request: [:service, :user]).recent
+        bookings = policy_scope(Booking).includes(:service, :user, :provider, :address, :quotation, service: :category).recent
         bookings = bookings.by_status(params[:status]) if params[:status].present?
         bookings = paginate(bookings)
         render json: bookings, each_serializer: BookingSerializer, meta: pagination_meta(bookings)
@@ -12,6 +12,51 @@ module Api
         booking = Booking.find(params[:id])
         authorize booking
         render json: booking, serializer: BookingDetailSerializer
+      end
+
+      def create
+        service = Service.find(params[:service_id] || params.dig(:booking, :service_id))
+        address = current_user.addresses.find(params[:address_id] || params.dig(:booking, :address_id))
+
+        desc = params[:description] || params.dig(:booking, :description)
+        pref = params[:preferred_at] || params.dig(:booking, :preferred_at) || params[:scheduled_at]
+        v_id = params[:service_variant_id] || params.dig(:booking, :service_variant_id)
+        v_type = params[:vehicle_type] || params.dig(:booking, :vehicle_type)
+        dur = params[:duration_hours] || params.dig(:booking, :duration_hours)
+        opts = params[:selected_options] || params.dig(:booking, :selected_options) || {}
+
+        booking = current_user.bookings.build(
+          service: service,
+          address: address,
+          description: desc,
+          preferred_at: pref,
+          scheduled_at: pref,
+          service_variant_id: v_id,
+          vehicle_type: v_type,
+          duration_hours: dur,
+          selected_options: opts,
+          booking_type: service.booking_type,
+          total_amount: service.fixed_price
+        )
+        authorize booking
+
+        ActiveRecord::Base.transaction do
+          booking.save!
+
+          # Save any attached photos
+          if params[:attachments].is_a?(Array)
+            params[:attachments].each do |att|
+              booking.request_attachments.create!(
+                file_url: att[:file_url] || att,
+                file_name: att[:file_name],
+                content_type: att[:content_type],
+                file_size: att[:file_size]
+              )
+            end
+          end
+        end
+
+        render json: booking, serializer: BookingDetailSerializer, status: :created
       end
 
       def reschedule
@@ -33,10 +78,15 @@ module Api
         booking = Booking.find(params[:id])
         authorize booking
 
+        if %w[completed cancelled].include?(booking.status)
+          render json: { error: "Cannot cancel booking in #{booking.status} status" }, status: :unprocessable_entity
+          return
+        end
+
         booking.transition_to!('cancelled', changed_by: current_user, notes: params[:reason] || 'Cancelled by customer')
         booking.update!(cancellation_reason: params[:reason])
 
-        if booking.service_request.can_transition_to?('cancelled')
+        if booking.service_request&.can_transition_to?('cancelled')
           booking.service_request.transition_to!('cancelled', changed_by: current_user, notes: 'Cancelled due to booking cancellation')
         end
 
@@ -59,6 +109,34 @@ module Api
         end
       end
 
+      def approve_quotation
+        booking = Booking.find(params[:id])
+        authorize booking, :show?
+
+        quotation = booking.active_quotation
+        unless quotation && quotation.can_approve?
+          render json: { error: 'No actionable quotation to approve' }, status: :unprocessable_entity
+          return
+        end
+
+        quotation.approve!(changed_by: current_user)
+        render json: booking.reload, serializer: BookingDetailSerializer
+      end
+
+      def reject_quotation
+        booking = Booking.find(params[:id])
+        authorize booking, :show?
+
+        quotation = booking.active_quotation
+        unless quotation && quotation.can_reject?
+          render json: { error: 'No actionable quotation to reject' }, status: :unprocessable_entity
+          return
+        end
+
+        quotation.reject!(changed_by: current_user, reason: params[:reason])
+        render json: booking.reload, serializer: BookingDetailSerializer
+      end
+
       private
 
       def pagination_meta(collection)
@@ -71,4 +149,3 @@ module Api
     end
   end
 end
-
