@@ -149,9 +149,9 @@ export default function ProfilePage() {
 
   const memberSince = user.created_at
     ? new Date(user.created_at).toLocaleDateString('en-IN', {
-        month: 'short',
-        year: 'numeric',
-      })
+      month: 'short',
+      year: 'numeric',
+    })
     : 'Recent';
 
   return (
@@ -498,8 +498,8 @@ export default function ProfilePage() {
               {savingPassword
                 ? 'Updating...'
                 : user.has_password
-                ? 'Update Password'
-                : 'Set Password'}
+                  ? 'Update Password'
+                  : 'Set Password'}
             </button>
           </div>
         </form>
