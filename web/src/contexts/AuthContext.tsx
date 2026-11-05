@@ -20,7 +20,7 @@ interface AuthContextType {
   loginWithEmail: (email: string, password: string) => Promise<User>;
   sendOtp: (phone: string) => Promise<{ cooldown: number }>;
   verifyOtp: (phone: string, otp: string) => Promise<User>;
-  register: (data: { name: string; email?: string; phone: string; password?: string }) => Promise<User>;
+  register: (data: { name?: string; email?: string; phone?: string; password?: string }) => Promise<User>;
   logout: () => Promise<void>;
   updateUser: (updated: Partial<User>) => void;
 }
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data.user;
   };
 
-  const register = async (formData: { name: string; email?: string; phone: string; password?: string }): Promise<User> => {
+  const register = async (formData: { name?: string; email?: string; phone?: string; password?: string }): Promise<User> => {
     const data = await apiRequest<{ user: User; access_token: string; refresh_token: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(formData),

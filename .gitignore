@@ -52,3 +52,4 @@ web/node_modules
 web/.next
 mobile/node_modules
 mobile/.expo
+*.tsbuildinfo

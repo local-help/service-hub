@@ -13,7 +13,9 @@ import {
   Clock, 
   Search,
   MapPin,
-  Phone
+  Phone,
+  Shield,
+  LifeBuoy
 } from 'lucide-react';
 import { Category, Service } from '../types';
 import { apiRequest } from '../api/client';
@@ -32,15 +34,39 @@ export default function HomePage() {
   useEffect(() => {
     Promise.all([
       apiRequest<Category[]>('/categories'),
-      apiRequest<{ services: Service[] } | Service[]>('/services?per_page=20')
+      apiRequest<{ services: Service[] } | Service[]>('/services?per_page=60')
     ]).then(([catData, svcData]) => {
       setCategories(catData || []);
       const svcs = Array.isArray(svcData) ? svcData : (svcData as any).services || [];
-      // Filter out quotation-based services from UI
-      const directServices = svcs.filter(
-        (s: Service) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation'
-      );
-      setServices(directServices.slice(0, 6));
+
+      // Target 4 popular services: Car Wash, Car Service, Car Insurance Claim, Roadside Assistance
+      const targetSlugs = ['car-wash', 'car-servicing-maintenance', 'car-insurance-assistance', 'roadside-assistance'];
+      const popular: Service[] = [];
+
+      targetSlugs.forEach((slug) => {
+        const found = svcs.find((s: Service) => s.slug === slug);
+        if (found) popular.push(found);
+      });
+
+      // Fallbacks if any not matched by slug
+      if (!popular.some(s => s.slug === 'car-wash')) {
+        const s = svcs.find((x: Service) => x.name.toLowerCase().includes('car wash'));
+        if (s) popular.push(s);
+      }
+      if (!popular.some(s => s.slug === 'car-servicing-maintenance')) {
+        const s = svcs.find((x: Service) => x.name.toLowerCase() === 'car service' || x.name.toLowerCase().includes('car servicing'));
+        if (s) popular.push(s);
+      }
+      if (!popular.some(s => s.slug === 'car-insurance-assistance')) {
+        const s = svcs.find((x: Service) => x.name.toLowerCase().includes('insurance'));
+        if (s) popular.push(s);
+      }
+      if (!popular.some(s => s.slug === 'roadside-assistance')) {
+        const s = svcs.find((x: Service) => x.name.toLowerCase().includes('roadside') || x.name.toLowerCase().includes('jump start'));
+        if (s) popular.push(s);
+      }
+
+      setServices(popular);
     }).catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -64,7 +90,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero — Clean, white, minimal */}
+      {/* Hero */}
       <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center space-y-5">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
@@ -99,9 +125,84 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* 1. POPULAR SERVICES FIRST */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Popular Services</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Direct doorstep vehicle care and emergency assistance</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="h-44 bg-slate-50 animate-pulse rounded-xl border border-slate-100" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredServices.map((service) => (
+              <div
+                key={service.id}
+                className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 transition"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1.5 mb-2">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                      {service.booking_type === 'time_based' ? 'Hourly' : 'Direct Booking'}
+                    </span>
+                    {service.estimated_duration_minutes && (
+                      <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Clock className="w-3 h-3" />
+                        {service.estimated_duration_minutes} min
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {service.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                    {service.short_description || service.description}
+                  </p>
+                </div>
+
+                <div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between">
+                  <div>
+                    {service.fixed_price ? (
+                      <span className="text-base font-semibold text-slate-900">
+                        ₹{service.fixed_price}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-500 font-medium">
+                        Standard Tariff
+                      </span>
+                    )}
+                  </div>
+
+                  <Link
+                    href={`/services/${service.id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
+                  >
+                    <span>Book</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 2. CATEGORIES BELOW POPULAR SERVICES */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">Categories</h2>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Categories</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Explore our coordinated service categories</p>
+          </div>
+        </div>
 
         {loading ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -127,61 +228,6 @@ export default function HomePage() {
             ))}
           </div>
         )}
-      </section>
-
-      {/* Popular Services */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">Popular Services</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className="border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-slate-300 transition"
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                    {service.booking_type === 'time_based' ? 'Time Based' : 'Fixed Price'}
-                  </span>
-                  {service.estimated_duration_minutes && (
-                    <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                      <Clock className="w-3 h-3" />
-                      {service.estimated_duration_minutes} min
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="text-sm font-semibold text-slate-900">
-                  {service.name}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                  {service.short_description || service.description}
-                </p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                {service.fixed_price ? (
-                  <span className="text-base font-semibold text-slate-900">
-                    ₹{service.fixed_price}
-                  </span>
-                ) : (
-                  <span className="text-sm text-slate-500">
-                    Dynamic pricing
-                  </span>
-                )}
-
-                <Link
-                  href={`/services/${service.id}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
-                >
-                  <span>Book</span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* How it works */}
@@ -244,7 +290,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Floating support — single subtle button */}
+      {/* Floating support */}
       <CustomerSupportButtons variant="floating" />
     </div>
   );
