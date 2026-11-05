@@ -56,6 +56,8 @@ module Api
           end
         end
 
+        EmailService.send_booking_confirmation(booking)
+
         render json: booking, serializer: BookingDetailSerializer, status: :created
       end
 
@@ -68,8 +70,11 @@ module Api
           return
         end
 
+        old_status = booking.status
         booking.transition_to!('rescheduled', changed_by: current_user, notes: "Reschedule requested to #{params[:scheduled_at]}")
         booking.update!(scheduled_at: params[:scheduled_at])
+
+        EmailService.send_booking_status_update(booking, old_status, 'rescheduled')
 
         render json: booking, serializer: BookingDetailSerializer
       end
@@ -89,6 +94,8 @@ module Api
         if booking.service_request&.can_transition_to?('cancelled')
           booking.service_request.transition_to!('cancelled', changed_by: current_user, notes: 'Cancelled due to booking cancellation')
         end
+
+        EmailService.send_booking_cancellation(booking, params[:reason])
 
         render json: booking, serializer: BookingDetailSerializer
       end

@@ -1,0 +1,22 @@
+<h2 style="margin: 0 0 12px; font-size: 18px; color: #176B65;">
+  Welcome to LocalHelp!
+</h2>
+<p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 16px;">
+  Hi <%= @user.name.presence || "there" %>, welcome to LocalHelp! Your one-stop doorstep local services platform.
+</p>
+<p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 20px;">
+  From home repairs and electrical work to vehicle detailing and cleaning, book trusted local professionals directly to your doorstep in minutes.
+</p>
+
+<div class="detail-box">
+  <strong style="font-size: 13px; color: #0f172a; display: block; margin-bottom: 8px;">What you can do next:</strong>
+  <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.8;">
+    <li>Browse verified local services in your area</li>
+    <li>Pin your doorstep address for hassle-free scheduling</li>
+    <li>Track live provider arrival and job updates in real time</li>
+  </ul>
+</div>
+
+<p style="text-align: center; margin: 28px 0 16px;">
+  <a href="<%= @portal_url %>" class="btn-primary">Explore Services Now</a>
+</p>

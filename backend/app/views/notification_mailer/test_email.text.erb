@@ -1,0 +1,10 @@
+Render Email Integration Verified!
+
+Your email sending integration from Render is working successfully.
+
+Message: <%= @custom_message %>
+Recipient: <%= @to_email %>
+Delivery Method: <%= ActionMailer::Base.delivery_method.to_s.upcase %>
+Dispatched At: <%= @sent_at.strftime("%d %b %Y, %I:%M:%S %p %Z") %>
+
+LocalHelp Team

@@ -13,7 +13,10 @@ import {
   AlertCircle,
   Clock,
   UserCheck,
-  X
+  X,
+  Mail,
+  Send,
+  Server
 } from 'lucide-react';
 import { User, PlatformSetting } from '../../../types';
 import { apiRequest } from '../../../api/client';
@@ -54,6 +57,35 @@ export default function AdminSettingsPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState<{ email: string; tempPass: string } | null>(null);
+
+  // Email Notification Test State (Render Integration)
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailAddress.trim()) return;
+    setTestEmailSending(true);
+    setTestEmailResult(null);
+    try {
+      const res = await apiRequest<{ message: string; recipient: string; delivery_info: any }>('/notifications/test_email', {
+        method: 'POST',
+        body: JSON.stringify({ email: testEmailAddress.trim() }),
+      });
+      setTestEmailResult({
+        success: true,
+        message: `Email dispatched to ${res.recipient} via ${res.delivery_info?.method?.toUpperCase() || 'SMTP'}!`,
+      });
+    } catch (err: any) {
+      setTestEmailResult({
+        success: false,
+        message: err.error || 'Failed to dispatch test notification email',
+      });
+    } finally {
+      setTestEmailSending(false);
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -409,6 +441,94 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           )}
+
+          {/* Section: Email & Notification Delivery (Render Integration) */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-teal-700" />
+                  Email & Notification Delivery (Render Integration)
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Transactional customer emails (booking confirmation, status updates, cancellations, welcome) dispatched via Render.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-xs font-medium">
+                <Server className="w-3.5 h-3.5 text-teal-600" />
+                Render Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* Test Email Dispatch Card */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Send Test Notification Email
+                </span>
+                <p className="text-xs text-slate-500">
+                  Verify SMTP (Port 587) or Resend API delivery from your Render environment directly to your inbox.
+                </p>
+
+                {testEmailResult && (
+                  <div
+                    className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                      testEmailResult.success
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-rose-50 text-rose-800 border border-rose-200'
+                    }`}
+                  >
+                    {testEmailResult.success ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    )}
+                    <span>{testEmailResult.message}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSendTestEmail} className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="your-email@example.com"
+                    value={testEmailAddress}
+                    onChange={(e) => setTestEmailAddress(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={testEmailSending || !testEmailAddress.trim()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-medium transition disabled:opacity-50 cursor-pointer shadow-xs"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{testEmailSending ? 'Sending…' : 'Send Test'}</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* Render Deployment Checklist */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Render Deployment Environment Variables
+                </span>
+                <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+                  <li>
+                    <code className="text-[11px] bg-slate-200/70 px-1 py-0.5 rounded text-slate-800 font-mono">RESEND_API_KEY</code>: Resend API token (works over Port 587 SMTP or Port 443 HTTPS).
+                  </li>
+                  <li>
+                    <code className="text-[11px] bg-slate-200/70 px-1 py-0.5 rounded text-slate-800 font-mono">EMAIL_FROM</code>: Verified sender email (e.g. <span className="font-mono">LocalHelp &lt;notifications@yourdomain.com&gt;</span>).
+                  </li>
+                  <li>
+                    <code className="text-[11px] bg-slate-200/70 px-1 py-0.5 rounded text-slate-800 font-mono">SMTP_PORT</code>: Port 587 with STARTTLS (Render blocks standard port 25).
+                  </li>
+                  <li>
+                    <code className="text-[11px] bg-slate-200/70 px-1 py-0.5 rounded text-slate-800 font-mono">APP_HOST</code>: Hostname used in links (auto-filled on Render).
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
           {/* Section 3: Operational Audit Activity Logs */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">

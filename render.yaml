@@ -1,0 +1,65 @@
+services:
+  # ── Rails 8 Backend API ──────────────────────────────
+  - type: web
+    name: localhelp-backend
+    runtime: ruby
+    rootDir: backend
+    plan: starter
+    buildCommand: bundle install
+    preDeployCommand: bundle exec rails db:migrate
+    startCommand: bundle exec puma -C config/puma.rb
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: localhelp-db
+          property: connectionString
+      # Email Notification Configuration (Render-ready)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: LocalHelp <notifications@localhelp.com>
+      - key: EMAIL_DELIVERY_MODE
+        value: smtp
+      - key: SMTP_ADDRESS
+        value: smtp.resend.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        value: resend
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: APP_HOST
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+  # ── Next.js Web Frontend ─────────────────────────────
+  - type: web
+    name: localhelp-web
+    runtime: node
+    rootDir: web
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: localhelp-backend
+          property: host
+
+databases:
+  - name: localhelp-db
+    databaseName: localhelp_production
+    user: localhelp
+    plan: starter

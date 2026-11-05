@@ -1,0 +1,11 @@
+Booking Status Update
+
+Hello <%= @user.name.presence || "Customer" %>, your booking status for <%= @service.name %> (<%= @booking.reference_number %>) has been updated:
+
+New Status: <%= @new_status.to_s.humanize.upcase %>
+<%= "Assigned Provider: #{@provider.name} (#{@provider.phone})\n" if @provider %>
+Scheduled: <%= @booking.scheduled_at&.strftime("%A, %d %b %Y at %I:%M %p") %>
+
+Check details: <%= @portal_url %>
+
+LocalHelp Support: support@localhelp.com | +91 98765 43210

@@ -54,6 +54,7 @@ module Auth
         unless user.save
           return failure(user.errors.full_messages.join(', '))
         end
+        EmailService.send_welcome_email(user)
       end
 
       unless user.status_active?

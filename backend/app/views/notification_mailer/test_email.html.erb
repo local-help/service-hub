@@ -1,0 +1,29 @@
+<div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+  <h2 style="margin: 0 0 6px; font-size: 16px; color: #065f46;">
+    Render Email Integration Verified
+  </h2>
+  <p style="margin: 0; font-size: 13px; color: #047857;">
+    Your email sending integration from Render is working successfully.
+  </p>
+</div>
+
+<p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 16px;">
+  <%= @custom_message %>
+</p>
+
+<div class="detail-box">
+  <table style="width: 100%;">
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Recipient:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #0f172a; text-align: right;"><%= @to_email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Delivery Method:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #176B65; text-align: right;"><%= ActionMailer::Base.delivery_method.to_s.upcase %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Dispatched At:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 500; color: #0f172a; text-align: right;"><%= @sent_at.strftime("%d %b %Y, %I:%M:%S %p %Z") %></td>
+    </tr>
+  </table>
+</div>

@@ -1,0 +1,39 @@
+<h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">
+  Booking Confirmed!
+</h2>
+<p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 20px;">
+  Hello <%= @user.name.presence || "Customer" %>, your doorstep service booking has been confirmed. A verified professional will arrive at your scheduled time.
+</p>
+
+<div class="detail-box">
+  <table style="width: 100%;">
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Booking Reference:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 700; color: #176B65; text-align: right;"><%= @booking.reference_number %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Service:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #0f172a; text-align: right;"><%= @service.name %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Scheduled Time:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #0f172a; text-align: right;"><%= @booking.scheduled_at&.strftime("%A, %d %b %Y at %I:%M %p") || "To be arranged" %></td>
+    </tr>
+    <% if @address %>
+    <tr>
+      <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Doorstep Address:</td>
+      <td style="padding: 6px 0; font-size: 13px; font-weight: 500; color: #0f172a; text-align: right;"><%= @address.full_address %></td>
+    </tr>
+    <% end %>
+    <% if @booking.total_amount %>
+    <tr style="border-top: 1px dashed #cbd5e1;">
+      <td style="padding: 10px 0 4px; font-size: 14px; font-weight: 600; color: #0f172a;">Total Amount:</td>
+      <td style="padding: 10px 0 4px; font-size: 15px; font-weight: 700; color: #0f172a; text-align: right;">₹<%= @booking.total_amount.to_i %></td>
+    </tr>
+    <% end %>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0 16px;">
+  <a href="<%= @portal_url %>" class="btn-primary">View Booking in App</a>
+</p>

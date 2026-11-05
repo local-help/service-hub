@@ -1,0 +1,13 @@
+Booking Confirmed!
+
+Hello <%= @user.name.presence || "Customer" %>, your doorstep service booking has been confirmed.
+
+Booking Reference: <%= @booking.reference_number %>
+Service: <%= @service.name %>
+Scheduled: <%= @booking.scheduled_at&.strftime("%A, %d %b %Y at %I:%M %p") || "To be arranged" %>
+Address: <%= @address&.full_address %>
+Total: ₹<%= @booking.total_amount.to_i if @booking.total_amount %>
+
+View your booking details: <%= @portal_url %>
+
+LocalHelp Support: support@localhelp.com | +91 98765 43210

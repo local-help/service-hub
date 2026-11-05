@@ -53,6 +53,7 @@ Rails.application.routes.draw do
       resources :notifications, only: [:index] do
         patch :read, on: :member
         post :read_all, on: :collection
+        post :test_email, on: :collection
       end
       resources :devices, only: [:create, :destroy]
 
