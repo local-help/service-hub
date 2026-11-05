@@ -95,3 +95,4 @@ class NotificationMailer < ApplicationMailer
     path.present? ? "#{host.chomp('/')}/#{path}" : host
   end
 end
+

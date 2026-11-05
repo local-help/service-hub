@@ -341,7 +341,7 @@ export default function ProviderProfilePage() {
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="operator@localhelp.com"
+                  placeholder="operator@localhelp.in"
                   className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#176B65]"
                 />
               </div>

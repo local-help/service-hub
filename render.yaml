@@ -25,7 +25,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: LocalHelp <notifications@localhelp.com>
+        value: LocalHelp <notifications@localhelp.in>
       - key: EMAIL_DELIVERY_MODE
         value: smtp
       - key: SMTP_ADDRESS
@@ -63,3 +63,4 @@ databases:
     databaseName: localhelp_production
     user: localhelp
     plan: starter
+

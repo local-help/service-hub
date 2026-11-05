@@ -7,7 +7,7 @@ PlatformSetting.set('platform_name', 'LocalHelp', value_type: 'string', descript
 PlatformSetting.set('city', 'Prayagraj', value_type: 'string', description: 'Operating city')
 
 puts "== Seeding Users =="
-super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.com') do |u|
+super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.in') do |u|
   u.name = 'Super Admin'
   u.phone = '+919999900001'
   u.password = 'Admin@123456'
@@ -17,7 +17,7 @@ super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.com') do |u|
   u.phone_verified = true
 end
 
-admin = User.find_or_create_by!(email: 'admin@localhelp.com') do |u|
+admin = User.find_or_create_by!(email: 'admin@localhelp.in') do |u|
   u.name = 'Operations Lead'
   u.phone = '+919999900002'
   u.password = 'Admin@123456'
@@ -804,7 +804,7 @@ providers_data = [
     email: 'contact@apexwash.com',
     contact_person: 'Rajesh Sharma',
     contact_phone: '+919811122233',
-    contact_email: 'apex_provider@localhelp.com',
+    contact_email: 'apex_provider@localhelp.in',
     address: 'MG Marg, Civil Lines',
     business_address: 'Plot 14, MG Marg, Civil Lines, Prayagraj',
     city: 'Prayagraj',
@@ -815,7 +815,7 @@ providers_data = [
     verification_status: 'verified',
     operational_status: 'active',
     onboarding_status: 'completed',
-    user_email: 'apex_provider@localhelp.com',
+    user_email: 'apex_provider@localhelp.in',
     user_name: 'Rajesh Sharma',
     service_slugs: ['car-wash', 'car-servicing-maintenance', 'car-detailing']
   },
@@ -826,7 +826,7 @@ providers_data = [
     email: 'info@sparklepro.in',
     contact_person: 'Pooja Verma',
     contact_phone: '+919822233344',
-    contact_email: 'sparkle_provider@localhelp.com',
+    contact_email: 'sparkle_provider@localhelp.in',
     address: 'Tagore Town, Near Colonelganj',
     business_address: '52/3 Tagore Town, Near Colonelganj, Prayagraj',
     city: 'Prayagraj',
@@ -837,7 +837,7 @@ providers_data = [
     verification_status: 'verified',
     operational_status: 'active',
     onboarding_status: 'completed',
-    user_email: 'sparkle_provider@localhelp.com',
+    user_email: 'sparkle_provider@localhelp.in',
     user_name: 'Pooja Verma',
     service_slugs: ['general-home-cleaning', 'deep-cleaning']
   },

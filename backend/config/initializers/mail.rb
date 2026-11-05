@@ -44,7 +44,7 @@ Rails.application.configure do
       port: ENV.fetch('SMTP_PORT', 587).to_i,
       user_name: ENV['SMTP_USERNAME'],
       password: ENV['SMTP_PASSWORD'],
-      domain: ENV.fetch('SMTP_DOMAIN', 'localhelp.com'),
+      domain: ENV.fetch('SMTP_DOMAIN', 'localhelp.in'),
       authentication: ENV.fetch('SMTP_AUTHENTICATION', 'plain').to_sym,
       enable_starttls_auto: true
     }
@@ -66,3 +66,4 @@ Rails.application.configure do
     config.action_mailer.raise_delivery_errors = false
   end
 end
+

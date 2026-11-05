@@ -63,8 +63,8 @@ bundle exec rspec
 
 | Role | Email | Phone | Password |
 |------|-------|-------|----------|
-| **Super Admin** | `superadmin@localhelp.com` | `+919999900001` | `Admin@123456` |
-| **Admin** | `admin@localhelp.com` | `+919999900002` | `Admin@123456` |
+| **Super Admin** | `superadmin@localhelp.in` | `+919999900001` | `Admin@123456` |
+| **Admin** | `admin@localhelp.in` | `+919999900002` | `Admin@123456` |
 | **Customer** | `customer@example.com` | `+919888877771` | `Customer@123456` |
 
 ---
