@@ -1,3 +1,46 @@
+# == Schema Information
+#
+# Table name: providers
+#
+#  id                  :bigint           not null, primary key
+#  active              :boolean          default(TRUE)
+#  address             :text
+#  approved_at         :datetime
+#  business_address    :text
+#  city                :string
+#  contact_email       :string
+#  contact_person      :string
+#  contact_phone       :string
+#  email               :string
+#  name                :string           not null
+#  notes               :text
+#  onboarding_status   :string           default("completed"), not null
+#  operational_status  :string           default("active"), not null
+#  phone               :string           not null
+#  postal_code         :string           default("211001")
+#  service_area        :string
+#  slug                :string
+#  state               :string           default("Uttar Pradesh")
+#  suspended_at        :datetime
+#  suspension_reason   :text
+#  verification_status :string           default("verified"), not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  approved_by_id      :bigint
+#
+# Indexes
+#
+#  index_providers_on_active               (active)
+#  index_providers_on_city                 (city)
+#  index_providers_on_operational_status   (operational_status)
+#  index_providers_on_phone                (phone)
+#  index_providers_on_slug                 (slug) UNIQUE
+#  index_providers_on_verification_status  (verification_status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (approved_by_id => users.id)
+#
 class Provider < ApplicationRecord
   self.table_name = 'providers'
 
@@ -34,10 +77,10 @@ class Provider < ApplicationRecord
   scope :verified, -> { where(verification_status: 'verified') }
   scope :eligible_for_assignment, -> { verified.active }
   scope :by_city, ->(city) { where(city: city) if city.present? }
-  scope :for_service, ->(service_id) {
+  scope :for_service, lambda { |service_id|
     joins(:provider_services).where(provider_services: { service_id: service_id, active: true })
   }
-  scope :search, ->(query) {
+  scope :search, lambda { |query|
     where("providers.name ILIKE :q OR providers.phone ILIKE :q OR providers.email ILIKE :q OR providers.contact_person ILIKE :q", q: "%#{query}%") if query.present?
   }
 
@@ -65,9 +108,7 @@ class Provider < ApplicationRecord
     provider_assignments.where(status: 'completed').count
   end
 
-  def active_assignments_count
-    active_assignments.count
-  end
+  delegate :count, to: :active_assignments, prefix: true
 
   def verify!(by_user:)
     update!(
@@ -81,7 +122,8 @@ class Provider < ApplicationRecord
     )
   end
 
-  def reject_verification!(reason:, by_user:)
+  def reject_verification!(reason:, by_user: nil)
+    _by_user = by_user
     update!(
       verification_status: 'rejected',
       operational_status: 'inactive',
@@ -90,7 +132,8 @@ class Provider < ApplicationRecord
     )
   end
 
-  def suspend!(reason:, by_user:)
+  def suspend!(reason:, by_user: nil)
+    _by_user = by_user
     update!(
       verification_status: 'suspended',
       operational_status: 'suspended',
@@ -120,6 +163,7 @@ class Provider < ApplicationRecord
 
   def generate_slug
     return if slug.present?
+
     base = name.to_s.parameterize
     base = "provider" if base.blank?
     candidate = base

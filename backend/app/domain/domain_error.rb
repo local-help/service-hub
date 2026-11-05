@@ -8,4 +8,3 @@ class DomainError < StandardError
     super(message)
   end
 end
-

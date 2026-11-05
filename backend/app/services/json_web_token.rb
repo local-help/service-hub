@@ -14,9 +14,9 @@ class JsonWebToken
 
     def decode(token)
       decoded = JWT.decode(token, SECRET_KEY, true, {
-        algorithm: 'HS256',
-        verify_expiration: true
-      })
+                             algorithm: 'HS256',
+                             verify_expiration: true
+                           })
       ActiveSupport::HashWithIndifferentAccess.new(decoded.first)
     rescue JWT::ExpiredSignature
       raise AuthenticationError, 'Token has expired'
@@ -46,10 +46,10 @@ class JsonWebToken
       token_digest = Digest::SHA256.hexdigest(raw_token)
       refresh_token = RefreshToken.active.find_by(token_digest: token_digest)
       raise AuthenticationError, 'Invalid or expired refresh token' unless refresh_token
+
       refresh_token
     end
   end
 end
 
 class AuthenticationError < StandardError; end
-

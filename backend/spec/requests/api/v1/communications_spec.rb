@@ -45,4 +45,3 @@ RSpec.describe 'Api::V1::Admin::Communications', type: :request do
     end
   end
 end
-

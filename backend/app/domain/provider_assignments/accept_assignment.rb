@@ -14,9 +14,7 @@ module ProviderAssignments
     def call
       ActiveRecord::Base.transaction do
         assignment.accept!(by_user: user)
-        if assignment.booking.present? && assignment.booking.may_start_service?
-          assignment.booking.start_service!
-        end
+        assignment.booking.start_service! if assignment.booking.present? && assignment.booking.may_start_service?
         StatusHistory.create!(
           entity_type: 'ProviderAssignment',
           entity_id: assignment.id,
@@ -27,12 +25,9 @@ module ProviderAssignments
         )
       end
 
-      if assignment.booking.present?
-        NotificationService.notify_booking_status_updated(assignment.booking, assignment.booking.status, 'provider_assigned')
-      end
+      NotificationService.notify_booking_status_updated(assignment.booking, assignment.booking.status, 'provider_assigned') if assignment.booking.present?
 
       assignment
     end
   end
 end
-

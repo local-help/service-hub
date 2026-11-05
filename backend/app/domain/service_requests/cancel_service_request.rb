@@ -13,9 +13,7 @@ module ServiceRequests
     end
 
     def call
-      if %w[completed cancelled].include?(service_request.status)
-        raise DomainError, "Cannot cancel request in #{service_request.status} status"
-      end
+      raise DomainError, "Cannot cancel request in #{service_request.status} status" if %w[completed cancelled].include?(service_request.status)
 
       ActiveRecord::Base.transaction do
         service_request.transition_to!('cancelled', changed_by: user, notes: reason || 'Cancelled by customer')
@@ -31,4 +29,3 @@ module ServiceRequests
     end
   end
 end
-

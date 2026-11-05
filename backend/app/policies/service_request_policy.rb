@@ -7,6 +7,7 @@ class ServiceRequestPolicy < ApplicationPolicy
     return true if admin?
     return true if owner?
     return true if user&.provider? && provider_assigned?
+
     false
   end
 
@@ -31,7 +32,8 @@ class ServiceRequestPolicy < ApplicationPolicy
   def provider_assigned?
     prov = user.service_provider
     return false unless prov.present? && prov.eligible_for_assignment?
-    record.provider_assignments.where(provider_id: prov.id, status: %w[assigned accepted in_progress completed]).exists?
+
+    record.provider_assignments.exists?(provider_id: prov.id, status: %w[assigned accepted in_progress completed])
   end
 
   class Scope < Scope
@@ -41,6 +43,7 @@ class ServiceRequestPolicy < ApplicationPolicy
       elsif user.provider?
         prov = user.service_provider
         return scope.none unless prov.present?
+
         scope.assigned_to_provider(prov.id)
       else
         scope.where(user_id: user.id)

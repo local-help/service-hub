@@ -29,4 +29,3 @@ class AddressPolicy < ApplicationPolicy
     end
   end
 end
-

@@ -17,13 +17,10 @@ namespace :email do
       result = EmailService.send_test_email(recipient)
       puts " SUCCESS: Test email dispatched successfully!"
       puts "Result details: #{result.inspect}"
-      if ActionMailer::Base.delivery_method == :file
-        puts " Emails saved to tmp/mails (local development mode)"
-      end
+      puts " Emails saved to tmp/mails (local development mode)" if ActionMailer::Base.delivery_method == :file
     rescue StandardError => e
       puts " FAILED to dispatch email: #{e.message}"
       puts e.backtrace.first(5)
     end
   end
 end
-

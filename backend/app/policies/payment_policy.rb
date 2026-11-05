@@ -25,4 +25,3 @@ class PaymentPolicy < ApplicationPolicy
     end
   end
 end
-

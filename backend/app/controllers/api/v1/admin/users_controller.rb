@@ -25,12 +25,8 @@ module Api
           user = User.find(params[:id])
 
           ActiveRecord::Base.transaction do
-            if params[:status].present?
-              user.update!(status: params[:status])
-            end
-            if params[:role].present? && %w[admin super_admin customer].include?(params[:role])
-              user.update!(role: params[:role])
-            end
+            user.update!(status: params[:status]) if params[:status].present?
+            user.update!(role: params[:role]) if params[:role].present? && %w[admin super_admin customer].include?(params[:role])
 
             AdminActivityLog.log!(
               admin: current_user,
@@ -52,4 +48,3 @@ module Api
     end
   end
 end
-

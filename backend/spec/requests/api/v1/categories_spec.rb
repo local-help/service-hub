@@ -24,4 +24,3 @@ RSpec.describe 'Api::V1::Categories', type: :request do
     end
   end
 end
-

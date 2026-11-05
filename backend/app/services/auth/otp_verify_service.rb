@@ -17,9 +17,7 @@ module Auth
       return failure('No active OTP found. Please request a new one.') unless otp_record
       return failure('OTP has expired') if otp_record.expired?
 
-      if otp_record.max_attempts_reached?
-        return failure('Maximum verification attempts exceeded. Please request a new OTP.')
-      end
+      return failure('Maximum verification attempts exceeded. Please request a new OTP.') if otp_record.max_attempts_reached?
 
       otp_digest = Digest::SHA256.hexdigest(@otp.to_s)
       otp_record.increment_attempts!
@@ -58,4 +56,3 @@ module Auth
     end
   end
 end
-

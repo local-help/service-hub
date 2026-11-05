@@ -17,6 +17,7 @@ module ServiceRequests
       service_id = params[:service_id] || params.dig(:service_request, :service_id)
       service = Service.find_by(id: service_id)
       raise DomainError, "Service ##{service_id} not found" unless service
+      raise DomainError, "#{service.name} is coming soon and cannot be booked" if service.coming_soon?
 
       address_id = params[:address_id] || params.dig(:service_request, :address_id)
       address = user.addresses.find_by(id: address_id)
@@ -96,4 +97,3 @@ module ServiceRequests
     end
   end
 end
-

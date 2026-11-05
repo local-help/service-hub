@@ -1,3 +1,27 @@
+# == Schema Information
+#
+# Table name: request_attachments
+#
+#  id                 :bigint           not null, primary key
+#  content_type       :string
+#  file_name          :string
+#  file_size          :integer
+#  file_url           :string           not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  booking_id         :bigint
+#  service_request_id :bigint
+#
+# Indexes
+#
+#  index_request_attachments_on_booking_id          (booking_id)
+#  index_request_attachments_on_service_request_id  (service_request_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (booking_id => bookings.id)
+#  fk_rails_...  (service_request_id => service_requests.id)
+#
 class RequestAttachment < ApplicationRecord
   belongs_to :service_request, optional: true
   belongs_to :booking, optional: true
@@ -14,8 +38,8 @@ class RequestAttachment < ApplicationRecord
   private
 
   def file_size_within_limit
-    if file_size.present? && file_size > MAX_FILE_SIZE
-      errors.add(:file_size, "must be less than 10MB")
-    end
+    return unless file_size.present? && file_size > MAX_FILE_SIZE
+
+    errors.add(:file_size, "must be less than 10MB")
   end
 end

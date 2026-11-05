@@ -3,11 +3,7 @@
 Rails.application.configure do
   # Determine app host for links in notification emails
   app_host = ENV.fetch('APP_HOST') do
-    if ENV['RENDER_EXTERNAL_HOSTNAME'].present?
-      ENV['RENDER_EXTERNAL_HOSTNAME']
-    else
-      'localhost:3000'
-    end
+    ENV['RENDER_EXTERNAL_HOSTNAME'].presence || 'localhost:3000'
   end
 
   protocol = if ENV['RENDER_EXTERNAL_HOSTNAME'].present? || ENV['APP_HOST'].to_s.start_with?('https')
@@ -42,28 +38,21 @@ Rails.application.configure do
     config.action_mailer.smtp_settings = {
       address: ENV['SMTP_ADDRESS'],
       port: ENV.fetch('SMTP_PORT', 587).to_i,
-      user_name: ENV['SMTP_USERNAME'],
-      password: ENV['SMTP_PASSWORD'],
+      user_name: ENV.fetch('SMTP_USERNAME', nil),
+      password: ENV.fetch('SMTP_PASSWORD', nil),
       domain: ENV.fetch('SMTP_DOMAIN', 'localhelp.in'),
       authentication: ENV.fetch('SMTP_AUTHENTICATION', 'plain').to_sym,
       enable_starttls_auto: true
     }
     config.action_mailer.raise_delivery_errors = true
-  elsif Rails.env.development?
-    # Local development without external credentials: save emails to tmp/mails for inspection
-    FileUtils.mkdir_p(Rails.root.join('tmp/mails'))
-    config.action_mailer.delivery_method = :file
-    config.action_mailer.file_settings = { location: Rails.root.join('tmp/mails') }
-    config.action_mailer.raise_delivery_errors = false
   elsif Rails.env.test?
     config.action_mailer.delivery_method = :test
     config.action_mailer.raise_delivery_errors = false
   else
-    # Production without explicit SMTP configured: fallback to file/log so requests don't fail
+    # Development or production fallback without explicit SMTP configured: save to tmp/mails
     FileUtils.mkdir_p(Rails.root.join('tmp/mails'))
     config.action_mailer.delivery_method = :file
     config.action_mailer.file_settings = { location: Rails.root.join('tmp/mails') }
     config.action_mailer.raise_delivery_errors = false
   end
 end
-

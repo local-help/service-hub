@@ -47,7 +47,8 @@ class BookingPolicy < ApplicationPolicy
 
   def provider_assigned?
     return false unless user.provider? && user.service_provider.present?
+
     p_id = user.service_provider.id
-    record.provider_id == p_id || record.provider_assignments.where(provider_id: p_id).exists?
+    record.provider_id == p_id || record.provider_assignments.exists?(provider_id: p_id)
   end
 end

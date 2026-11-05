@@ -26,6 +26,7 @@ class ProviderAssignmentPolicy < ApplicationPolicy
       elsif user.provider?
         prov = user.service_provider
         return scope.none unless prov.present?
+
         scope.where(provider_id: prov.id)
       else
         scope.none
@@ -33,4 +34,3 @@ class ProviderAssignmentPolicy < ApplicationPolicy
     end
   end
 end
-

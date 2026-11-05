@@ -1,3 +1,49 @@
+# == Schema Information
+#
+# Table name: service_requests
+#
+#  id                  :bigint           not null, primary key
+#  admin_notes         :text
+#  assigned_at         :datetime
+#  assigned_by         :bigint
+#  booking_type        :string
+#  cancellation_reason :text
+#  description         :text             not null
+#  duration_hours      :integer
+#  preferred_at        :datetime
+#  reference_number    :string           not null
+#  selected_options    :jsonb
+#  status              :string           default("pending_review"), not null
+#  vehicle_type        :string
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  address_id          :bigint           not null
+#  provider_id         :bigint
+#  service_id          :bigint           not null
+#  service_variant_id  :bigint
+#  user_id             :bigint           not null
+#
+# Indexes
+#
+#  index_service_requests_on_address_id          (address_id)
+#  index_service_requests_on_preferred_at        (preferred_at)
+#  index_service_requests_on_provider_id         (provider_id)
+#  index_service_requests_on_reference_number    (reference_number) UNIQUE
+#  index_service_requests_on_service_id          (service_id)
+#  index_service_requests_on_service_variant_id  (service_variant_id)
+#  index_service_requests_on_status              (status)
+#  index_service_requests_on_user_id             (user_id)
+#  index_service_requests_on_user_id_and_status  (user_id,status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (address_id => addresses.id)
+#  fk_rails_...  (assigned_by => users.id)
+#  fk_rails_...  (provider_id => providers.id)
+#  fk_rails_...  (service_id => services.id)
+#  fk_rails_...  (service_variant_id => service_variants.id)
+#  fk_rails_...  (user_id => users.id)
+#
 class ServiceRequestSerializer < ActiveModel::Serializer
   attributes :id, :reference_number, :status, :description, :preferred_at,
              :user_id, :customer_name, :customer_phone,
@@ -63,4 +109,3 @@ class ServiceRequestSerializer < ActiveModel::Serializer
     object.created_at.iso8601
   end
 end
-

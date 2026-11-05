@@ -37,6 +37,8 @@ module Quotations
                        provider.provider_assignments.find_by(booking_id: booking&.id)
                    end
 
+      initial_status = params[:status] || (created_by&.admin_or_super_admin? ? 'pending' : 'submitted')
+
       quotation = nil
       ActiveRecord::Base.transaction do
         quotation = Quotation.create!(
@@ -47,11 +49,15 @@ module Quotations
           amount: amount,
           description: description,
           valid_until: valid_until,
-          status: 'submitted',
+          status: initial_status,
           created_by: created_by.id
         )
 
-        quotation.submit!(by_user: created_by)
+        if initial_status == 'submitted'
+          quotation.submit!(by_user: created_by)
+        elsif service_request.present? && service_request.can_transition_to?('quotation_sent')
+          service_request.transition_to!('quotation_sent', changed_by: created_by, notes: "Quotation created for #{quotation.amount}")
+        end
 
         if created_by&.admin_or_super_admin?
           AdminActivityLog.log!(

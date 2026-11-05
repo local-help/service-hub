@@ -115,6 +115,10 @@ FactoryBot.define do
 
   factory :booking do
     service_request
+    user { service_request&.user || association(:user) }
+    service { service_request&.service || association(:service) }
+    address { service_request&.address || association(:address, user: user) }
+    description { service_request&.description || 'Standard Booking Description' }
     scheduled_at { 1.day.from_now }
     status { 'confirmed' }
   end

@@ -7,7 +7,7 @@ PlatformSetting.set('platform_name', 'LocalHelp', value_type: 'string', descript
 PlatformSetting.set('city', 'Prayagraj', value_type: 'string', description: 'Operating city')
 
 puts "== Seeding Users =="
-super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.in') do |u|
+User.find_or_create_by!(email: 'superadmin@localhelp.in') do |u|
   u.name = 'Super Admin'
   u.phone = '+919999900001'
   u.password = 'Admin@123456'
@@ -17,7 +17,7 @@ super_admin = User.find_or_create_by!(email: 'superadmin@localhelp.in') do |u|
   u.phone_verified = true
 end
 
-admin = User.find_or_create_by!(email: 'admin@localhelp.in') do |u|
+User.find_or_create_by!(email: 'admin@localhelp.in') do |u|
   u.name = 'Operations Lead'
   u.phone = '+919999900002'
   u.password = 'Admin@123456'
@@ -987,7 +987,7 @@ if car_wash_svc && apex_prov && super_admin
   end
 
   # Request 2: Unassigned, pending admin assignment
-  sr2 = ServiceRequest.find_or_create_by!(reference_number: 'LH-10102') do |r|
+  ServiceRequest.find_or_create_by!(reference_number: 'LH-10102') do |r|
     r.user = customer
     r.service = car_wash_svc
     r.service_variant = hatchback_var

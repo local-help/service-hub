@@ -13,9 +13,7 @@ module Bookings
     end
 
     def call
-      if %w[completed cancelled].include?(booking.status)
-        raise DomainError, "Cannot cancel booking in #{booking.status} status"
-      end
+      raise DomainError, "Cannot cancel booking in #{booking.status} status" if %w[completed cancelled].include?(booking.status)
 
       ActiveRecord::Base.transaction do
         booking.transition_to!('cancelled', changed_by: user, notes: reason || 'Cancelled')
@@ -31,4 +29,3 @@ module Bookings
     end
   end
 end
-

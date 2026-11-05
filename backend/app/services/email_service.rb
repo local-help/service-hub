@@ -74,17 +74,15 @@ class EmailService
     rescue StandardError => e
       Rails.logger.warn("[EmailService] ActionMailer delivery failed, attempting Resend API fallback: #{e.message}")
 
-      if ENV['RESEND_API_KEY'].present?
-        html = "<p>#{message}</p><p><small>Fallback delivery via Resend API</small></p>"
-        deliver_via_resend_api(to: to_email, subject: subject, html: html, text: message)
-      else
-        raise e
-      end
+      raise e unless ENV['RESEND_API_KEY'].present?
+
+      html = "<p>#{message}</p><p><small>Fallback delivery via Resend API</small></p>"
+      deliver_via_resend_api(to: to_email, subject: subject, html: html, text: message)
     end
 
     # Direct delivery via Resend HTTPS REST API (Port 443 - zero firewall/port issues on Render)
     def deliver_via_resend_api(to:, subject:, html:, text: nil)
-      api_key = ENV['RESEND_API_KEY']
+      api_key = ENV.fetch('RESEND_API_KEY', nil)
       raise 'RESEND_API_KEY is not configured' unless api_key.present?
 
       uri = URI.parse('https://api.resend.com/emails')
@@ -130,4 +128,3 @@ class EmailService
     end
   end
 end
-

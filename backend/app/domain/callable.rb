@@ -9,4 +9,3 @@ module Callable
     end
   end
 end
-

@@ -20,7 +20,7 @@ RSpec.describe 'Core Business Rules & Constraints', type: :request do
     end
 
     it 'rejects approval of an already rejected quotation' do
-      quotation = create(:quotation, service_request: service_request, creator: admin, status: 'rejected')
+      create(:quotation, service_request: service_request, creator: admin, status: 'rejected')
       service_request.update!(status: 'quotation_rejected')
 
       post "/api/v1/service_requests/#{service_request.id}/quotation/approve", headers: auth_headers(customer)

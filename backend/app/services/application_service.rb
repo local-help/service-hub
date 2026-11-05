@@ -34,4 +34,3 @@ class ServiceResult
     !@success
   end
 end
-

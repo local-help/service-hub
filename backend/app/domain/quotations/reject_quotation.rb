@@ -21,7 +21,7 @@ module Quotations
     end
 
     def call
-      raise DomainError, 'No actionable quotation to reject' unless quotation && quotation.can_reject?
+      raise DomainError, 'Quotation cannot be rejected (already resolved)' unless quotation&.can_reject?
 
       quotation.reject!(changed_by: user, reason: reason)
       NotificationService.notify_quotation_rejected(quotation, reason)
@@ -29,4 +29,3 @@ module Quotations
     end
   end
 end
-

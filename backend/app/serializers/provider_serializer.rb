@@ -1,3 +1,46 @@
+# == Schema Information
+#
+# Table name: providers
+#
+#  id                  :bigint           not null, primary key
+#  active              :boolean          default(TRUE)
+#  address             :text
+#  approved_at         :datetime
+#  business_address    :text
+#  city                :string
+#  contact_email       :string
+#  contact_person      :string
+#  contact_phone       :string
+#  email               :string
+#  name                :string           not null
+#  notes               :text
+#  onboarding_status   :string           default("completed"), not null
+#  operational_status  :string           default("active"), not null
+#  phone               :string           not null
+#  postal_code         :string           default("211001")
+#  service_area        :string
+#  slug                :string
+#  state               :string           default("Uttar Pradesh")
+#  suspended_at        :datetime
+#  suspension_reason   :text
+#  verification_status :string           default("verified"), not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  approved_by_id      :bigint
+#
+# Indexes
+#
+#  index_providers_on_active               (active)
+#  index_providers_on_city                 (city)
+#  index_providers_on_operational_status   (operational_status)
+#  index_providers_on_phone                (phone)
+#  index_providers_on_slug                 (slug) UNIQUE
+#  index_providers_on_verification_status  (verification_status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (approved_by_id => users.id)
+#
 class ProviderSerializer < ActiveModel::Serializer
   attributes :id, :name, :slug, :description, :phone, :email,
              :contact_person, :contact_phone, :contact_email,

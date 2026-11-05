@@ -5,7 +5,7 @@ module Api
         before_action :require_super_admin!
 
         def index
-          settings = PlatformSetting.all.order(:key)
+          settings = PlatformSetting.order(:key)
           render json: settings, each_serializer: PlatformSettingSerializer
         end
 
@@ -33,4 +33,3 @@ module Api
     end
   end
 end
-

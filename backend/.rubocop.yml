@@ -1,8 +1,227 @@
-# Omakase Ruby styling for Rails
-inherit_gem: { rubocop-rails-omakase: rubocop.yml }
+plugins:
+  - rubocop-rails
+  - rubocop-performance
+  - rubocop-rspec
 
-# Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  DisplayCopNames: true
+  Exclude:
+    - 'bin/**/*'
+    - 'db/schema.rb'
+    - 'db/queue_schema.rb'
+    - 'db/migrate/**/*'
+    - 'node_modules/**/*'
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'public/**/*'
+    - 'storage/**/*'
+    - 'config/environments/**/*'
+    - 'config/boot.rb'
+    - 'lib/tasks/auto_annotate_models.rake'
+
+# ── Layout & Formatting ───────────────────────────────────────
+Layout/LineLength:
+  Max: 180
+  AllowedPatterns: ['\A\s*#', '\A\s*def\s+', 'https?://', '^\s*#\s*==\s*Schema Information']
+  Exclude:
+    - 'db/seeds.rb'
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  EnforcedStyle: no_space
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: space
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: true
+
+Layout/TrailingEmptyLines:
+  Enabled: true
+
+# ── Style Conventions ─────────────────────────────────────────
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/GlobalVars:
+  AllowedVariables: ['$redis', '$solid_queue']
+
+Style/BlockComments:
+  Enabled: false
+
+Style/OneClassPerFile:
+  Enabled: false
+
+Style/Next:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/HashLikeCase:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false
+
+Style/SafeNavigationChainLength:
+  Max: 4
+
+Bundler/OrderedGems:
+  Enabled: false
+
+Lint/MissingSuper:
+  Enabled: false
+
+# ── Naming & Predicates ───────────────────────────────────────
+Naming/PredicateMethod:
+  Exclude:
+    - 'app/serializers/**/*'
+    - 'app/controllers/concerns/**/*'
+    - 'app/controllers/**/*'
+
+Naming/PredicatePrefix:
+  Enabled: false
+
+# ── Complexity & Metrics ──────────────────────────────────────
+Metrics/BlockLength:
+  Max: 60
+  Exclude:
+    - 'spec/**/*'
+    - 'config/routes.rb'
+    - 'config/routes/**/*'
+    - 'db/seeds.rb'
+    - 'lib/tasks/**/*'
+
+Metrics/MethodLength:
+  Max: 60
+  Exclude:
+    - 'db/seeds.rb'
+    - 'app/domain/**/*'
+
+Metrics/ClassLength:
+  Max: 450
+  Exclude:
+    - 'db/seeds.rb'
+
+Metrics/AbcSize:
+  Max: 65
+  Exclude:
+    - 'db/seeds.rb'
+    - 'app/domain/**/*'
+    - 'app/serializers/**/*'
+    - 'app/services/auth/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 20
+  Exclude:
+    - 'app/domain/**/*'
+    - 'app/services/auth/**/*'
+
+Metrics/PerceivedComplexity:
+  Max: 20
+  Exclude:
+    - 'app/domain/**/*'
+    - 'app/services/auth/**/*'
+
+# ── Rails Cops ────────────────────────────────────────────────
+Rails:
+  Enabled: true
+
+Rails/I18nLocaleTexts:
+  Enabled: false
+
+Rails/UnknownEnv:
+  Environments:
+    - development
+    - test
+    - production
+
+Rails/Blank:
+  Enabled: false
+
+Rails/InverseOf:
+  Enabled: false
+
+Rails/SkipsModelValidations:
+  AllowedMethods:
+    - update_all
+    - touch
+    - update_column
+    - update_columns
+    - increment!
+
+Rails/HasManyOrHasOneDependent:
+  Enabled: false
+
+Rails/ResponseParsedBody:
+  Enabled: false
+
+Rails/Pluck:
+  Enabled: false
+
+Rails/StrongParametersExpect:
+  Enabled: false
+
+Rails/HttpStatusNameConsistency:
+  Enabled: false
+
+Rails/Output:
+  Exclude:
+    - 'db/seeds.rb'
+    - 'lib/tasks/**/*'
+
+Rails/RakeEnvironment:
+  Exclude:
+    - 'lib/tasks/security.rake'
+
+# ── RSpec Cops ────────────────────────────────────────────────
+RSpec/MultipleExpectations:
+  Max: 8
+
+RSpec/ExampleLength:
+  Max: 40
+
+RSpec/NestedGroups:
+  Max: 5
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/ContextWording:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+RSpec/LetSetup:
+  Enabled: false
+
+RSpec/BeEq:
+  Enabled: false
+
+RSpec/IndexedLet:
+  Enabled: false
+
+RSpec/DescribedClass:
+  Enabled: false

@@ -1,0 +1,5 @@
+---
+:pager: false
+:skip_checks:
+- CheckEOLRuby
+- CheckEOLRails

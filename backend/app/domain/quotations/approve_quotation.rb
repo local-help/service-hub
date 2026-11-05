@@ -20,7 +20,8 @@ module Quotations
     end
 
     def call
-      raise DomainError, 'No actionable quotation to approve' unless quotation && quotation.can_approve?
+      raise DomainError, 'Quotation cannot be approved (already resolved or expired)' if quotation.nil? || quotation.expired?
+      raise DomainError, 'Quotation cannot be approved (already resolved or expired)' unless quotation.can_approve?
 
       ActiveRecord::Base.transaction do
         quotation.approve!(changed_by: user)
@@ -38,11 +39,10 @@ module Quotations
           booking.scheduled_at = sr.preferred_at || 1.day.from_now
           booking.status = 'confirmed'
           booking.total_amount = quotation.amount
+          booking.description = sr.description.presence || quotation.description.presence || 'Service Booking'
           booking.save!
 
-          if sr.can_transition_to?('booking_confirmed')
-            sr.transition_to!('booking_confirmed', changed_by: user, notes: 'Booking confirmed upon quotation approval')
-          end
+          sr.transition_to!('booking_confirmed', changed_by: user, notes: 'Booking confirmed upon quotation approval') if sr.can_transition_to?('booking_confirmed')
         end
       end
 

@@ -7,13 +7,9 @@ module Auth
 
     def call
       user = User.find_by(email: @email&.downcase&.strip)
-      unless user&.authenticate(@password)
-        return failure('Invalid email or password')
-      end
+      return failure('Invalid email or password') unless user&.authenticate(@password)
 
-      unless user.status_active?
-        return failure('Account is inactive or suspended')
-      end
+      return failure('Account is inactive or suspended') unless user.status_active?
 
       access_token = JsonWebToken.generate_access_token(user)
       refresh_token = JsonWebToken.generate_refresh_token(user)
@@ -21,4 +17,3 @@ module Auth
     end
   end
 end
-

@@ -17,4 +17,3 @@ class CommunicationPolicy < ApplicationPolicy
     end
   end
 end
-

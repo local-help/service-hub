@@ -7,14 +7,10 @@ module Auth
     def call
       return failure('Phone number is required') if @phone.blank?
 
-      unless OtpVerification.can_send_otp?(@phone)
-        return failure('Too many OTP requests. Please try again later.')
-      end
+      return failure('Too many OTP requests. Please try again later.') unless OtpVerification.can_send_otp?(@phone)
 
       cooldown = OtpVerification.cooldown_remaining(@phone)
-      if cooldown > 0
-        return failure("Please wait #{cooldown.ceil} seconds before requesting a new OTP")
-      end
+      return failure("Please wait #{cooldown.ceil} seconds before requesting a new OTP") if cooldown > 0
 
       otp = generate_otp
       otp_digest = Digest::SHA256.hexdigest(otp)
@@ -42,4 +38,3 @@ module Auth
     end
   end
 end
-

@@ -1,3 +1,40 @@
+# == Schema Information
+#
+# Table name: quotations
+#
+#  id                        :bigint           not null, primary key
+#  amount                    :decimal(10, 2)   not null
+#  created_by                :bigint           not null
+#  description               :text
+#  estimated_completion_time :string
+#  reviewed_at               :datetime
+#  status                    :string           default("pending"), not null
+#  valid_until               :datetime         not null
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  booking_id                :bigint
+#  provider_assignment_id    :bigint
+#  provider_id               :bigint
+#  reviewed_by_id            :bigint
+#  service_request_id        :bigint
+#
+# Indexes
+#
+#  index_quotations_on_active_per_request      (service_request_id) UNIQUE WHERE ((status)::text = ANY ((ARRAY['draft'::character varying, 'submitted'::character varying, 'pending'::character varying, 'approved'::character varying])::text[]))
+#  index_quotations_on_booking_id              (booking_id)
+#  index_quotations_on_provider_assignment_id  (provider_assignment_id)
+#  index_quotations_on_provider_id             (provider_id)
+#  index_quotations_on_status                  (status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (booking_id => bookings.id)
+#  fk_rails_...  (created_by => users.id)
+#  fk_rails_...  (provider_assignment_id => provider_assignments.id)
+#  fk_rails_...  (provider_id => providers.id)
+#  fk_rails_...  (reviewed_by_id => users.id)
+#  fk_rails_...  (service_request_id => service_requests.id)
+#
 class Quotation < ApplicationRecord
   belongs_to :service_request, optional: true
   belongs_to :booking, optional: true
@@ -5,7 +42,7 @@ class Quotation < ApplicationRecord
   belongs_to :provider, optional: true
   belongs_to :provider_assignment, optional: true
   belongs_to :reviewed_by, class_name: 'User', optional: true
-  has_one :target_booking, class_name: 'Booking', foreign_key: :quotation_id, dependent: :nullify
+  has_one :target_booking, class_name: 'Booking', dependent: :nullify
 
   STATUSES = %w[draft submitted pending approved rejected expired withdrawn].freeze
 
@@ -81,9 +118,7 @@ class Quotation < ApplicationRecord
         booking.update!(total_amount: amount, quotation_id: id)
         booking.approve_quotation! if booking.may_approve_quotation?
       end
-      if service_request.present? && service_request.can_transition_to?('quotation_approved')
-        service_request.transition_to!('quotation_approved', changed_by: changed_by)
-      end
+      service_request.transition_to!('quotation_approved', changed_by: changed_by) if service_request.present? && service_request.can_transition_to?('quotation_approved')
       StatusHistory.create!(
         entity_type: 'Quotation',
         entity_id: id,
@@ -99,9 +134,7 @@ class Quotation < ApplicationRecord
 
     transaction do
       update!(status: 'rejected', reviewed_by: changed_by, reviewed_at: Time.current)
-      if booking.present? && booking.may_reject_quotation?
-        booking.reject_quotation!
-      end
+      booking.reject_quotation! if booking.present? && booking.may_reject_quotation?
       if service_request.present? && service_request.can_transition_to?('quotation_rejected')
         service_request.transition_to!('quotation_rejected', changed_by: changed_by, notes: reason)
       end
@@ -119,9 +152,9 @@ class Quotation < ApplicationRecord
   private
 
   def valid_until_must_be_future
-    if valid_until.present? && valid_until <= Time.current
-      errors.add(:valid_until, "must be in the future")
-    end
+    return unless valid_until.present? && valid_until <= Time.current
+
+    errors.add(:valid_until, "must be in the future")
   end
 
   def only_one_active_quotation_per_request

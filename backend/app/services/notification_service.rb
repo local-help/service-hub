@@ -42,7 +42,8 @@ class NotificationService
       notify_admins(
         type: 'new_booking',
         title: "New Booking: #{booking.service&.name} (#{booking.reference_number})",
-        body: "Customer #{booking.user&.name} confirmed booking in #{booking.address&.landmark || booking.address&.city || 'Prayagraj'} for #{formatted_time(booking.scheduled_at)}.",
+        body: "Customer #{booking.user&.name} confirmed booking in " \
+              "#{booking.address&.landmark || booking.address&.city || 'Prayagraj'} for #{formatted_time(booking.scheduled_at)}.",
         metadata: {
           booking_id: booking.id,
           reference_number: booking.reference_number,
@@ -171,20 +172,20 @@ class NotificationService
       end
 
       # 4. In-app notification for Administrators
-      if %w[in_progress completed rescheduled].include?(new_status)
-        notify_admins(
-          type: "admin_booking_#{new_status}",
-          title: "Booking #{new_status.titleize}: #{booking.reference_number}",
-          body: "#{booking.service&.name} (#{booking.reference_number}) updated to #{new_status.humanize.downcase} by #{booking.provider&.name || 'provider'}.",
-          metadata: {
-            booking_id: booking.id,
-            reference_number: booking.reference_number,
-            old_status: old_status,
-            new_status: new_status,
-            action_url: '/admin/bookings'
-          }
-        )
-      end
+      return unless %w[in_progress completed rescheduled].include?(new_status)
+
+      notify_admins(
+        type: "admin_booking_#{new_status}",
+        title: "Booking #{new_status.titleize}: #{booking.reference_number}",
+        body: "#{booking.service&.name} (#{booking.reference_number}) updated to #{new_status.humanize.downcase} by #{booking.provider&.name || 'provider'}.",
+        metadata: {
+          booking_id: booking.id,
+          reference_number: booking.reference_number,
+          old_status: old_status,
+          new_status: new_status,
+          action_url: '/admin/bookings'
+        }
+      )
     end
 
     # ── CUSTOMER: Quotation Received ──────────────────────────────
@@ -278,7 +279,7 @@ class NotificationService
           quotation.provider,
           type: 'quote_rejected',
           title: "Quote Declined: #{quotation.reference_number}",
-          body: "Customer declined quotation for #{quotation.booking&.service&.name || 'service request'}.#{reason.present? ? " Note: #{reason}" : ''}",
+          body: "Customer declined quotation for #{quotation.booking&.service&.name || 'service request'}.#{" Note: #{reason}" if reason.present?}",
           metadata: {
             quotation_id: quotation.id,
             booking_id: quotation.booking_id,
@@ -291,7 +292,7 @@ class NotificationService
       notify_admins(
         type: 'quote_rejected',
         title: "Quote Declined: #{quotation.reference_number}",
-        body: "Customer declined quotation from #{quotation.provider&.name}.#{reason.present? ? " Reason: #{reason}" : ''}",
+        body: "Customer declined quotation from #{quotation.provider&.name}.#{" Reason: #{reason}" if reason.present?}",
         metadata: {
           quotation_id: quotation.id,
           booking_id: quotation.booking_id,
@@ -309,7 +310,7 @@ class NotificationService
           user: booking.user,
           type: 'booking_cancelled',
           title: "Booking Cancelled: #{booking.service&.name}",
-          body: "Booking #{booking.reference_number} has been cancelled.#{reason.present? ? " Reason: #{reason}" : ''}",
+          body: "Booking #{booking.reference_number} has been cancelled.#{" Reason: #{reason}" if reason.present?}",
           metadata: {
             booking_id: booking.id,
             reference_number: booking.reference_number,
@@ -339,7 +340,7 @@ class NotificationService
       notify_admins(
         type: 'booking_cancelled',
         title: "Booking Cancelled: #{booking.reference_number}",
-        body: "Booking for #{booking.service&.name} was cancelled#{cancelled_by.present? ? " by #{cancelled_by.name}" : ''}.#{reason.present? ? " Reason: #{reason}" : ''}",
+        body: "Booking for #{booking.service&.name} was cancelled#{" by #{cancelled_by.name}" if cancelled_by.present?}.#{" Reason: #{reason}" if reason.present?}",
         metadata: {
           booking_id: booking.id,
           reference_number: booking.reference_number,
@@ -419,13 +420,16 @@ class NotificationService
     def status_messages_for(booking, status)
       case status.to_s
       when 'provider_assigned'
-        ["Professional Assigned: #{booking.provider&.name || 'Provider'}", "A verified local professional has been assigned to your booking (#{booking.reference_number})."]
+        ["Professional Assigned: #{booking.provider&.name || 'Provider'}",
+         "A verified local professional has been assigned to your booking (#{booking.reference_number})."]
       when 'in_progress'
         ["Service Underway: #{booking.service&.name}", "Your professional has arrived and started the service (#{booking.reference_number})."]
       when 'completed'
-        ["Service Completed: #{booking.service&.name}", "Your doorstep service (#{booking.reference_number}) has been marked complete. Tap to rate your experience."]
+        ["Service Completed: #{booking.service&.name}",
+         "Your doorstep service (#{booking.reference_number}) has been marked complete. Tap to rate your experience."]
       when 'rescheduled'
-        ["Booking Rescheduled: #{booking.service&.name}", "Your booking (#{booking.reference_number}) is rescheduled to #{formatted_time(booking.scheduled_at)}."]
+        ["Booking Rescheduled: #{booking.service&.name}",
+         "Your booking (#{booking.reference_number}) is rescheduled to #{formatted_time(booking.scheduled_at)}."]
       else
         ["Status Update: #{status.to_s.humanize}", "Booking #{booking.reference_number} is now #{status.to_s.humanize}."]
       end

@@ -157,4 +157,3 @@ RSpec.describe 'Provider Portal API', type: :request do
     end
   end
 end
-

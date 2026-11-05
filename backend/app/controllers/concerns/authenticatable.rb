@@ -27,7 +27,6 @@ module Authenticatable
 
   def extract_token
     header = request.headers['Authorization']
-    header&.split(' ')&.last
+    header&.split&.last
   end
 end
-

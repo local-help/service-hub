@@ -37,7 +37,12 @@ module Api
           extends_past_night = params[:extends_past_night].to_s == 'true'
           night_hours = (params[:night_hours] || 0).to_i
 
-          total = pricing ? pricing.calculate_tariff(duration_hours: hours, extends_past_night: extends_past_night, night_hours: night_hours) : (service.fixed_price || 0)
+          total = if pricing
+                    pricing.calculate_tariff(duration_hours: hours, extends_past_night: extends_past_night,
+                                             night_hours: night_hours)
+                  else
+                    service.fixed_price || 0
+                  end
 
           render json: {
             booking_type: 'time_based',

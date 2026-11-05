@@ -1,3 +1,19 @@
+# == Schema Information
+#
+# Table name: platform_settings
+#
+#  id          :bigint           not null, primary key
+#  description :text
+#  key         :string           not null
+#  value       :text
+#  value_type  :string           default("string"), not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#
+# Indexes
+#
+#  index_platform_settings_on_key  (key) UNIQUE
+#
 class PlatformSetting < ApplicationRecord
   validates :key, presence: true, uniqueness: true
   validates :value_type, presence: true, inclusion: { in: %w[string integer boolean json] }

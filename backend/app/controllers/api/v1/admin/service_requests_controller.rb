@@ -11,13 +11,9 @@ module Api
           requests = requests.by_status(params[:status]) if params[:status].present?
           requests = requests.by_service(params[:service_id]) if params[:service_id].present?
 
-          if params[:category_id].present?
-            requests = requests.joins(:service).where(services: { category_id: params[:category_id] })
-          end
+          requests = requests.joins(:service).where(services: { category_id: params[:category_id] }) if params[:category_id].present?
 
-          if params[:provider_id].present?
-            requests = requests.where(provider_id: params[:provider_id])
-          end
+          requests = requests.where(provider_id: params[:provider_id]) if params[:provider_id].present?
 
           if params[:q].present?
             q = "%#{params[:q]}%"

@@ -3,6 +3,7 @@ module Authorizable
 
   included do
     include Pundit::Authorization
+
     after_action :verify_authorized_or_scoped, unless: :skip_authorization?
 
     rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
@@ -30,15 +31,15 @@ module Authorizable
   end
 
   def require_admin!
-    unless current_user&.admin_or_super_admin?
-      render json: { error: 'Admin access required' }, status: :forbidden
-    end
+    return if current_user&.admin_or_super_admin?
+
+    render json: { error: 'Admin access required' }, status: :forbidden
   end
 
   def require_super_admin!
-    unless current_user&.super_admin?
-      render json: { error: 'Super Admin access required' }, status: :forbidden
-    end
+    return if current_user&.super_admin?
+
+    render json: { error: 'Super Admin access required' }, status: :forbidden
   end
 
   def require_provider!

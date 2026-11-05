@@ -18,11 +18,10 @@ class Msg91Adapter
   BASE_URL = 'https://api.msg91.com/api/v5'.freeze
 
   class << self
-    def send_otp(phone, otp)
+    def send_otp(phone, _otp)
       # Adapter for MSG91 HTTP API
       Rails.logger.info("[SMS][MSG91] Sending OTP to #{phone}")
       # In dev/test this acts safely without hitting remote if credentials aren't set
     end
   end
 end
-

@@ -1,3 +1,49 @@
+# == Schema Information
+#
+# Table name: service_requests
+#
+#  id                  :bigint           not null, primary key
+#  admin_notes         :text
+#  assigned_at         :datetime
+#  assigned_by         :bigint
+#  booking_type        :string
+#  cancellation_reason :text
+#  description         :text             not null
+#  duration_hours      :integer
+#  preferred_at        :datetime
+#  reference_number    :string           not null
+#  selected_options    :jsonb
+#  status              :string           default("pending_review"), not null
+#  vehicle_type        :string
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  address_id          :bigint           not null
+#  provider_id         :bigint
+#  service_id          :bigint           not null
+#  service_variant_id  :bigint
+#  user_id             :bigint           not null
+#
+# Indexes
+#
+#  index_service_requests_on_address_id          (address_id)
+#  index_service_requests_on_preferred_at        (preferred_at)
+#  index_service_requests_on_provider_id         (provider_id)
+#  index_service_requests_on_reference_number    (reference_number) UNIQUE
+#  index_service_requests_on_service_id          (service_id)
+#  index_service_requests_on_service_variant_id  (service_variant_id)
+#  index_service_requests_on_status              (status)
+#  index_service_requests_on_user_id             (user_id)
+#  index_service_requests_on_user_id_and_status  (user_id,status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (address_id => addresses.id)
+#  fk_rails_...  (assigned_by => users.id)
+#  fk_rails_...  (provider_id => providers.id)
+#  fk_rails_...  (service_id => services.id)
+#  fk_rails_...  (service_variant_id => service_variants.id)
+#  fk_rails_...  (user_id => users.id)
+#
 class ServiceRequest < ApplicationRecord
   belongs_to :user
   belongs_to :service
@@ -46,7 +92,7 @@ class ServiceRequest < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :by_status, ->(status) { where(status: status) if status.present? }
-  scope :assigned_to_provider, ->(provider_id) {
+  scope :assigned_to_provider, lambda { |provider_id|
     where(id: ProviderAssignment.where(provider_id: provider_id, status: %w[assigned accepted in_progress completed]).select(:service_request_id))
   }
 
@@ -120,6 +166,7 @@ class ServiceRequest < ApplicationRecord
 
   def generate_reference_number
     return if reference_number.present?
+
     loop do
       self.reference_number = "LH-#{SecureRandom.random_number(10_000..99_999)}"
       break unless ServiceRequest.exists?(reference_number: reference_number)

@@ -1,3 +1,36 @@
+# == Schema Information
+#
+# Table name: provider_assignments
+#
+#  id                 :bigint           not null, primary key
+#  accepted_at        :datetime
+#  assigned_at        :datetime         not null
+#  completed_at       :datetime
+#  internal_notes     :text
+#  rejected_at        :datetime
+#  rejection_reason   :text
+#  status             :string           default("assigned"), not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  assigned_by_id     :bigint           not null
+#  booking_id         :bigint
+#  provider_id        :bigint           not null
+#  service_request_id :bigint
+#
+# Indexes
+#
+#  index_provider_assignments_on_booking_id          (booking_id)
+#  index_provider_assignments_on_provider_id         (provider_id)
+#  index_provider_assignments_on_service_request_id  (service_request_id)
+#  index_provider_assignments_on_status              (status)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (assigned_by_id => users.id)
+#  fk_rails_...  (booking_id => bookings.id)
+#  fk_rails_...  (provider_id => providers.id)
+#  fk_rails_...  (service_request_id => service_requests.id)
+#
 class ProviderAssignment < ApplicationRecord
   belongs_to :service_request, optional: true
   belongs_to :booking, optional: true
@@ -38,7 +71,7 @@ class ProviderAssignment < ApplicationRecord
     %w[accepted in_progress].include?(status)
   end
 
-  def accept!(notes: nil)
+  def accept!(notes: nil, by_user: nil)
     raise InvalidTransitionError, "Cannot accept assignment in #{status} status" unless can_accept?
 
     transaction do
@@ -47,18 +80,14 @@ class ProviderAssignment < ApplicationRecord
         accepted_at: Time.current,
         internal_notes: notes.presence || internal_notes
       )
-      if booking.present? && booking.pending_review?
-        booking.assign_provider! if booking.may_assign_provider?
-      end
-      if service_request.present? && service_request.status == 'pending_review'
-        service_request.update!(status: 'contacting_provider')
-      end
+      booking.assign_provider! if booking.present? && booking.pending_review? && booking.may_assign_provider?
+      service_request.update!(status: 'contacting_provider') if service_request.present? && service_request.status == 'pending_review'
       StatusHistory.create!(
         entity_type: 'ProviderAssignment',
         entity_id: id,
         previous_status: 'assigned',
         new_status: 'accepted',
-        changed_by: assigned_by_id,
+        changed_by: by_user&.id || assigned_by_id,
         notes: notes || 'Provider accepted service assignment'
       )
     end
@@ -96,12 +125,8 @@ class ProviderAssignment < ApplicationRecord
 
     transaction do
       update!(status: 'in_progress', internal_notes: notes.presence || internal_notes)
-      if booking.present? && booking.may_start_service?
-        booking.start_service!
-      end
-      if service_request.present? && service_request.can_transition_to?('in_progress')
-        service_request.transition_to!('in_progress', notes: 'Service in progress by provider')
-      end
+      booking.start_service! if booking.present? && booking.may_start_service?
+      service_request.transition_to!('in_progress', notes: 'Service in progress by provider') if service_request.present? && service_request.can_transition_to?('in_progress')
     end
   end
 
@@ -110,12 +135,8 @@ class ProviderAssignment < ApplicationRecord
 
     transaction do
       update!(status: 'completed', completed_at: Time.current, internal_notes: notes.presence || internal_notes)
-      if booking.present? && booking.may_complete?
-        booking.complete!
-      end
-      if service_request.present? && service_request.can_transition_to?('completed')
-        service_request.transition_to!('completed', notes: 'Service marked completed by provider')
-      end
+      booking.complete! if booking.present? && booking.may_complete?
+      service_request.transition_to!('completed', notes: 'Service marked completed by provider') if service_request.present? && service_request.can_transition_to?('completed')
     end
   end
 

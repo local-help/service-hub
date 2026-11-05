@@ -1,3 +1,57 @@
+# == Schema Information
+#
+# Table name: bookings
+#
+#  id                  :bigint           not null, primary key
+#  admin_notes         :text
+#  assigned_at         :datetime
+#  assigned_by         :bigint
+#  booking_type        :string
+#  cancellation_reason :text
+#  description         :text
+#  duration_hours      :integer
+#  feedback            :text
+#  preferred_at        :datetime
+#  rating              :integer
+#  reference_number    :string
+#  scheduled_at        :datetime
+#  selected_options    :jsonb
+#  status              :string           default("confirmed"), not null
+#  total_amount        :decimal(10, 2)
+#  vehicle_type        :string
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  address_id          :bigint
+#  provider_id         :bigint
+#  quotation_id        :bigint
+#  service_id          :bigint
+#  service_request_id  :bigint
+#  service_variant_id  :bigint
+#  user_id             :bigint
+#
+# Indexes
+#
+#  index_bookings_on_address_id          (address_id)
+#  index_bookings_on_provider_id         (provider_id)
+#  index_bookings_on_quotation_id        (quotation_id)
+#  index_bookings_on_reference_number    (reference_number) UNIQUE
+#  index_bookings_on_scheduled_at        (scheduled_at)
+#  index_bookings_on_service_id          (service_id)
+#  index_bookings_on_service_request_id  (service_request_id) UNIQUE
+#  index_bookings_on_service_variant_id  (service_variant_id)
+#  index_bookings_on_status              (status)
+#  index_bookings_on_user_id             (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (address_id => addresses.id)
+#  fk_rails_...  (provider_id => providers.id)
+#  fk_rails_...  (quotation_id => quotations.id)
+#  fk_rails_...  (service_id => services.id)
+#  fk_rails_...  (service_request_id => service_requests.id)
+#  fk_rails_...  (service_variant_id => service_variants.id)
+#  fk_rails_...  (user_id => users.id)
+#
 class Booking < ApplicationRecord
   include AASM
 
@@ -12,7 +66,7 @@ class Booking < ApplicationRecord
   belongs_to :quotation, optional: true
 
   has_many :request_attachments, dependent: :destroy
-  has_many :attachments, class_name: 'RequestAttachment', foreign_key: :booking_id, dependent: :destroy
+  has_many :attachments, class_name: 'RequestAttachment', dependent: :destroy
   has_many :quotations, dependent: :destroy
   has_many :payments, dependent: :restrict_with_error
   has_many :communications, dependent: :destroy
@@ -36,7 +90,7 @@ class Booking < ApplicationRecord
   scope :upcoming, -> { where(status: %w[confirmed rescheduled in_progress]).where("scheduled_at >= ? OR scheduled_at IS NULL", Time.current) }
   scope :past, -> { where(status: %w[completed cancelled]) }
   scope :recent, -> { order(created_at: :desc) }
-  scope :for_provider, ->(provider_id) {
+  scope :for_provider, lambda { |provider_id|
     where(provider_id: provider_id).or(
       where(id: ProviderAssignment.where(provider_id: provider_id, status: %w[assigned accepted in_progress completed]).select(:booking_id))
     )
@@ -145,7 +199,7 @@ class Booking < ApplicationRecord
       end
     end
   end
-  alias_method :assign_provider_details!, :assign_to_provider!
+  alias assign_provider_details! assign_to_provider!
 
   def active_quotation
     quotations.where(status: %w[draft submitted pending approved]).order(created_at: :desc).first || quotation
@@ -175,6 +229,7 @@ class Booking < ApplicationRecord
 
   def generate_reference_number
     return if reference_number.present?
+
     loop do
       self.reference_number = "BK-#{SecureRandom.random_number(100_000..999_999)}"
       break unless Booking.exists?(reference_number: reference_number)

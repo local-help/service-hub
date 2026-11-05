@@ -1,3 +1,22 @@
+# == Schema Information
+#
+# Table name: otp_verifications
+#
+#  id          :bigint           not null, primary key
+#  attempts    :integer          default(0)
+#  expires_at  :datetime         not null
+#  otp_digest  :string           not null
+#  phone       :string           not null
+#  purpose     :string           default("login"), not null
+#  verified_at :datetime
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#
+# Indexes
+#
+#  index_otp_verifications_on_expires_at         (expires_at)
+#  index_otp_verifications_on_phone_and_purpose  (phone,purpose)
+#
 class OtpVerification < ApplicationRecord
   validates :phone, presence: true
   validates :otp_digest, presence: true
@@ -40,6 +59,7 @@ class OtpVerification < ApplicationRecord
   def self.cooldown_remaining(phone)
     last_otp = for_phone(phone).order(created_at: :desc).first
     return 0 unless last_otp
+
     remaining = OTP_RESEND_COOLDOWN - (Time.current - last_otp.created_at)
     [remaining, 0].max
   end

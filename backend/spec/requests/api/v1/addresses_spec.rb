@@ -41,4 +41,3 @@ RSpec.describe 'Api::V1::Addresses', type: :request do
     end
   end
 end
-

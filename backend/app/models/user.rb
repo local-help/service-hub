@@ -1,3 +1,29 @@
+# == Schema Information
+#
+# Table name: users
+#
+#  id              :bigint           not null, primary key
+#  avatar_url      :string
+#  email           :string
+#  email_verified  :boolean          default(FALSE)
+#  google_uid      :string
+#  name            :string           not null
+#  password_digest :string
+#  phone           :string
+#  phone_verified  :boolean          default(FALSE)
+#  role            :string           default("customer"), not null
+#  status          :string           default("active"), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email       (email) UNIQUE WHERE (email IS NOT NULL)
+#  index_users_on_google_uid  (google_uid) UNIQUE WHERE (google_uid IS NOT NULL)
+#  index_users_on_phone       (phone) UNIQUE WHERE (phone IS NOT NULL)
+#  index_users_on_role        (role)
+#  index_users_on_status      (status)
+#
 class User < ApplicationRecord
   has_secure_password validations: false
 
@@ -45,7 +71,7 @@ class User < ApplicationRecord
   def service_provider
     active_provider_user&.provider
   end
-  alias_method :provider_organization, :service_provider
+  alias provider_organization service_provider
 
   def provider_role
     active_provider_user&.role
@@ -67,16 +93,12 @@ class User < ApplicationRecord
 
   def normalize_attributes
     self.email = email.presence&.downcase&.strip
-    if phone.present?
-      self.phone = phone.to_s.gsub(/[\s\-\(\)]/, '').presence
-    else
-      self.phone = nil
-    end
+    self.phone = (phone.to_s.gsub(/[\s\-()]/, '').presence if phone.present?)
   end
 
   def must_have_email_or_phone
-    if email.blank? && phone.blank?
-      errors.add(:base, 'Must provide either email or phone number')
-    end
+    return unless email.blank? && phone.blank?
+
+    errors.add(:base, 'Must provide either email or phone number')
   end
 end

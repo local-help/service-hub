@@ -105,4 +105,3 @@ RSpec.describe 'Api::V1::Auth', type: :request do
     end
   end
 end
-

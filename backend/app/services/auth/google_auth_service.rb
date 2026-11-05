@@ -16,7 +16,7 @@ module Auth
 
       if id_token.present?
         payload = verify_google_id_token(id_token)
-      elsif Rails.env.development? || Rails.env.test?
+      elsif Rails.env.local?
         # In development / test, allow simulated sign in if direct profile passed
         payload = simulated_dev_payload
       end
@@ -51,15 +51,12 @@ module Auth
           role: 'customer',
           status: 'active'
         )
-        unless user.save
-          return failure(user.errors.full_messages.join(', '))
-        end
+        return failure(user.errors.full_messages.join(', ')) unless user.save
+
         NotificationService.notify_welcome(user)
       end
 
-      unless user.status_active?
-        return failure('Account is inactive or suspended')
-      end
+      return failure('Account is inactive or suspended') unless user.status_active?
 
       access_token = JsonWebToken.generate_access_token(user)
       refresh_token = JsonWebToken.generate_refresh_token(user, @request)
@@ -91,17 +88,15 @@ module Auth
           data = JSON.parse(res.body)
 
           # Verify client id if configured
-          google_client_id = ENV['GOOGLE_CLIENT_ID'] || ENV['NEXT_PUBLIC_GOOGLE_CLIENT_ID']
-          if google_client_id.present? && data['aud'] != google_client_id
-            return { error: 'Google ID token audience mismatch' }
-          end
+          google_client_id = ENV['GOOGLE_CLIENT_ID'] || ENV.fetch('NEXT_PUBLIC_GOOGLE_CLIENT_ID', nil)
+          return { error: 'Google ID token audience mismatch' } if google_client_id.present? && data['aud'] != google_client_id
 
           return {
             google_uid: data['sub'],
             email: data['email'],
             name: data['name'] || "#{data['given_name']} #{data['family_name']}".strip,
             avatar_url: data['picture'],
-            email_verified: data['email_verified'] == true || data['email_verified'] == 'true'
+            email_verified: [true, 'true'].include?(data['email_verified'])
           }
         end
       rescue StandardError => e
@@ -109,7 +104,7 @@ module Auth
       end
 
       # 2. In development or test, allow decoding valid unverified JWT structure
-      if Rails.env.development? || Rails.env.test?
+      if Rails.env.local?
         begin
           decoded = JWT.decode(id_token, nil, false).first
           if decoded && decoded['email'].present?
@@ -126,9 +121,7 @@ module Auth
         end
 
         # Check if direct profile was provided
-        if @params[:email].present?
-          return simulated_dev_payload
-        end
+        return simulated_dev_payload if @params[:email].present?
       end
 
       { error: 'Invalid Google token' }
@@ -148,4 +141,3 @@ module Auth
     end
   end
 end
-

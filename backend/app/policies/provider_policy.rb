@@ -25,4 +25,3 @@ class ProviderPolicy < ApplicationPolicy
     end
   end
 end
-

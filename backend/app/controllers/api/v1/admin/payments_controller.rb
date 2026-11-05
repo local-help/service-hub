@@ -7,7 +7,7 @@ module Api
         before_action :require_admin!
 
         def index
-          payments = Payment.includes(booking: [service_request: :user]).recent
+          payments = Payment.includes(booking: [{ service_request: :user }]).recent
           payments = payments.by_status(params[:status]) if params[:status].present?
           payments = paginate(payments)
           render json: payments, each_serializer: PaymentSerializer, meta: pagination_meta(payments)
