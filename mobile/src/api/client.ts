@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
+const ENV_URL = process.env.EXPO_PUBLIC_API_URL;
 const DEFAULT_PORT = '4000';
 const DEFAULT_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-export let API_BASE = `http://${DEFAULT_HOST}:${DEFAULT_PORT}/api/v1`;
+export let API_BASE = ENV_URL || `http://${DEFAULT_HOST}:${DEFAULT_PORT}/api/v1`;
 
 export const setApiBase = (url: string) => {
   API_BASE = url;
