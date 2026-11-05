@@ -103,7 +103,7 @@ export default function HomePage() {
 
           {/* Search bar */}
           <div className="max-w-lg mx-auto pt-2">
-            <div className="flex items-center bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 gap-3 focus-within:border-slate-400 transition">
+            <div className="flex items-center bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 gap-3 focus-within:border-teal-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-100 transition">
               <Search className="w-4 h-4 text-slate-400 shrink-0" />
               <input
                 type="text"
@@ -115,9 +115,9 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition shrink-0"
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-teal-700 transition shrink-0"
               >
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-3.5 h-3.5 text-teal-600" />
                 <span className="hidden sm:inline">{location.locality || 'Prayagraj'}</span>
               </button>
             </div>
@@ -145,16 +145,16 @@ export default function HomePage() {
             {filteredServices.map((service) => (
               <div
                 key={service.id}
-                className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 transition"
+                className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-teal-300 hover:shadow-xs transition bg-white"
               >
                 <div>
                   <div className="flex items-center justify-between gap-1.5 mb-2">
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-100">
                       {service.booking_type === 'time_based' ? 'Hourly' : 'Direct Booking'}
                     </span>
                     {service.estimated_duration_minutes && (
                       <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3 h-3 text-slate-400" />
                         {service.estimated_duration_minutes} min
                       </span>
                     )}
@@ -183,7 +183,7 @@ export default function HomePage() {
 
                   <Link
                     href={`/services/${service.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition shadow-xs"
                   >
                     <span>Book</span>
                     <ArrowRight className="w-3 h-3" />
@@ -216,12 +216,12 @@ export default function HomePage() {
               <Link
                 key={category.id}
                 href={`/categories/${category.id}`}
-                className="group flex flex-col items-center justify-center gap-2.5 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition text-center"
+                className="group flex flex-col items-center justify-center gap-2.5 p-4 rounded-xl bg-slate-50/70 hover:bg-teal-50/40 border border-slate-100 hover:border-teal-200 transition text-center"
               >
-                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200 group-hover:border-teal-300 transition">
                   {getCategoryIcon(category.icon_name)}
                 </div>
-                <span className="text-xs font-medium text-slate-700 group-hover:text-slate-900 line-clamp-2">
+                <span className="text-xs font-medium text-slate-700 group-hover:text-teal-900 line-clamp-2 transition">
                   {category.name}
                 </span>
               </Link>
@@ -232,7 +232,7 @@ export default function HomePage() {
 
       {/* How it works */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="bg-slate-50 rounded-xl p-8 sm:p-10">
+        <div className="bg-slate-50 rounded-xl p-8 sm:p-10 border border-slate-100">
           <h2 className="text-lg font-semibold text-slate-900 mb-1">How LocalHelp Works</h2>
           <p className="text-sm text-slate-500 mb-8">
             No spam calls, no bidding — just verified local professionals.
@@ -240,7 +240,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center text-sm font-semibold shadow-xs">
                 1
               </div>
               <h4 className="text-sm font-semibold text-slate-900">Select a service</h4>
@@ -250,7 +250,7 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center text-sm font-semibold shadow-xs">
                 2
               </div>
               <h4 className="text-sm font-semibold text-slate-900">Verified match</h4>
@@ -260,7 +260,7 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center text-sm font-semibold shadow-xs">
                 3
               </div>
               <h4 className="text-sm font-semibold text-slate-900">Approve & relax</h4>
@@ -281,9 +281,9 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <a
               href={getCallUrl()}
-              className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-teal-700 transition"
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-4 h-4 text-teal-600" />
               <span>{supportInfo.phone}</span>
             </a>
           </div>

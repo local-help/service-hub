@@ -113,7 +113,7 @@ export const LocationModal: React.FC = () => {
           type="button"
           onClick={handleGpsClick}
           disabled={isDetecting}
-          className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition disabled:opacity-60 cursor-pointer"
+          className="w-full py-2.5 px-4 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition disabled:opacity-60 cursor-pointer shadow-xs"
         >
           {isDetecting ? (
             <>
@@ -156,7 +156,7 @@ export const LocationModal: React.FC = () => {
               value={customAddress}
               onChange={(e) => setCustomAddress(e.target.value)}
               placeholder="e.g. 14 MG Marg, Civil Lines"
-              className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 text-slate-900"
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 text-slate-900"
             />
           </div>
 
@@ -170,7 +170,7 @@ export const LocationModal: React.FC = () => {
                 value={customLandmark}
                 onChange={(e) => setCustomLandmark(e.target.value)}
                 placeholder="e.g. Near High Court"
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 text-slate-900"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 text-slate-900"
               />
             </div>
 
@@ -183,7 +183,7 @@ export const LocationModal: React.FC = () => {
                 value={customPincode}
                 onChange={(e) => setCustomPincode(e.target.value)}
                 placeholder="211001"
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 text-slate-900"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 text-slate-900"
               />
             </div>
           </div>
@@ -204,7 +204,7 @@ export const LocationModal: React.FC = () => {
                   onClick={() => handleSelectLocality(loc)}
                   className={`px-2.5 py-1 text-xs rounded-md border transition cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 font-medium'
+                      ? 'bg-teal-700 text-white border-teal-700 font-medium shadow-xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
@@ -232,7 +232,7 @@ export const LocationModal: React.FC = () => {
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-1.5"
+              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-teal-700 text-white hover:bg-teal-800 transition flex items-center gap-1.5 shadow-xs"
             >
               <Check className="w-3.5 h-3.5" />
               <span>Confirm</span>

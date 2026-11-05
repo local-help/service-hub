@@ -180,7 +180,7 @@ export default function ServiceDetailPage() {
                 onClick={() => setSelectedVehicle(vt)}
                 className={`py-2 px-3 rounded-lg border text-xs font-medium transition text-center cursor-pointer ${
                   selectedVehicle === vt
-                    ? 'bg-slate-900 text-white border-slate-900'
+                    ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -218,14 +218,14 @@ export default function ServiceDetailPage() {
                   onClick={() => setSelectedVariantId(variant.id)}
                   className={`p-3.5 rounded-lg border cursor-pointer transition flex items-center justify-between gap-3 ${
                     isSelected
-                      ? 'border-slate-900 bg-slate-50/50'
+                      ? 'border-teal-600 bg-teal-50/30'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        isSelected ? 'border-slate-900 bg-slate-900' : 'border-slate-300'
+                        isSelected ? 'border-teal-700 bg-teal-700' : 'border-slate-300'
                       }`}>
                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
@@ -280,7 +280,7 @@ export default function ServiceDetailPage() {
                   onClick={() => setDriverHours(hrs)}
                   className={`py-2 px-3 rounded-lg border text-xs font-medium transition text-center cursor-pointer ${
                     driverHours === hrs
-                      ? 'bg-slate-900 text-white border-slate-900'
+                      ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
@@ -339,7 +339,7 @@ export default function ServiceDetailPage() {
         ) : (
           <button
             onClick={handleProceed}
-            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs"
           >
             <span>Proceed to Booking</span>
             <ArrowRight className="w-3.5 h-3.5" />

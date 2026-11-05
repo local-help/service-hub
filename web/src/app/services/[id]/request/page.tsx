@@ -245,7 +245,7 @@ function CreateRequestContent() {
         <div className="flex items-center justify-center gap-3 text-xs font-medium pt-2">
           <Link
             href={`/bookings/${createdRequest.booking?.id || createdRequest.id}`}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition"
+            className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg transition shadow-xs"
           >
             Manage Booking
           </Link>
@@ -345,7 +345,7 @@ function CreateRequestContent() {
               <button
                 type="button"
                 onClick={handleCreateAddress}
-                className="px-3.5 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-md cursor-pointer"
+                className="px-3.5 py-1.5 bg-teal-700 text-white text-xs font-medium rounded-md hover:bg-teal-800 transition cursor-pointer shadow-xs"
               >
                 Save & Select
               </button>
@@ -358,14 +358,14 @@ function CreateRequestContent() {
                   onClick={() => setSelectedAddressId(addr.id)}
                   className={`p-3 rounded-lg border cursor-pointer transition ${
                     selectedAddressId === addr.id
-                      ? 'border-slate-900 bg-slate-50/50'
+                      ? 'border-teal-600 bg-teal-50/30'
                       : 'border-slate-200 hover:border-slate-300 bg-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-slate-900">{addr.label || 'Address'}</span>
                     {selectedAddressId === addr.id && (
-                      <span className="text-[10px] text-slate-500 font-medium">Selected</span>
+                      <span className="text-[10px] text-teal-700 font-semibold">Selected</span>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 line-clamp-2">{addr.full_address || addr.address_line}</p>
@@ -459,7 +459,7 @@ function CreateRequestContent() {
                     </div>
                   ) : (
                     <>
-                      <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-xs">
+                      <div className="w-8 h-8 rounded-full bg-white border border-teal-200 flex items-center justify-center text-teal-700 shadow-xs">
                         <Upload className="w-4 h-4" />
                       </div>
                       <div>
@@ -486,7 +486,7 @@ function CreateRequestContent() {
                 <button
                   type="button"
                   onClick={handleAddAttachment}
-                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+                  className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs"
                 >
                   Add
                 </button>
@@ -536,7 +536,7 @@ function CreateRequestContent() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-lg transition disabled:opacity-50 cursor-pointer"
+          className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
         >
           {submitting ? 'Submitting…' : 'Submit Request'}
         </button>

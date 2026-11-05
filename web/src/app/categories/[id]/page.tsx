@@ -144,7 +144,7 @@ export default function CategoryPage() {
               onClick={() => setSelectedSubcat('all')}
               className={`px-3 py-1 rounded-lg text-xs transition whitespace-nowrap ${
                 selectedSubcat === 'all'
-                  ? 'bg-slate-900 text-white font-medium'
+                  ? 'bg-teal-700 text-white font-medium shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -156,7 +156,7 @@ export default function CategoryPage() {
                 onClick={() => setSelectedSubcat(subcat.id)}
                 className={`px-3 py-1 rounded-lg text-xs transition whitespace-nowrap ${
                   selectedSubcat === subcat.id
-                    ? 'bg-slate-900 text-white font-medium'
+                    ? 'bg-teal-700 text-white font-medium shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
@@ -265,7 +265,7 @@ export default function CategoryPage() {
                   ) : (
                     <Link
                       href={`/services/${service.id}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition shadow-xs"
                     >
                       <span>Book</span>
                       <ArrowRight className="w-3 h-3" />

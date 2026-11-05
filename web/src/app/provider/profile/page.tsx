@@ -282,7 +282,7 @@ export default function ProviderProfilePage() {
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}
-            className="px-3.5 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+            className="px-3.5 py-2 bg-teal-700 text-white rounded-xl text-xs font-semibold hover:bg-teal-800 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Add Member</span>

@@ -80,7 +80,7 @@ export default function RegisterPage() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
               </div>
             </div>
@@ -95,12 +95,12 @@ export default function RegisterPage() {
                   placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-teal-700 transition cursor-pointer"
                   title={showPassword ? 'Hide password' : 'View password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -118,12 +118,12 @@ export default function RegisterPage() {
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-teal-700 transition cursor-pointer"
                   title={showConfirmPassword ? 'Hide password' : 'View password'}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -134,7 +134,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer mt-2"
+              className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer shadow-xs mt-2"
             >
               {loading ? 'Creating account…' : 'Sign up'}
             </button>
@@ -143,7 +143,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-xs text-slate-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-slate-900 font-medium hover:underline">
+          <Link href="/login" className="text-teal-700 font-medium hover:text-teal-800 hover:underline">
             Sign in
           </Link>
         </p>

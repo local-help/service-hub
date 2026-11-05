@@ -115,7 +115,7 @@ export default function AddressesPage() {
           </div>
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{showAdd ? 'Cancel' : 'Add Address'}</span>
@@ -198,7 +198,7 @@ export default function AddressesPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+              className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs"
             >
               {submitting ? 'Saving…' : 'Save Address'}
             </button>

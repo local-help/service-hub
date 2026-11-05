@@ -32,7 +32,7 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
         </a>
         <a
           href={getCallUrl()}
-          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-full shadow-sm text-xs font-medium transition"
+          className="flex items-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-full shadow-sm text-xs font-medium transition"
           title="Call Customer Care"
         >
           <Phone className="w-3.5 h-3.5" />
@@ -63,7 +63,7 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
             href={getWhatsAppUrl(referenceNumber, serviceName)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition shadow-xs"
           >
             <MessageCircle className="w-3.5 h-3.5" />
             <span>WhatsApp</span>

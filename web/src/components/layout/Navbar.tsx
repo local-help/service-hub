@@ -38,7 +38,7 @@ export const Navbar: React.FC = () => {
 
   const linkClass = (path: string) =>
     `px-3 py-1.5 rounded-md text-sm transition ${
-      isActive(path) ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-900'
+      isActive(path) ? 'text-teal-700 font-semibold' : 'text-slate-600 hover:text-teal-700'
     }`;
 
   return (
@@ -110,9 +110,9 @@ export const Navbar: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-md transition"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 hover:text-teal-700 hover:bg-teal-50/50 rounded-md transition"
               >
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-3.5 h-3.5 text-teal-600" />
                 <span>{location.locality || 'Prayagraj'}</span>
               </button>
             )}
@@ -162,17 +162,17 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center gap-1.5 pl-2 border-l border-slate-100">
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-50 transition text-slate-700 hover:text-slate-900 group"
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-teal-50/50 transition text-slate-700 hover:text-teal-800 group"
                   title="View & Edit Profile"
                 >
                   {user.avatar_url ? (
                     <img
                       src={user.avatar_url}
                       alt={user.name}
-                      className="w-6 h-6 rounded-full object-cover border border-slate-200"
+                      className="w-6 h-6 rounded-full object-cover border border-teal-200"
                     />
                   ) : (
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-semibold flex items-center justify-center group-hover:bg-slate-200 transition">
+                    <span className="w-6 h-6 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-semibold flex items-center justify-center group-hover:bg-teal-100 transition">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
@@ -190,13 +190,13 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <Link
                   href="/login"
-                  className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition"
+                  className="px-3 py-1.5 text-sm text-slate-600 hover:text-teal-700 transition"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-teal-700 hover:bg-teal-800 rounded-lg shadow-xs transition"
                 >
                   Sign up
                 </Link>
@@ -376,7 +376,7 @@ export const Navbar: React.FC = () => {
                 className="text-center px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg"
               >Log in</Link>
               <Link href="/register" onClick={() => setMobileMenuOpen(false)}
-                className="text-center px-4 py-2 text-sm text-white bg-slate-900 rounded-lg"
+                className="text-center px-4 py-2 text-sm text-white bg-teal-700 hover:bg-teal-800 rounded-lg shadow-xs transition"
               >Sign up</Link>
             </div>
           )}

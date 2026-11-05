@@ -48,15 +48,15 @@ export default function BookingsPage() {
       case 'contacting_provider':
         return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Matching Provider</span>;
       case 'quotation_sent':
-        return <span className="bg-purple-50 text-purple-700 text-[11px] font-semibold px-2 py-0.5 rounded-md animate-pulse">Quote Received</span>;
+        return <span className="bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-semibold px-2 py-0.5 rounded-md">Quote Received</span>;
       case 'quotation_approved':
-        return <span className="bg-emerald-50 text-emerald-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Quote Approved</span>;
+        return <span className="bg-teal-50 text-teal-800 border border-teal-100 text-[11px] font-medium px-2 py-0.5 rounded-md">Quote Approved</span>;
       case 'confirmed':
         return <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">Confirmed</span>;
       case 'rescheduled':
         return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Rescheduled</span>;
       case 'in_progress':
-        return <span className="bg-blue-50 text-blue-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">On-Site / Active</span>;
+        return <span className="bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-semibold px-2 py-0.5 rounded-md">On-Site / Active</span>;
       case 'completed':
         return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md">Completed</span>;
       case 'cancelled':
@@ -93,7 +93,7 @@ export default function BookingsPage() {
         </div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center shadow-xs"
         >
           <span>Book New Service</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -122,7 +122,7 @@ export default function BookingsPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`px-3 py-1.5 text-xs rounded-lg transition font-medium cursor-pointer whitespace-nowrap ${
               activeTab === tab.key
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-teal-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
@@ -149,7 +149,7 @@ export default function BookingsPage() {
           </p>
           <Link
             href="/"
-            className="inline-block px-4 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition"
+            className="inline-block px-4 py-2 bg-teal-700 text-white text-xs font-medium rounded-lg hover:bg-teal-800 transition shadow-xs"
           >
             Explore Services
           </Link>
@@ -232,7 +232,7 @@ export default function BookingsPage() {
                 />
                 <Link
                   href={`/bookings/${b.id}`}
-                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-xs"
+                  className="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-xs"
                 >
                   <span>{b.status === 'quotation_sent' ? 'Review Quote' : 'Manage'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />

@@ -229,7 +229,7 @@ export default function ProfilePage() {
                 onError={() => setAvatarUrl('')}
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-slate-900 text-white font-semibold text-xl flex items-center justify-center shadow-xs">
+              <div className="w-16 h-16 rounded-full bg-teal-700 text-white font-semibold text-xl flex items-center justify-center shadow-xs">
                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
@@ -300,7 +300,7 @@ export default function ProfilePage() {
             />
             <label
               htmlFor="avatar-device-upload"
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs ${
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs ${
                 uploadingAvatar ? 'opacity-60 pointer-events-none' : ''
               }`}
             >
@@ -335,7 +335,7 @@ export default function ProfilePage() {
               placeholder="https://example.com/photo.jpg"
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-slate-400 text-slate-900 bg-white"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 text-slate-900 bg-white"
             />
           </div>
           <p className="text-[11px] text-slate-400">
@@ -384,7 +384,7 @@ export default function ProfilePage() {
                   placeholder="e.g. Amit Sharma"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
               </div>
             </div>
@@ -428,7 +428,7 @@ export default function ProfilePage() {
                   placeholder="+91 98765 43210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={savingProfile}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <span>{savingProfile ? 'Saving Changes...' : 'Save Profile Details'}</span>
             </button>
@@ -487,7 +487,7 @@ export default function ProfilePage() {
                   placeholder="••••••••"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
                 <button
                   type="button"
@@ -514,7 +514,7 @@ export default function ProfilePage() {
                   placeholder="At least 8 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
                 <button
                   type="button"
@@ -539,7 +539,7 @@ export default function ProfilePage() {
                   placeholder="Re-enter new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                  className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                 />
                 <button
                   type="button"
@@ -557,7 +557,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={savingPassword}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition cursor-pointer"
+              className="px-4 py-2 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs"
             >
               {savingPassword
                 ? 'Updating...'

@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --color-teal-deep: #176B65;
-  --color-teal-accent: #25877C;
-  --color-ivory-warm: #FFFFFF;
+  --color-teal-primary: #0F766E;
+  --color-teal-hover: #115E59;
+  --color-teal-light: #F0FDFA;
+  --color-teal-border: #CCFBF1;
   --color-charcoal: #0F172A;
-  --color-ivory-sand: #E2E8F0;
 
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
@@ -19,7 +19,7 @@ body {
 }
 
 ::selection {
-  background-color: #0F172A;
+  background-color: #0F766E;
   color: #FFFFFF;
 }
 

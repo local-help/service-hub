@@ -106,7 +106,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setTab('otp')}
               className={`py-1.5 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                tab === 'otp' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                tab === 'otp' ? 'bg-white text-teal-800 shadow-xs font-semibold' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Phone className="w-3.5 h-3.5" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setTab('password')}
               className={`py-1.5 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                tab === 'password' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                tab === 'password' ? 'bg-white text-teal-800 shadow-xs font-semibold' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Mail className="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@ export default function LoginPage() {
                       placeholder="+919876543210"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                     />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">We'll send a 6-digit code via SMS.</p>
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
+                  className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer shadow-xs"
                 >
                   {loading ? 'Sending code…' : 'Send OTP'}
                 </button>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="text-xs text-slate-500 hover:text-slate-800"
+                      className="text-xs text-slate-500 hover:text-teal-700"
                     >
                       Change phone
                     </button>
@@ -174,7 +174,7 @@ export default function LoginPage() {
                       placeholder="123456"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-sm font-mono tracking-wider border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-center text-slate-900"
+                      className="w-full pl-9 pr-3 py-2 text-sm font-mono tracking-wider border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-center text-slate-900"
                     />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1 text-center">
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || otp.length < 4}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
+                  className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer shadow-xs"
                 >
                   {loading ? 'Verifying…' : 'Continue'}
                 </button>
@@ -204,7 +204,7 @@ export default function LoginPage() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                   />
                 </div>
               </div>
@@ -219,12 +219,12 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
+                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 transition text-slate-900"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-teal-700 transition cursor-pointer"
                     title={showPassword ? 'Hide password' : 'View password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -235,7 +235,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
+                className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer shadow-xs"
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
@@ -245,7 +245,7 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-slate-500">
           Don't have an account?{' '}
-          <Link href="/register" className="text-slate-900 font-medium hover:underline">
+          <Link href="/register" className="text-teal-700 font-medium hover:text-teal-800 hover:underline">
             Sign up
           </Link>
         </p>
