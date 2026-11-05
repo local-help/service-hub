@@ -25,3 +25,4 @@ module Bookings
     end
   end
 end
+
