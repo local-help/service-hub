@@ -30,7 +30,7 @@ export default function AddressesPage() {
     is_default: false,
   });
 
-  const handleGpsDetected = (loc: LocationData) => {
+  const handleLocationDetected = (loc: LocationData) => {
     setForm((prev) => ({
       ...prev,
       address_line: loc.address_line,
@@ -127,7 +127,7 @@ export default function AddressesPage() {
         <form onSubmit={handleCreate} className="border border-slate-200 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
             <h3 className="text-sm font-semibold text-slate-900">Add Service Address</h3>
-            <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS" />
+            <GpsButton onLocationDetected={handleLocationDetected} label="Use Current Location" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

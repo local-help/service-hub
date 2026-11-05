@@ -164,9 +164,9 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setIsDetecting(false);
           let message = 'Unable to retrieve location';
           if (geoError.code === geoError.PERMISSION_DENIED) {
-            message = 'Location permission denied. Please allow GPS access in your browser settings.';
+            message = 'Location permission denied. Please allow location access in your browser settings.';
           } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
-            message = 'Position unavailable. Please check your device GPS.';
+            message = 'Position unavailable. Please check your device location settings.';
           } else if (geoError.code === geoError.TIMEOUT) {
             message = 'Location request timed out. Retrying...';
           }

@@ -40,7 +40,7 @@ export const LocationModal: React.FC = () => {
 
   if (!isModalOpen) return null;
 
-  const handleGpsClick = async () => {
+  const handleCurrentLocationClick = async () => {
     try {
       const loc = await detectLocation();
       setCustomAddress(loc.address_line);
@@ -108,22 +108,22 @@ export const LocationModal: React.FC = () => {
           </div>
         )}
 
-        {/* GPS Button */}
+        {/* Current Location Button */}
         <button
           type="button"
-          onClick={handleGpsClick}
+          onClick={handleCurrentLocationClick}
           disabled={isDetecting}
           className="w-full py-2.5 px-4 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition disabled:opacity-60 cursor-pointer shadow-xs"
         >
           {isDetecting ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Detecting GPS location…</span>
+              <span>Detecting current location…</span>
             </>
           ) : (
             <>
               <Crosshair className="w-3.5 h-3.5" />
-              <span>Use Current GPS Location</span>
+              <span>Use Current Location</span>
             </>
           )}
         </button>

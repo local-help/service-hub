@@ -54,7 +54,7 @@ function CreateRequestContent() {
     is_default: true,
   });
 
-  const handleGpsDetected = (loc: LocationData) => {
+  const handleLocationDetected = (loc: LocationData) => {
     setNewAddress((prev) => ({
       ...prev,
       address_line: loc.address_line,
@@ -308,7 +308,7 @@ function CreateRequestContent() {
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <span className="text-xs font-medium text-slate-700">Add Doorstep Address</span>
-                <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS" />
+                <GpsButton onLocationDetected={handleLocationDetected} label="Use Current Location" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

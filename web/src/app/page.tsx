@@ -245,7 +245,7 @@ export default function HomePage() {
               </div>
               <h4 className="text-sm font-semibold text-slate-900">Select a service</h4>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Choose your service, pick options, and pin your location via GPS.
+                Choose your service, pick options, and set your doorstep location.
               </p>
             </div>
 

@@ -13,7 +13,7 @@ interface GpsButtonProps {
 export const GpsButton: React.FC<GpsButtonProps> = ({
   onLocationDetected,
   className = '',
-  label = 'Use GPS Location',
+  label = 'Use Current Location',
 }) => {
   const { detectLocation, isDetecting } = useLocation();
 
@@ -34,7 +34,7 @@ export const GpsButton: React.FC<GpsButtonProps> = ({
       onClick={handleClick}
       disabled={isDetecting}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer disabled:opacity-50 ${className}`}
-      title="Fetch exact coordinates from your device GPS"
+      title="Detect exact address from your current location"
     >
       {isDetecting ? (
         <>
