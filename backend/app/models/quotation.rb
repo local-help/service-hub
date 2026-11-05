@@ -44,7 +44,7 @@ class Quotation < ApplicationRecord
       update!(status: 'submitted', created_by: by_user.id)
       if booking.present? && booking.may_send_quotation?
         booking.send_quotation!
-      elsif service_request.present?
+      elsif service_request.present? && service_request.can_transition_to?('quotation_sent')
         service_request.transition_to!('quotation_sent', changed_by: by_user)
       end
       StatusHistory.create!(
@@ -81,7 +81,7 @@ class Quotation < ApplicationRecord
         booking.update!(total_amount: amount, quotation_id: id)
         booking.approve_quotation! if booking.may_approve_quotation?
       end
-      if service_request.present?
+      if service_request.present? && service_request.can_transition_to?('quotation_approved')
         service_request.transition_to!('quotation_approved', changed_by: changed_by)
       end
       StatusHistory.create!(
@@ -102,7 +102,7 @@ class Quotation < ApplicationRecord
       if booking.present? && booking.may_reject_quotation?
         booking.reject_quotation!
       end
-      if service_request.present?
+      if service_request.present? && service_request.can_transition_to?('quotation_rejected')
         service_request.transition_to!('quotation_rejected', changed_by: changed_by, notes: reason)
       end
       StatusHistory.create!(

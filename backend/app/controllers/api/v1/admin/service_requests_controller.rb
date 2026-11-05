@@ -65,52 +65,28 @@ module Api
           service_request = ServiceRequest.find(params[:id])
           provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
 
-          ActiveRecord::Base.transaction do
-            service_request.assign_provider!(
-              provider,
-              assigned_by: current_user,
-              notes: params[:notes]
-            )
+          ProviderAssignments::AssignProvider.call(
+            target: service_request,
+            provider: provider,
+            assigned_by: current_user,
+            notes: params[:notes]
+          )
 
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'assign_provider',
-              entity: service_request,
-              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
-            )
-          end
-
-          if service_request.booking.present?
-            NotificationService.notify_provider_assigned(service_request.booking, provider)
-          end
-
-          render json: service_request, serializer: ServiceRequestDetailSerializer
+          render json: service_request.reload, serializer: ServiceRequestDetailSerializer
         end
 
         def reassign_provider
           service_request = ServiceRequest.find(params[:id])
           provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
 
-          ActiveRecord::Base.transaction do
-            service_request.assign_provider!(
-              provider,
-              assigned_by: current_user,
-              notes: params[:notes] || 'Reassigned by admin'
-            )
+          ProviderAssignments::AssignProvider.call(
+            target: service_request,
+            provider: provider,
+            assigned_by: current_user,
+            notes: params[:notes] || 'Reassigned by admin'
+          )
 
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'reassign_provider',
-              entity: service_request,
-              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
-            )
-          end
-
-          if service_request.booking.present?
-            NotificationService.notify_provider_assigned(service_request.booking, provider)
-          end
-
-          render json: service_request, serializer: ServiceRequestDetailSerializer
+          render json: service_request.reload, serializer: ServiceRequestDetailSerializer
         end
 
         def assignment_history

@@ -35,11 +35,8 @@ module Api
             return
           end
 
-          @assignment.accept!(notes: params[:notes])
-          if @assignment.booking
-            NotificationService.notify_booking_status_updated(@assignment.booking, @assignment.booking.status, 'provider_assigned')
-          end
-          render json: @assignment, serializer: ProviderAssignmentSerializer
+          assignment = ProviderAssignments::AcceptAssignment.call(assignment: @assignment, user: current_user)
+          render json: assignment.reload, serializer: ProviderAssignmentSerializer
         rescue InvalidTransitionError => e
           render json: { error: e.message }, status: :unprocessable_entity
         end
@@ -80,45 +77,15 @@ module Api
         end
 
         def create_quotation
-          service_request = @assignment.service_request
-
-          if service_request.active_quotation.present?
-            render json: { error: 'An active quotation already exists for this service request' }, status: :unprocessable_entity
-            return
-          end
-
-          valid_until = params[:valid_until].present? ? Time.zone.parse(params[:valid_until].to_s) : 48.hours.from_now
-
-          booking = @assignment.booking || service_request.booking
-
-          quotation = service_request.quotations.build(
-            amount: params[:amount],
-            description: params[:description],
-            valid_until: valid_until,
+          quotation = Quotations::CreateQuotation.call(
             provider: current_provider,
-            provider_assignment: @assignment,
-            booking: booking,
-            created_by: current_user.id,
-            status: 'submitted'
+            created_by: current_user,
+            params: params.merge(
+              service_request_id: @assignment.service_request_id,
+              booking_id: @assignment.booking_id
+            )
           )
-
-          ActiveRecord::Base.transaction do
-            quotation.save!
-
-            if service_request.can_transition_to?('quotation_sent')
-              service_request.transition_to!(
-                'quotation_sent',
-                changed_by: current_user,
-                notes: "Provider submitted quotation: ₹#{quotation.amount}"
-              )
-            end
-          end
-
-          NotificationService.notify_quotation_received(quotation)
-
           render json: quotation, serializer: QuotationSerializer, status: :created
-        rescue ActiveRecord::RecordInvalid => e
-          render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
         end
 
         private

@@ -62,69 +62,38 @@ module Api
           booking = Booking.find(params[:id])
           provider = ::Provider.eligible_for_assignment.find(params[:provider_id])
 
-          ActiveRecord::Base.transaction do
-            booking.assign_to_provider!(
-              provider,
-              assigned_by: current_user,
-              notes: params[:notes]
-            )
+          ProviderAssignments::AssignProvider.call(
+            target: booking,
+            provider: provider,
+            assigned_by: current_user,
+            notes: params[:notes]
+          )
 
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'assign_provider',
-              entity: booking,
-              metadata: { provider_id: provider.id, provider_name: provider.name, notes: params[:notes] }
-            )
-          end
-
-          NotificationService.notify_provider_assigned(booking, provider)
-
-          render json: booking, serializer: BookingDetailSerializer
+          render json: booking.reload, serializer: BookingDetailSerializer
         end
 
         def reschedule
           booking = Booking.find(params[:id])
-          old_status = booking.status
 
-          ActiveRecord::Base.transaction do
-            booking.transition_to!('rescheduled', changed_by: current_user, notes: "Rescheduled by admin to #{params[:scheduled_at]}")
-            booking.update!(scheduled_at: params[:scheduled_at])
+          Bookings::RescheduleBooking.call(
+            booking: booking,
+            scheduled_at: params[:scheduled_at],
+            user: current_user
+          )
 
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'reschedule_booking',
-              entity: booking,
-              metadata: { new_time: params[:scheduled_at] }
-            )
-          end
-
-          NotificationService.notify_booking_status_updated(booking, old_status, 'rescheduled')
-
-          render json: booking, serializer: BookingDetailSerializer
+          render json: booking.reload, serializer: BookingDetailSerializer
         end
 
         def cancel
           booking = Booking.find(params[:id])
 
-          ActiveRecord::Base.transaction do
-            booking.transition_to!('cancelled', changed_by: current_user, notes: params[:reason] || 'Cancelled by admin')
-            booking.update!(cancellation_reason: params[:reason])
+          Bookings::CancelBooking.call(
+            booking: booking,
+            user: current_user,
+            reason: params[:reason]
+          )
 
-            if booking.service_request&.can_transition_to?('cancelled')
-              booking.service_request.transition_to!('cancelled', changed_by: current_user, notes: 'Cancelled by admin')
-            end
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'cancel_booking',
-              entity: booking,
-              metadata: { reason: params[:reason] }
-            )
-          end
-
-          NotificationService.notify_booking_cancelled(booking, params[:reason], current_user)
-
-          render json: booking, serializer: BookingDetailSerializer
+          render json: booking.reload, serializer: BookingDetailSerializer
         end
 
         private

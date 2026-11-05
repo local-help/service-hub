@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
   rescue_from ActionController::ParameterMissing, with: :bad_request
+  rescue_from DomainError, with: :unprocessable_domain_error
 
   private
 
@@ -14,6 +15,10 @@ class ApplicationController < ActionController::API
 
   def unprocessable_entity(exception)
     render json: { error: exception.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
+  end
+
+  def unprocessable_domain_error(exception)
+    render json: { error: exception.message }, status: :unprocessable_entity
   end
 
   def bad_request(exception)
