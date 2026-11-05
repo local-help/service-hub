@@ -18,7 +18,9 @@ import {
   X,
   Phone,
   User as UserIcon,
-  Briefcase
+  Briefcase,
+  XCircle,
+  ArrowRight
 } from 'lucide-react';
 import { Booking } from '../../../types';
 import { apiRequest } from '../../../api/client';
@@ -45,6 +47,11 @@ export default function BookingDetailPage() {
   const [rating, setRating] = useState(5);
   const [feedback, setFeedback] = useState('');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  // Cancellation modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasonCategory, setCancelReasonCategory] = useState('Change in schedule / Need to reschedule');
+  const [cancelDetails, setCancelDetails] = useState('');
 
   const fetchBooking = () => {
     if (!id) return;
@@ -119,21 +126,29 @@ export default function BookingDetailPage() {
     }
   };
 
-  const handleCancelBooking = async () => {
-    const reason = prompt('Please enter reason for cancellation:');
-    if (reason === null) return;
+  const handleConfirmCancel = async (e: React.FormEvent) => {
+    e.preventDefault();
     setActionLoading(true);
+    const finalReason = cancelDetails.trim()
+      ? `${cancelReasonCategory} - ${cancelDetails.trim()}`
+      : cancelReasonCategory;
     try {
       await apiRequest(`/bookings/${id}/cancel`, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: finalReason }),
       });
+      setShowCancelModal(false);
       fetchBooking();
     } catch (err: any) {
       alert(err.error || 'Failed to cancel booking');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleRescheduleInstead = () => {
+    setShowCancelModal(false);
+    setShowReschedule(true);
   };
 
   const handleInitiatePayment = async () => {
@@ -235,6 +250,35 @@ export default function BookingDetailPage() {
           />
         </div>
       </div>
+
+      {/* Cancelled Notice Banner */}
+      {booking.status === 'cancelled' && (
+        <div className="border border-rose-200 bg-rose-50/60 rounded-2xl p-5 flex items-start gap-3.5">
+          <div className="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+            <XCircle className="w-5 h-5" />
+          </div>
+          <div className="space-y-1.5 flex-1">
+            <h3 className="text-sm font-semibold text-rose-900">This booking was cancelled</h3>
+            {booking.cancellation_reason && (
+              <p className="text-xs text-rose-700">
+                Reason: <span className="font-medium text-slate-800">{booking.cancellation_reason}</span>
+              </p>
+            )}
+            <p className="text-xs text-slate-500">
+              Need assistance or want to schedule a new visit? You can book anytime.
+            </p>
+            <div className="pt-1.5">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition shadow-xs"
+              >
+                <span>Book New Service</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Details & Quotation */}
@@ -525,20 +569,141 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-          {/* Cancel Action */}
+          {/* Improved Cancel Action Card */}
           {!['completed', 'cancelled'].includes(booking.status) && (
-            <div className="pt-2 text-center">
+            <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-2.5">
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Manage Booking
+              </span>
               <button
-                onClick={handleCancelBooking}
+                type="button"
+                onClick={() => setShowCancelModal(true)}
                 disabled={actionLoading}
-                className="text-xs text-rose-600 hover:text-rose-700 transition cursor-pointer"
+                className="w-full py-2.5 px-3 rounded-lg border border-rose-200 bg-rose-50/40 hover:bg-rose-50 text-rose-700 hover:text-rose-800 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs group"
               >
-                Cancel Booking
+                <XCircle className="w-3.5 h-3.5 text-rose-500 group-hover:scale-105 transition" />
+                <span>Cancel Booking</span>
               </button>
+              <div className="flex items-center justify-center gap-1 text-[11px] text-slate-400 text-center">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span>Free cancellation before visit commences</span>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Cancellation Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 shrink-0">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Cancel Booking</h3>
+                  <p className="text-xs text-slate-500 font-mono">{referenceNumber}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Reschedule Alternative Banner */}
+            <div className="p-3 bg-teal-50/70 border border-teal-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+              <div>
+                <p className="font-semibold text-teal-900">Need a different date or time?</p>
+                <p className="text-teal-700 text-[11px] mt-0.5">Reschedule for free instead of cancelling.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRescheduleInstead}
+                className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg shrink-0 transition shadow-xs text-xs cursor-pointer"
+              >
+                Reschedule
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCancel} className="space-y-4 text-xs">
+              <div>
+                <label className="font-semibold text-slate-800 block mb-2">
+                  Please select a reason for cancellation:
+                </label>
+                <div className="space-y-1.5">
+                  {[
+                    'Change in schedule / Need to reschedule',
+                    'Found alternative service provider',
+                    'Booked by mistake / duplicate request',
+                    'Price or quotation too high',
+                    'Personal emergency',
+                    'Other reason',
+                  ].map((cat) => (
+                    <label
+                      key={cat}
+                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition ${
+                        cancelReasonCategory === cat
+                          ? 'border-rose-300 bg-rose-50/40 text-slate-900 font-medium'
+                          : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cancel_reason"
+                        value={cat}
+                        checked={cancelReasonCategory === cat}
+                        onChange={(e) => setCancelReasonCategory(e.target.value)}
+                        className="text-rose-600 focus:ring-rose-500"
+                      />
+                      <span>{cat}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-medium text-slate-700 block mb-1">
+                  Additional notes or feedback (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={cancelDetails}
+                  onChange={(e) => setCancelDetails(e.target.value)}
+                  placeholder="Share details to help us improve..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-rose-400 text-slate-900 text-xs"
+                />
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-500 leading-relaxed">
+                By confirming, this booking will be cancelled and any assigned technician will be released. You can always book a new visit whenever you're ready.
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(false)}
+                  className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition cursor-pointer"
+                >
+                  Keep Booking
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {actionLoading ? 'Cancelling…' : 'Confirm Cancellation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
