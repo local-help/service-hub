@@ -47,6 +47,7 @@ module Api
         )
         authorize service_request
 
+        booking = nil
         ActiveRecord::Base.transaction do
           service_request.save!
 
@@ -93,7 +94,11 @@ module Api
           )
         end
 
-        NotificationService.notify_booking_confirmed(booking) if booking.present?
+        if booking&.status == 'confirmed'
+          NotificationService.notify_booking_confirmed(booking)
+        else
+          NotificationService.notify_request_submitted(service_request)
+        end
 
         render json: service_request, serializer: ServiceRequestDetailSerializer, status: :created
       end

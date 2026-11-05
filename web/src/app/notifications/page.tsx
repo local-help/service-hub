@@ -40,6 +40,8 @@ function formatFullTime(dateString: string): string {
 
 function getNotificationIcon(type: string) {
   switch (type) {
+    case 'request_submitted':
+      return <Clock className="w-5 h-5 text-teal-600" />;
     case 'booking_confirmed':
       return <CalendarCheck className="w-5 h-5 text-emerald-600" />;
     case 'provider_assigned':

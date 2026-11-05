@@ -39,6 +39,24 @@ class NotificationService
       end
     end
 
+    # ── CUSTOMER: Request Submitted (Quote-based / Review) ────────
+    def notify_request_submitted(service_request)
+      return unless service_request&.user
+
+      create_notification(
+        user: service_request.user,
+        type: 'request_submitted',
+        title: "Request Received: #{service_request.service&.name}",
+        body: "Your request (#{service_request.reference_number}) has been received. Providers will review and submit quotations shortly.",
+        metadata: {
+          service_request_id: service_request.id,
+          booking_id: service_request.booking&.id,
+          reference_number: service_request.reference_number,
+          action_url: '/bookings'
+        }
+      )
+    end
+
     # ── CUSTOMER & PROVIDER: Provider Assigned ────────────────────
     def notify_provider_assigned(booking, provider)
       return unless booking && provider
