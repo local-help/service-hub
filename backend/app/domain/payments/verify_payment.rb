@@ -3,15 +3,12 @@
 module Payments
   class VerifyPayment
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :booking, :gateway_order_id, :gateway_reference, :signature
-
-    def initialize(booking:, gateway_order_id:, gateway_reference: nil, signature: nil)
-      @booking = booking.is_a?(Booking) ? booking : Booking.find(booking)
-      @gateway_order_id = gateway_order_id
-      @gateway_reference = gateway_reference
-      @signature = signature
-    end
+    option :booking, type: Types::Instance(Booking)
+    option :gateway_order_id
+    option :gateway_reference, optional: true
+    option :signature, optional: true
 
     def call
       payment = booking.payments.find_by(gateway_order_id: gateway_order_id)

@@ -3,17 +3,15 @@
 module ProviderAssignments
   class AcceptAssignment
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :assignment, :user
-
-    def initialize(assignment:, user:)
-      @assignment = assignment.is_a?(ProviderAssignment) ? assignment : ProviderAssignment.find(assignment)
-      @user = user
-    end
+    option :assignment, type: Types::Instance(ProviderAssignment)
+    option :user, type: Types.Instance(User)
+    option :notes, optional: true
 
     def call
       ActiveRecord::Base.transaction do
-        assignment.accept!(by_user: user)
+        assignment.accept!(by_user: user, notes: notes)
         assignment.booking.start_service! if assignment.booking.present? && assignment.booking.may_start_service?
         StatusHistory.create!(
           entity_type: 'ProviderAssignment',
@@ -21,7 +19,7 @@ module ProviderAssignments
           previous_status: 'assigned',
           new_status: 'accepted',
           changed_by: user.id,
-          notes: 'Provider accepted the request assignment'
+          notes: notes || 'Provider accepted the request assignment'
         )
       end
 

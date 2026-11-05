@@ -91,6 +91,10 @@ Lint/MissingSuper:
   Enabled: false
 
 # ── Naming & Predicates ───────────────────────────────────────
+Naming/MethodName:
+  Exclude:
+    - 'app/domain/types.rb'
+
 Naming/PredicateMethod:
   Exclude:
     - 'app/serializers/**/*'

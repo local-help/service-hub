@@ -3,32 +3,31 @@
 module Bookings
   class CreateBooking
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :user, :params, :attachments
-
-    def initialize(user:, params:, attachments: nil)
-      @user = user
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-      @attachments = attachments || @params[:attachments] || @params.dig(:booking, :attachments)
-    end
+    option :user, type: Types.Instance(User)
+    option :params
+    option :attachments, optional: true
 
     def call
-      service_id = params[:service_id] || params.dig(:booking, :service_id)
+      parsed_params = normalize_params(params)
+      raw_attachments = attachments || parsed_params[:attachments] || parsed_params.dig(:booking, :attachments)
+
+      service_id = parsed_params[:service_id] || parsed_params.dig(:booking, :service_id)
       service = Service.find_by(id: service_id)
       raise DomainError, "Service ##{service_id} not found" unless service
       raise DomainError, "#{service.name} is coming soon and cannot be booked" if service.coming_soon?
 
-      address_id = params[:address_id] || params.dig(:booking, :address_id)
+      address_id = parsed_params[:address_id] || parsed_params.dig(:booking, :address_id)
       address = user.addresses.find_by(id: address_id)
       raise DomainError, "Address ##{address_id} not found" unless address
 
-      desc = params[:description] || params.dig(:booking, :description)
-      pref = params[:preferred_at] || params.dig(:booking, :preferred_at) || params[:scheduled_at]
-      v_id = params[:service_variant_id] || params.dig(:booking, :service_variant_id)
-      v_type = params[:vehicle_type] || params.dig(:booking, :vehicle_type)
-      dur = params[:duration_hours] || params.dig(:booking, :duration_hours)
-      opts = params[:selected_options] || params.dig(:booking, :selected_options) || {}
+      desc = parsed_params[:description] || parsed_params.dig(:booking, :description)
+      pref = parsed_params[:preferred_at] || parsed_params.dig(:booking, :preferred_at) || parsed_params[:scheduled_at]
+      v_id = parsed_params[:service_variant_id] || parsed_params.dig(:booking, :service_variant_id)
+      v_type = parsed_params[:vehicle_type] || parsed_params.dig(:booking, :vehicle_type)
+      dur = parsed_params[:duration_hours] || parsed_params.dig(:booking, :duration_hours)
+      opts = parsed_params[:selected_options] || parsed_params.dig(:booking, :selected_options) || {}
 
       booking = user.bookings.build(
         service: service,
@@ -47,8 +46,8 @@ module Bookings
       ActiveRecord::Base.transaction do
         booking.save!
 
-        if attachments.is_a?(Array)
-          attachments.each do |att|
+        if raw_attachments.is_a?(Array)
+          raw_attachments.each do |att|
             booking.request_attachments.create!(
               file_url: att.is_a?(Hash) ? (att[:file_url] || att['file_url']) : att,
               file_name: att.is_a?(Hash) ? (att[:file_name] || att['file_name']) : nil,
@@ -61,6 +60,13 @@ module Bookings
 
       NotificationService.notify_booking_confirmed(booking)
       booking
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

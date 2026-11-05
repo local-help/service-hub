@@ -3,14 +3,11 @@
 module Bookings
   class CancelBooking
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :booking, :user, :reason
-
-    def initialize(booking:, user: nil, reason: nil)
-      @booking = booking.is_a?(Booking) ? booking : Booking.find(booking)
-      @user = user
-      @reason = reason
-    end
+    option :booking, type: Types::Instance(Booking)
+    option :user, type: Types.Instance(User).optional, optional: true
+    option :reason, optional: true
 
     def call
       raise DomainError, "Cannot cancel booking in #{booking.status} status" if %w[completed cancelled].include?(booking.status)

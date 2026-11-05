@@ -3,19 +3,14 @@
 module ProviderAssignments
   class AssignProvider
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :target, :provider, :assigned_by, :notes
-
-    def initialize(target:, provider:, assigned_by:, notes: nil)
-      @target = target
-      @provider = provider.is_a?(Provider) ? provider : Provider.find(provider)
-      @assigned_by = assigned_by
-      @notes = notes
-    end
+    option :target
+    option :provider, type: Types.Instance(Provider)
+    option :assigned_by, type: Types.Instance(User).optional, optional: true
+    option :notes, optional: true
 
     def call
-      assigned_by_user = assigned_by.is_a?(User) ? assigned_by : User.find_by(id: assigned_by)
-
       service_request = if target.is_a?(ServiceRequest)
                           target
                         elsif target.respond_to?(:service_request) && target.service_request.present?
@@ -37,29 +32,30 @@ module ProviderAssignments
       assignment = nil
       ActiveRecord::Base.transaction do
         if service_request.present?
-          assignment = service_request.assign_provider!(provider, assigned_by: assigned_by_user, notes: notes)
+          assignment = service_request.assign_provider!(provider, assigned_by: assigned_by, notes: notes)
           AdminActivityLog.log!(
-            admin: assigned_by_user,
+            admin: assigned_by,
             action: 'assign_provider',
             entity: service_request,
             metadata: { provider_id: provider.id, provider_name: provider.name, notes: notes }
           )
         end
 
-        if booking.present? && !service_request.present?
+        if booking.present? && service_request.blank?
           booking.update!(
             provider: provider,
-            assigned_by: assigned_by_user&.id,
-            assigned_at: Time.current
+            assigned_at: Time.current,
+            assigned_by: assigned_by&.id
           )
           assignment = booking.provider_assignments.create!(
             provider: provider,
-            assigned_by: assigned_by_user,
+            assigned_by: assigned_by,
             status: 'assigned',
-            assigned_at: Time.current
+            assigned_at: Time.current,
+            internal_notes: notes
           )
           AdminActivityLog.log!(
-            admin: assigned_by_user,
+            admin: assigned_by,
             action: 'assign_provider',
             entity: booking,
             metadata: { provider_id: provider.id, provider_name: provider.name, notes: notes }
@@ -67,10 +63,24 @@ module ProviderAssignments
         end
       end
 
-      target_booking = booking || service_request&.booking
-      NotificationService.notify_provider_assigned(target_booking, provider) if target_booking.present?
+      # Customer & Provider notification
+      if booking.present?
+        NotificationService.notify_provider_assigned(booking, provider)
+      elsif service_request.present?
+        NotificationService.notify_provider_users(
+          provider,
+          type: 'job_assigned',
+          title: "New Job Request: #{service_request.service&.name}",
+          body: "Request #{service_request.reference_number} in #{service_request.address&.city || 'Prayagraj'} assigned for review.",
+          metadata: {
+            service_request_id: service_request.id,
+            reference_number: service_request.reference_number,
+            action_url: '/provider/requests'
+          }
+        )
+      end
 
-      assignment || booking
+      assignment
     end
   end
 end

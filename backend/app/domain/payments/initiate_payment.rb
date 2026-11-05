@@ -3,14 +3,11 @@
 module Payments
   class InitiatePayment
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :booking, :user, :method
-
-    def initialize(booking:, user:, method: 'online')
-      @booking = booking.is_a?(Booking) ? booking : Booking.find(booking)
-      @user = user
-      @method = method
-    end
+    option :booking, type: Types::Instance(Booking)
+    option :user, type: Types.Instance(User)
+    option :method, default: -> { 'online' }
 
     def call
       amount = booking.payment_amount

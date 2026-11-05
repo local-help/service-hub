@@ -3,20 +3,18 @@
 module ServiceRequests
   class UpdateServiceRequest
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :service_request, :user, :params
-
-    def initialize(service_request:, user:, params:)
-      @service_request = service_request.is_a?(ServiceRequest) ? service_request : ServiceRequest.find(service_request)
-      @user = user
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :service_request, type: Types::Instance(ServiceRequest)
+    option :user, type: Types.Instance(User).optional, optional: true
+    option :params
 
     def call
+      parsed_params = normalize_params(params)
+
       ActiveRecord::Base.transaction do
-        target_status = params[:status]
-        admin_notes = params[:admin_notes]
+        target_status = parsed_params[:status]
+        admin_notes = parsed_params[:admin_notes]
 
         if target_status.present? && target_status != service_request.status
           service_request.transition_to!(
@@ -39,6 +37,13 @@ module ServiceRequests
       end
 
       service_request
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

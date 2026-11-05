@@ -3,30 +3,27 @@
 module Providers
   class AddProviderMember
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :provider, :actor, :params
-
-    def initialize(provider:, actor:, params:)
-      @provider = provider.is_a?(::Provider) ? provider : ::Provider.find(provider)
-      @actor = actor
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :provider, type: Types.Instance(::Provider)
+    option :actor, type: Types.Instance(User).optional, optional: true
+    option :params
 
     def call
-      email = params[:email]&.strip
-      phone = params[:phone]&.strip
+      parsed_params = normalize_params(params)
+      email = parsed_params[:email]&.strip
+      phone = parsed_params[:phone]&.strip
 
       user = User.find_by(email: email) if email.present?
       user ||= User.find_by(phone: phone) if phone.present?
 
       if user.nil?
         user = User.create!(
-          name: params[:name] || 'Team Member',
+          name: parsed_params[:name] || 'Team Member',
           email: email,
           phone: phone,
           role: 'provider',
-          password: params[:password] || 'Provider@123456',
+          password: parsed_params[:password] || 'Provider@123456',
           status: 'active'
         )
       else
@@ -34,7 +31,7 @@ module Providers
       end
 
       provider_user = provider.provider_users.find_or_initialize_by(user: user)
-      provider_user.role = params[:role] || 'staff'
+      provider_user.role = parsed_params[:role] || 'staff'
       provider_user.active = true
       provider_user.save!
 
@@ -48,6 +45,13 @@ module Providers
       end
 
       provider_user
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

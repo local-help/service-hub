@@ -3,19 +3,17 @@
 module ProviderAssignments
   class RejectAssignment
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :assignment, :reason, :notes
-
-    def initialize(assignment:, reason:, notes: nil)
-      @assignment = assignment.is_a?(ProviderAssignment) ? assignment : ProviderAssignment.find(assignment)
-      @reason = reason.to_s.strip
-      @notes = notes
-    end
+    option :assignment, type: Types::Instance(ProviderAssignment)
+    option :reason
+    option :notes, optional: true
 
     def call
-      raise DomainError, 'Rejection reason is required' if reason.blank?
+      cleaned_reason = reason.to_s.strip
+      raise DomainError, 'Rejection reason is required' if cleaned_reason.blank?
 
-      assignment.reject!(reason: reason, notes: notes)
+      assignment.reject!(reason: cleaned_reason, notes: notes)
       assignment
     end
   end

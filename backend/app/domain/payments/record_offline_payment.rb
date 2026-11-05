@@ -3,18 +3,15 @@
 module Payments
   class RecordOfflinePayment
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :booking, :recorded_by, :params
-
-    def initialize(booking:, recorded_by:, params:)
-      @booking = booking.is_a?(Booking) ? booking : Booking.find(booking)
-      @recorded_by = recorded_by
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :booking, type: Types::Instance(Booking)
+    option :recorded_by, type: Types.Instance(User)
+    option :params
 
     def call
-      amount = (params[:amount] || booking.payment_amount).to_f
+      parsed_params = normalize_params(params)
+      amount = (parsed_params[:amount] || booking.payment_amount).to_f
       raise DomainError, 'Payment amount must be greater than zero' unless amount > 0
 
       payment = nil
@@ -25,9 +22,9 @@ module Payments
           status: 'paid',
           recorded_by: recorded_by.id,
           gateway_metadata: {
-            notes: params[:notes],
-            payment_type: params[:offline_type] || 'cash',
-            reference: params[:reference]
+            notes: parsed_params[:notes],
+            payment_type: parsed_params[:offline_type] || 'cash',
+            reference: parsed_params[:reference]
           }
         )
 
@@ -56,6 +53,13 @@ module Payments
       )
 
       payment
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

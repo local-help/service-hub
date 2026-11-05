@@ -33,6 +33,10 @@ gem "kaminari", "~> 1.2"
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]
 
+# Domain & Types
+gem "dry-initializer", "~> 3.2"
+gem "dry-types", "~> 1.9"
+
 # Deployment
 gem "kamal", require: false
 gem "thruster", require: false

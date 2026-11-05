@@ -3,25 +3,22 @@
 module Users
   class InviteAdminUser
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :inviter, :params
-
-    def initialize(inviter:, params:)
-      @inviter = inviter
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :inviter, type: Types.Instance(User)
+    option :params
 
     def call
-      email = params[:email]&.downcase&.strip
-      role = params[:role] || 'admin'
+      parsed_params = normalize_params(params)
+      email = parsed_params[:email]&.downcase&.strip
+      role = parsed_params[:role] || 'admin'
       raise DomainError, 'Invalid admin role' unless %w[admin super_admin].include?(role)
 
-      temp_password = params[:password] || "Admin@#{SecureRandom.hex(4)}"
+      temp_password = parsed_params[:password] || "Admin@#{SecureRandom.hex(4)}"
       user = User.new(
-        name: params[:name] || 'Admin Member',
+        name: parsed_params[:name] || 'Admin Member',
         email: email,
-        phone: params[:phone],
+        phone: parsed_params[:phone],
         password: temp_password,
         role: role,
         status: 'active',
@@ -40,6 +37,13 @@ module Users
       end
 
       { user: user, temp_password: temp_password }
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

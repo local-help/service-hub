@@ -3,17 +3,14 @@
 module ProviderAssignments
   class UpdateAssignmentStatus
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :assignment, :target_status, :notes
-
-    def initialize(assignment:, target_status:, notes: nil)
-      @assignment = assignment.is_a?(ProviderAssignment) ? assignment : ProviderAssignment.find(assignment)
-      @target_status = target_status.to_s
-      @notes = notes
-    end
+    option :assignment, type: Types::Instance(ProviderAssignment)
+    option :target_status
+    option :notes, optional: true
 
     def call
-      case target_status
+      case target_status.to_s
       when 'in_progress'
         old_status = assignment.booking&.status
         assignment.start_service!(notes: notes)

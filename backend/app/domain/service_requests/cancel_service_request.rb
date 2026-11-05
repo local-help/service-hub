@@ -3,14 +3,11 @@
 module ServiceRequests
   class CancelServiceRequest
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :service_request, :user, :reason
-
-    def initialize(service_request:, user: nil, reason: nil)
-      @service_request = service_request.is_a?(ServiceRequest) ? service_request : ServiceRequest.find(service_request)
-      @user = user
-      @reason = reason
-    end
+    option :service_request, type: Types::Instance(ServiceRequest)
+    option :user, type: Types.Instance(User).optional, optional: true
+    option :reason, optional: true
 
     def call
       raise DomainError, "Cannot cancel request in #{service_request.status} status" if %w[completed cancelled].include?(service_request.status)

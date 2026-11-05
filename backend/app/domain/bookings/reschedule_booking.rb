@@ -3,17 +3,14 @@
 module Bookings
   class RescheduleBooking
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :booking, :scheduled_at, :user
-
-    def initialize(booking:, scheduled_at:, user: nil)
-      @booking = booking.is_a?(Booking) ? booking : Booking.find(booking)
-      @scheduled_at = scheduled_at
-      @user = user
-    end
+    option :booking, type: Types::Instance(Booking)
+    option :scheduled_at
+    option :user, type: Types.Instance(User).optional, optional: true
 
     def call
-      raise DomainError, 'New scheduled date/time is required' unless scheduled_at.present?
+      raise DomainError, 'New scheduled date/time is required' if scheduled_at.blank?
 
       old_status = booking.status
 

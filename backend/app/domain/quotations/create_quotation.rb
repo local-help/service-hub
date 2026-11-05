@@ -3,26 +3,24 @@
 module Quotations
   class CreateQuotation
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :provider, :created_by, :params
-
-    def initialize(created_by:, params:, provider: nil)
-      @provider = provider
-      @created_by = created_by
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :created_by, type: Types.Instance(User)
+    option :params
+    option :provider, type: Types.Instance(Provider).optional, optional: true
 
     def call
-      amount = (params[:amount] || params.dig(:quotation, :amount)).to_f
+      parsed_params = normalize_params(params)
+
+      amount = (parsed_params[:amount] || parsed_params.dig(:quotation, :amount)).to_f
       raise DomainError, 'Valid amount greater than 0 is required' if amount <= 0
 
-      description = params[:description] || params.dig(:quotation, :description)
-      valid_until_param = params[:valid_until] || params.dig(:quotation, :valid_until)
+      description = parsed_params[:description] || parsed_params.dig(:quotation, :description)
+      valid_until_param = parsed_params[:valid_until] || parsed_params.dig(:quotation, :valid_until)
       valid_until = valid_until_param.present? ? Time.zone.parse(valid_until_param.to_s) : 48.hours.from_now
 
-      booking_id = params[:booking_id] || params.dig(:quotation, :booking_id)
-      request_id = params[:service_request_id] || params.dig(:quotation, :service_request_id) || params[:id]
+      booking_id = parsed_params[:booking_id] || parsed_params.dig(:quotation, :booking_id)
+      request_id = parsed_params[:service_request_id] || parsed_params.dig(:quotation, :service_request_id) || parsed_params[:id]
 
       booking = booking_id.present? ? Booking.find_by(id: booking_id) : nil
       service_request = request_id.present? ? ServiceRequest.find_by(id: request_id) : booking&.service_request
@@ -37,7 +35,7 @@ module Quotations
                        provider.provider_assignments.find_by(booking_id: booking&.id)
                    end
 
-      initial_status = params[:status] || (created_by&.admin_or_super_admin? ? 'pending' : 'submitted')
+      initial_status = parsed_params[:status] || (created_by&.admin_or_super_admin? ? 'pending' : 'submitted')
 
       quotation = nil
       ActiveRecord::Base.transaction do
@@ -75,6 +73,13 @@ module Quotations
 
       NotificationService.notify_quotation_received(quotation)
       quotation
+    end
+
+    private
+
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
     end
   end
 end

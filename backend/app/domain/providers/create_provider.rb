@@ -3,18 +3,15 @@
 module Providers
   class CreateProvider
     include Callable
+    extend Dry::Initializer
 
-    attr_reader :creator, :params
-
-    def initialize(creator:, params:)
-      @creator = creator
-      @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
-      @params = @params.with_indifferent_access if @params.respond_to?(:with_indifferent_access)
-    end
+    option :creator, type: Types.Instance(User).optional, optional: true
+    option :params
 
     def call
-      provider = ::Provider.new(provider_attributes)
-      provider.name = params[:business_name] if provider.name.blank? && params[:business_name].present?
+      parsed_params = normalize_params(params)
+      provider = ::Provider.new(provider_attributes(parsed_params))
+      provider.name = parsed_params[:business_name] if provider.name.blank? && parsed_params[:business_name].present?
 
       ActiveRecord::Base.transaction do
         provider.save!
@@ -27,15 +24,15 @@ module Providers
           working_hours_end: '20:00'
         )
 
-        if params[:service_ids].is_a?(Array)
-          params[:service_ids].each do |s_id|
+        if parsed_params[:service_ids].is_a?(Array)
+          parsed_params[:service_ids].each do |s_id|
             provider.provider_services.create!(service_id: s_id, active: true)
           end
         end
 
         # Optionally create owner user if user info passed
-        if params[:user].present?
-          user_params = params[:user]
+        if parsed_params[:user].present?
+          user_params = parsed_params[:user]
           user = User.create!(
             name: user_params[:name],
             email: user_params[:email],
@@ -62,8 +59,13 @@ module Providers
 
     private
 
-    def provider_attributes
-      params.slice(
+    def normalize_params(raw)
+      p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw
+      p.respond_to?(:with_indifferent_access) ? p.with_indifferent_access : p
+    end
+
+    def provider_attributes(attrs)
+      attrs.slice(
         :name, :business_name, :slug, :description,
         :phone, :email, :contact_person, :contact_phone, :contact_email,
         :address, :business_address, :city, :state, :postal_code,
