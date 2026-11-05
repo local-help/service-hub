@@ -11,7 +11,7 @@ module Auth
       user.status = 'active'
 
       if user.save
-        EmailService.send_welcome_email(user)
+        NotificationService.notify_welcome(user)
         access_token = JsonWebToken.generate_access_token(user)
         refresh_token = JsonWebToken.generate_refresh_token(user)
         success(user: user, access_token: access_token, refresh_token: refresh_token)

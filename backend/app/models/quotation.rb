@@ -35,6 +35,10 @@ class Quotation < ApplicationRecord
     %w[draft submitted pending].include?(status)
   end
 
+  def reference_number
+    "QT-#{id.to_s.rjust(5, '0')}"
+  end
+
   def submit!(by_user:)
     transaction do
       update!(status: 'submitted', created_by: by_user.id)

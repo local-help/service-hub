@@ -93,7 +93,7 @@ module Api
           )
         end
 
-        EmailService.send_booking_confirmation(booking) if booking.present?
+        NotificationService.notify_booking_confirmed(booking) if booking.present?
 
         render json: service_request, serializer: ServiceRequestDetailSerializer, status: :created
       end
@@ -112,7 +112,7 @@ module Api
 
         if service_request.booking&.can_cancel?
           service_request.booking.transition_to!('cancelled', changed_by: current_user, notes: 'Cancelled due to service request cancellation')
-          EmailService.send_booking_cancellation(service_request.booking, params[:reason])
+          NotificationService.notify_booking_cancelled(service_request.booking, params[:reason], current_user)
         end
 
         render json: service_request, serializer: ServiceRequestDetailSerializer

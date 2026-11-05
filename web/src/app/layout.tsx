@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SupportProvider } from '../contexts/SupportContext';
 import { LocationProvider } from '../contexts/LocationContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
 import { LocationModal } from '../components/ui/LocationModal';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
@@ -32,14 +33,16 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-white text-slate-900 antialiased min-h-screen flex flex-col">
         <AuthProvider>
-          <SupportProvider>
-            <LocationProvider>
-              <Navbar />
-              <LocationModal />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </LocationProvider>
-          </SupportProvider>
+          <NotificationProvider>
+            <SupportProvider>
+              <LocationProvider>
+                <Navbar />
+                <LocationModal />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </LocationProvider>
+            </SupportProvider>
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

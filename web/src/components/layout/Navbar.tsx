@@ -11,10 +11,12 @@ import {
   MapPin,
   Briefcase,
   Store,
-  ArrowUpRight
+  ArrowUpRight,
+  Bell
 } from 'lucide-react';
 import { useAuth, ViewMode } from '../../contexts/AuthContext';
 import { useLocation } from '../../contexts/LocationContext';
+import { NotificationBell } from '../notifications/NotificationBell';
 
 export const Navbar: React.FC = () => {
   const { user, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
@@ -159,7 +161,8 @@ export const Navbar: React.FC = () => {
             )}
 
             {user ? (
-              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-100">
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-100">
+                <NotificationBell />
                 <Link
                   href="/profile"
                   className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-teal-50/50 transition text-slate-700 hover:text-teal-800 group"
@@ -235,6 +238,7 @@ export const Navbar: React.FC = () => {
                 )}
               </button>
             )}
+            {user && <NotificationBell />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 text-slate-500 hover:text-slate-900"

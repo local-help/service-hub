@@ -36,6 +36,9 @@ module Api
           end
 
           @assignment.accept!(notes: params[:notes])
+          if @assignment.booking
+            NotificationService.notify_booking_status_updated(@assignment.booking, @assignment.booking.status, 'provider_assigned')
+          end
           render json: @assignment, serializer: ProviderAssignmentSerializer
         rescue InvalidTransitionError => e
           render json: { error: e.message }, status: :unprocessable_entity
@@ -59,9 +62,13 @@ module Api
 
           case target_status
           when 'in_progress'
+            old_status = @assignment.booking&.status
             @assignment.start_service!(notes: params[:notes])
+            NotificationService.notify_booking_status_updated(@assignment.booking, old_status, 'in_progress') if @assignment.booking
           when 'completed'
+            old_status = @assignment.booking&.status
             @assignment.complete!(notes: params[:notes])
+            NotificationService.notify_booking_status_updated(@assignment.booking, old_status, 'completed') if @assignment.booking
           else
             render json: { error: "Invalid status transition to #{target_status}. Allowed: in_progress, completed" }, status: :unprocessable_entity
             return
@@ -106,6 +113,8 @@ module Api
               )
             end
           end
+
+          NotificationService.notify_quotation_received(quotation)
 
           render json: quotation, serializer: QuotationSerializer, status: :created
         rescue ActiveRecord::RecordInvalid => e

@@ -372,3 +372,25 @@ export interface PlatformSetting {
   updated_at: string;
 }
 
+export interface AppNotification {
+  id: number;
+  notification_type: string;
+  title: string;
+  body: string | null;
+  metadata?: {
+    booking_id?: number;
+    reference_number?: string;
+    service_id?: number;
+    provider_id?: number;
+    quotation_id?: number;
+    action_url?: string;
+    amount?: number;
+    old_status?: string;
+    new_status?: string;
+    [key: string]: any;
+  };
+  read_at: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+

@@ -5,20 +5,29 @@ module Api
 
       def index
         notifications = policy_scope(Notification).recent
+        notifications = notifications.unread if params[:unread_only] == 'true' || params[:status] == 'unread'
         notifications = paginate(notifications)
-        render json: notifications, each_serializer: NotificationSerializer, meta: pagination_meta(notifications)
+        render json: notifications,
+               each_serializer: NotificationSerializer,
+               meta: pagination_meta(notifications).merge(unread_count: current_user.notifications.unread.count)
+      end
+
+      def unread_count
+        skip_authorization
+        render json: { unread_count: current_user.notifications.unread.count }
       end
 
       def read
         notification = current_user.notifications.find(params[:id])
-        authorize notification
+        authorize notification, :read?
         notification.mark_read!
         render json: notification, serializer: NotificationSerializer
       end
 
       def read_all
+        skip_authorization
         current_user.notifications.unread.update_all(read_at: Time.current)
-        render json: { message: 'All notifications marked as read' }
+        render json: { message: 'All notifications marked as read', unread_count: 0 }
       end
 
       def test_email

@@ -3,8 +3,24 @@ class NotificationPolicy < ApplicationPolicy
     true
   end
 
+  def show?
+    owner?
+  end
+
+  def read?
+    owner?
+  end
+
   def update?
     owner?
+  end
+
+  def read_all?
+    true
+  end
+
+  def unread_count?
+    true
   end
 
   class Scope < Scope

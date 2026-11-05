@@ -77,6 +77,8 @@ module Api
             )
           end
 
+          NotificationService.notify_provider_assigned(booking, provider)
+
           render json: booking, serializer: BookingDetailSerializer
         end
 
