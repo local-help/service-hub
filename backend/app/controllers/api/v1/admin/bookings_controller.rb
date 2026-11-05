@@ -28,34 +28,14 @@ module Api
         def update
           booking = Booking.find(params[:id])
 
-          ActiveRecord::Base.transaction do
-            if params[:status].present? && params[:status] != booking.status
-              booking.transition_to!(
-                params[:status],
-                changed_by: current_user,
-                notes: params[:admin_notes]
-              )
+          Bookings::UpdateBookingStatus.call(
+            booking: booking,
+            new_status: params[:status],
+            user: current_user,
+            admin_notes: params[:admin_notes]
+          )
 
-              if booking.service_request.present?
-                if params[:status] == 'in_progress' && booking.service_request.can_transition_to?('in_progress')
-                  booking.service_request.transition_to!('in_progress', changed_by: current_user)
-                elsif params[:status] == 'completed' && booking.service_request.can_transition_to?('completed')
-                  booking.service_request.transition_to!('completed', changed_by: current_user)
-                end
-              end
-            end
-
-            booking.update!(admin_notes: params[:admin_notes]) if params[:admin_notes].present?
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'update_booking',
-              entity: booking,
-              metadata: { status: booking.status }
-            )
-          end
-
-          render json: booking, serializer: BookingDetailSerializer
+          render json: booking.reload, serializer: BookingDetailSerializer
         end
 
         def assign_provider

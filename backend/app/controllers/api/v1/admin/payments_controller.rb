@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     module Admin
@@ -14,37 +16,11 @@ module Api
         def record_offline
           booking = Booking.find(params[:booking_id])
 
-          amount = params[:amount] || booking.payment_amount
-          unless amount.to_f > 0
-            render json: { error: 'Payment amount must be greater than zero' }, status: :unprocessable_entity
-            return
-          end
-
-          payment = booking.payments.build(
-            amount: amount,
-            method: 'offline',
-            status: 'paid',
-            recorded_by: current_user.id,
-            gateway_metadata: {
-              notes: params[:notes],
-              payment_type: params[:offline_type] || 'cash', # cash, pos, upi_direct
-              reference: params[:reference]
-            }
+          payment = Payments::RecordOfflinePayment.call(
+            booking: booking,
+            recorded_by: current_user,
+            params: params
           )
-
-          ActiveRecord::Base.transaction do
-            payment.save!
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'record_offline_payment',
-              entity: payment,
-              metadata: {
-                booking_id: booking.id,
-                amount: payment.amount.to_f
-              }
-            )
-          end
 
           render json: payment, serializer: PaymentSerializer, status: :created
         end
@@ -66,4 +42,3 @@ module Api
     end
   end
 end
-

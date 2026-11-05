@@ -39,26 +39,13 @@ module Api
         def update
           service_request = ServiceRequest.find(params[:id])
 
-          ActiveRecord::Base.transaction do
-            if params[:status].present? && params[:status] != service_request.status
-              service_request.transition_to!(
-                params[:status],
-                changed_by: current_user,
-                notes: params[:admin_notes]
-              )
-            end
+          ServiceRequests::UpdateServiceRequest.call(
+            service_request: service_request,
+            user: current_user,
+            params: params
+          )
 
-            service_request.update!(admin_notes: params[:admin_notes]) if params[:admin_notes].present?
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'update_request',
-              entity: service_request,
-              metadata: { status: service_request.status, notes: params[:admin_notes] }
-            )
-          end
-
-          render json: service_request, serializer: ServiceRequestDetailSerializer
+          render json: service_request.reload, serializer: ServiceRequestDetailSerializer
         end
 
         def assign_provider

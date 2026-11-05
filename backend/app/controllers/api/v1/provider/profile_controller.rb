@@ -36,31 +36,18 @@ module Api
             return
           end
 
-          user = User.find_by(email: params[:email]) || User.find_by(phone: params[:phone])
-          if user.nil?
-            user = User.create!(
-              name: params[:name],
-              email: params[:email],
-              phone: params[:phone],
-              role: 'provider',
-              password: params[:password] || SecureRandom.hex(8),
-              status: 'active'
-            )
-          else
-            user.update!(role: 'provider') unless user.admin_or_super_admin?
-          end
-
-          provider_user = current_provider.provider_users.find_or_initialize_by(user: user)
-          provider_user.role = params[:role] || 'staff'
-          provider_user.active = true
-          provider_user.save!
+          provider_user = Providers::AddProviderMember.call(
+            provider: current_provider,
+            actor: current_user,
+            params: params
+          )
 
           render json: {
             id: provider_user.id,
-            user_id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
+            user_id: provider_user.user_id,
+            name: provider_user.user.name,
+            email: provider_user.user.email,
+            phone: provider_user.user.phone,
             role: provider_user.role,
             active: provider_user.active
           }, status: :created

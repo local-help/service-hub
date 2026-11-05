@@ -10,39 +10,14 @@ module Api
         end
 
         def invite
-          email = params[:email]&.downcase&.strip
-          role = params[:role] || 'admin'
-
-          unless %w[admin super_admin].include?(role)
-            render json: { error: 'Invalid admin role' }, status: :unprocessable_entity
-            return
-          end
-
-          temp_password = params[:password] || "Admin@#{SecureRandom.hex(4)}"
-          user = User.new(
-            name: params[:name] || 'Admin Member',
-            email: email,
-            phone: params[:phone],
-            password: temp_password,
-            role: role,
-            status: 'active',
-            email_verified: true
+          result = Users::InviteAdminUser.call(
+            inviter: current_user,
+            params: params
           )
 
-          ActiveRecord::Base.transaction do
-            user.save!
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'invite_admin_user',
-              entity: user,
-              metadata: { email: user.email, role: user.role }
-            )
-          end
-
           render json: {
-            user: UserSerializer.new(user).as_json,
-            temp_password: temp_password
+            user: UserSerializer.new(result[:user]).as_json,
+            temp_password: result[:temp_password]
           }, status: :created
         end
 

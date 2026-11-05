@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class PaymentsController < ApplicationController
@@ -12,27 +14,18 @@ module Api
         booking = Booking.find(params[:booking_id])
         authorize booking, :show?
 
-        amount = booking.payment_amount
-        unless amount.present? && amount > 0
-          render json: { error: 'No payable amount determined for this booking' }, status: :unprocessable_entity
-          return
-        end
-
-        # Create payment record
-        order_id = "order_#{SecureRandom.hex(12)}"
-        payment = booking.payments.create!(
-          amount: amount,
-          method: 'online',
-          status: 'pending',
-          gateway_order_id: order_id
+        result = Payments::InitiatePayment.call(
+          booking: booking,
+          user: current_user,
+          method: 'online'
         )
 
         render json: {
-          payment: PaymentSerializer.new(payment).as_json,
-          gateway_order_id: order_id,
-          razorpay_key: ENV['RAZORPAY_KEY_ID'] || 'rzp_test_mock_key',
-          amount_cents: (amount * 100).to_i,
-          currency: 'INR'
+          payment: PaymentSerializer.new(result[:payment]).as_json,
+          gateway_order_id: result[:gateway_order_id],
+          razorpay_key: result[:razorpay_key],
+          amount_cents: result[:amount_cents],
+          currency: result[:currency]
         }, status: :created
       end
 
@@ -40,23 +33,11 @@ module Api
         booking = Booking.find(params[:booking_id])
         authorize booking, :show?
 
-        payment = booking.payments.find_by(gateway_order_id: params[:gateway_order_id])
-        raise ActiveRecord::RecordNotFound, 'Payment order not found' unless payment
-
-        # If already paid, idempotent response
-        if payment.paid?
-          render json: payment, serializer: PaymentSerializer
-          return
-        end
-
-        # In test / dev with mock gateway, verify signature or test payload
-        payment.update!(
-          status: 'paid',
-          gateway_reference: params[:gateway_reference] || "pay_#{SecureRandom.hex(12)}",
-          gateway_metadata: {
-            verified_at: Time.current.iso8601,
-            razorpay_signature: params[:signature]
-          }
+        payment = Payments::VerifyPayment.call(
+          booking: booking,
+          gateway_order_id: params[:gateway_order_id],
+          gateway_reference: params[:gateway_reference],
+          signature: params[:signature]
         )
 
         render json: payment, serializer: PaymentSerializer
@@ -64,4 +45,3 @@ module Api
     end
   end
 end
-

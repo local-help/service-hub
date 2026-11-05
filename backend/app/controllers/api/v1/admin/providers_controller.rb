@@ -31,46 +31,10 @@ module Api
         end
 
         def create
-          provider = ::Provider.new(provider_params)
-          provider.name = params[:business_name] if provider.name.blank? && params[:business_name].present?
-
-          ActiveRecord::Base.transaction do
-            provider.save!
-
-            # Default availability
-            provider.create_availability!(
-              is_available: true,
-              operating_days: %w[monday tuesday wednesday thursday friday saturday sunday],
-              working_hours_start: '08:00',
-              working_hours_end: '20:00'
-            )
-
-            if params[:service_ids].is_a?(Array)
-              params[:service_ids].each do |s_id|
-                provider.provider_services.create!(service_id: s_id, active: true)
-              end
-            end
-
-            # Optionally create owner user if user info passed
-            if params[:user].present?
-              user = User.create!(
-                name: params[:user][:name],
-                email: params[:user][:email],
-                phone: params[:user][:phone],
-                password: params[:user][:password] || 'Provider@123456',
-                role: 'provider',
-                status: 'active'
-              )
-              provider.provider_users.create!(user: user, role: 'owner', active: true)
-            end
-
-            AdminActivityLog.log!(
-              admin: current_user,
-              action: 'create_provider',
-              entity: provider,
-              metadata: { name: provider.name, phone: provider.phone }
-            )
-          end
+          provider = Providers::CreateProvider.call(
+            creator: current_user,
+            params: params
+          )
 
           render json: provider, serializer: ProviderSerializer, status: :created
         end
@@ -191,38 +155,18 @@ module Api
         def create_user
           provider = ::Provider.find(params[:id])
 
-          user = User.find_by(email: params[:email]) || User.find_by(phone: params[:phone])
-          if user.nil?
-            user = User.create!(
-              name: params[:name],
-              email: params[:email],
-              phone: params[:phone],
-              role: 'provider',
-              password: params[:password] || 'Provider@123456',
-              status: 'active'
-            )
-          else
-            user.update!(role: 'provider') unless user.admin_or_super_admin?
-          end
-
-          provider_user = provider.provider_users.find_or_initialize_by(user: user)
-          provider_user.role = params[:role] || 'staff'
-          provider_user.active = true
-          provider_user.save!
-
-          AdminActivityLog.log!(
-            admin: current_user,
-            action: 'create_provider_user',
-            entity: provider,
-            metadata: { user_id: user.id, email: user.email, role: provider_user.role }
+          provider_user = Providers::AddProviderMember.call(
+            provider: provider,
+            actor: current_user,
+            params: params
           )
 
           render json: {
             id: provider_user.id,
-            user_id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
+            user_id: provider_user.user_id,
+            name: provider_user.user.name,
+            email: provider_user.user.email,
+            phone: provider_user.user.phone,
             role: provider_user.role,
             active: provider_user.active
           }, status: :created

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     module Provider
@@ -37,43 +39,24 @@ module Api
 
           assignment = ProviderAssignments::AcceptAssignment.call(assignment: @assignment, user: current_user)
           render json: assignment.reload, serializer: ProviderAssignmentSerializer
-        rescue InvalidTransitionError => e
-          render json: { error: e.message }, status: :unprocessable_entity
         end
 
         def reject
-          reason = params[:reason].to_s.strip
-          if reason.blank?
-            render json: { error: 'Rejection reason is required' }, status: :unprocessable_entity
-            return
-          end
-
-          @assignment.reject!(reason: reason, notes: params[:notes])
-          render json: @assignment, serializer: ProviderAssignmentSerializer
-        rescue InvalidTransitionError, ArgumentError => e
-          render json: { error: e.message }, status: :unprocessable_entity
+          assignment = ProviderAssignments::RejectAssignment.call(
+            assignment: @assignment,
+            reason: params[:reason],
+            notes: params[:notes]
+          )
+          render json: assignment, serializer: ProviderAssignmentSerializer
         end
 
         def update_status
-          target_status = params[:status]
-
-          case target_status
-          when 'in_progress'
-            old_status = @assignment.booking&.status
-            @assignment.start_service!(notes: params[:notes])
-            NotificationService.notify_booking_status_updated(@assignment.booking, old_status, 'in_progress') if @assignment.booking
-          when 'completed'
-            old_status = @assignment.booking&.status
-            @assignment.complete!(notes: params[:notes])
-            NotificationService.notify_booking_status_updated(@assignment.booking, old_status, 'completed') if @assignment.booking
-          else
-            render json: { error: "Invalid status transition to #{target_status}. Allowed: in_progress, completed" }, status: :unprocessable_entity
-            return
-          end
-
-          render json: @assignment, serializer: ProviderAssignmentSerializer
-        rescue InvalidTransitionError => e
-          render json: { error: e.message }, status: :unprocessable_entity
+          assignment = ProviderAssignments::UpdateAssignmentStatus.call(
+            assignment: @assignment,
+            target_status: params[:status],
+            notes: params[:notes]
+          )
+          render json: assignment, serializer: ProviderAssignmentSerializer
         end
 
         def create_quotation
@@ -97,4 +80,3 @@ module Api
     end
   end
 end
-

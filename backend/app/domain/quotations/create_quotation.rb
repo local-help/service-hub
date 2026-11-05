@@ -6,7 +6,7 @@ module Quotations
 
     attr_reader :provider, :created_by, :params
 
-    def initialize(provider:, created_by:, params:)
+    def initialize(created_by:, params:, provider: nil)
       @provider = provider
       @created_by = created_by
       @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params
@@ -28,8 +28,14 @@ module Quotations
       service_request = request_id.present? ? ServiceRequest.find_by(id: request_id) : booking&.service_request
       booking ||= service_request&.booking
 
-      assignment = provider.provider_assignments.find_by(service_request_id: service_request&.id) ||
-                   provider.provider_assignments.find_by(booking_id: booking&.id)
+      if service_request&.quotation.present? && service_request.quotation.status.in?(%w[draft submitted pending approved])
+        raise DomainError, 'A quotation already exists for this service request'
+      end
+
+      assignment = if provider.present?
+                     provider.provider_assignments.find_by(service_request_id: service_request&.id) ||
+                       provider.provider_assignments.find_by(booking_id: booking&.id)
+                   end
 
       quotation = nil
       ActiveRecord::Base.transaction do
@@ -46,6 +52,19 @@ module Quotations
         )
 
         quotation.submit!(by_user: created_by)
+
+        if created_by&.admin_or_super_admin?
+          AdminActivityLog.log!(
+            admin: created_by,
+            action: 'create_quotation',
+            entity: quotation,
+            metadata: {
+              amount: quotation.amount.to_f,
+              service_request_id: service_request&.id,
+              booking_id: booking&.id
+            }
+          )
+        end
       end
 
       NotificationService.notify_quotation_received(quotation)
@@ -53,4 +72,3 @@ module Quotations
     end
   end
 end
-
