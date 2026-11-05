@@ -109,15 +109,15 @@ class Booking < ApplicationRecord
     state :cancelled
 
     event :assign_provider, after: :log_status_change do
-      transitions from: [:pending_review, :contacting_provider, :quotation_sent, :quotation_approved], to: :contacting_provider
+      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved confirmed], to: :contacting_provider
     end
 
     event :send_quotation, after: :log_status_change do
-      transitions from: [:pending_review, :contacting_provider], to: :quotation_sent
+      transitions from: %i[pending_review contacting_provider], to: :quotation_sent
     end
 
     event :approve_quotation, after: :log_status_change do
-      transitions from: :quotation_sent, to: :confirmed
+      transitions from: %i[quotation_sent quotation_approved], to: :confirmed
     end
 
     event :reject_quotation, after: :log_status_change do
@@ -125,23 +125,23 @@ class Booking < ApplicationRecord
     end
 
     event :confirm, after: :log_status_change do
-      transitions from: [:pending_review, :contacting_provider, :quotation_sent, :quotation_approved, :rescheduled], to: :confirmed
+      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved rescheduled], to: :confirmed
     end
 
     event :start_service, after: :log_status_change do
-      transitions from: [:confirmed, :contacting_provider], to: :in_progress
+      transitions from: %i[confirmed contacting_provider rescheduled], to: :in_progress
     end
 
     event :reschedule, after: :log_status_change do
-      transitions from: [:confirmed, :rescheduled], to: :rescheduled
+      transitions from: %i[confirmed rescheduled], to: :rescheduled
     end
 
     event :complete, after: :log_status_change do
-      transitions from: [:confirmed, :in_progress], to: :completed
+      transitions from: %i[confirmed in_progress], to: :completed
     end
 
     event :cancel, after: :log_status_change do
-      transitions from: [:pending_review, :contacting_provider, :quotation_sent, :quotation_approved, :confirmed, :rescheduled, :in_progress], to: :cancelled
+      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved confirmed rescheduled in_progress], to: :cancelled
     end
   end
 
@@ -150,28 +150,14 @@ class Booking < ApplicationRecord
   end
 
   def transition_to!(new_status, changed_by: nil, notes: nil)
-    event_name = case new_status.to_s
-                 when 'contacting_provider' then :assign_provider
-                 when 'quotation_sent' then :send_quotation
-                 when 'quotation_approved' then :approve_quotation
-                 when 'confirmed' then :confirm
-                 when 'in_progress' then :start_service
-                 when 'rescheduled' then :reschedule
-                 when 'completed' then :complete
-                 when 'cancelled' then :cancel
-                 end
+    target = aasm.permitted_transitions.find { |t| t[:state].to_s == new_status.to_s }
+    raise InvalidTransitionError, "Cannot transition booking from #{status} to #{new_status}" unless target
 
-    if event_name && aasm.events.map(&:name).include?(event_name) && send("may_#{event_name}?")
-      @current_transition_user = changed_by
-      @current_transition_notes = notes
-      send("#{event_name}!")
-    else
-      transaction do
-        prev = status
-        update!(status: new_status)
-        record_status_history(prev, new_status, changed_by: changed_by, notes: notes)
-      end
-    end
+    @current_transition_user = changed_by
+    @current_transition_notes = notes
+    send(:"#{target[:event]}!")
+  rescue AASM::InvalidTransition => e
+    raise InvalidTransitionError, e.message
   end
 
   def current_assignment
@@ -218,11 +204,11 @@ class Booking < ApplicationRecord
   end
 
   def can_cancel?
-    may_cancel? || %w[pending_review contacting_provider quotation_sent quotation_approved confirmed rescheduled].include?(status)
+    may_cancel?
   end
 
   def can_reschedule?
-    may_reschedule? || %w[confirmed rescheduled].include?(status)
+    may_reschedule?
   end
 
   private
@@ -245,8 +231,14 @@ class Booking < ApplicationRecord
     end
   end
 
-  def log_status_change
-    record_status_history(aasm.from_state, aasm.to_state, changed_by: @current_transition_user, notes: @current_transition_notes)
+  def log_status_change(*args)
+    opts = args.extract_options!
+    user = opts[:changed_by] || @current_transition_user
+    notes = opts[:notes] || @current_transition_notes
+    record_status_history(aasm.from_state.to_s, aasm.to_state.to_s, changed_by: user, notes: notes)
+  ensure
+    @current_transition_user = nil
+    @current_transition_notes = nil
   end
 
   def record_status_history(from_s, to_s, changed_by: nil, notes: nil)

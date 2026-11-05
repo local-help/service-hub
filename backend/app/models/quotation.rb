@@ -36,6 +36,8 @@
 #  fk_rails_...  (service_request_id => service_requests.id)
 #
 class Quotation < ApplicationRecord
+  include AASM
+
   belongs_to :service_request, optional: true
   belongs_to :booking, optional: true
   belongs_to :creator, class_name: 'User', foreign_key: :created_by
@@ -45,6 +47,36 @@ class Quotation < ApplicationRecord
   has_one :target_booking, class_name: 'Booking', dependent: :nullify
 
   STATUSES = %w[draft submitted pending approved rejected expired withdrawn].freeze
+
+  aasm column: 'status' do
+    state :pending, initial: true
+    state :draft
+    state :submitted
+    state :approved
+    state :rejected
+    state :expired
+    state :withdrawn
+
+    event :submit, before: :on_submit, after: :log_status_change do
+      transitions from: %i[draft pending submitted], to: :submitted
+    end
+
+    event :approve, before: :on_approve, after: :log_status_change do
+      transitions from: %i[submitted pending], to: :approved, guard: :not_expired?
+    end
+
+    event :reject, before: :on_reject, after: :log_status_change do
+      transitions from: %i[submitted pending], to: :rejected
+    end
+
+    event :expire, after: :log_status_change do
+      transitions from: %i[draft submitted pending], to: :expired
+    end
+
+    event :withdraw, before: :on_withdraw, after: :log_status_change do
+      transitions from: %i[draft submitted pending], to: :withdrawn
+    end
+  end
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :valid_until, presence: true
@@ -60,108 +92,103 @@ class Quotation < ApplicationRecord
     valid_until < Time.current && %w[draft submitted pending].include?(status)
   end
 
+  def not_expired?
+    !expired?
+  end
+
   def can_approve?
-    %w[pending submitted].include?(status) && !expired?
+    may_approve?
   end
 
   def can_reject?
-    %w[pending submitted].include?(status)
+    may_reject?
   end
 
   def can_modify?
-    %w[draft submitted pending].include?(status)
+    draft? || submitted? || pending?
+  end
+
+  def can_transition_to?(new_status)
+    aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
   end
 
   def reference_number
     "QT-#{id.to_s.rjust(5, '0')}"
   end
 
-  def submit!(by_user:)
-    transaction do
-      update!(status: 'submitted', created_by: by_user.id)
-      if booking.present? && booking.may_send_quotation?
-        booking.send_quotation!
-      elsif service_request.present? && service_request.can_transition_to?('quotation_sent')
-        service_request.transition_to!('quotation_sent', changed_by: by_user)
-      end
-      StatusHistory.create!(
-        entity_type: 'Quotation',
-        entity_id: id,
-        previous_status: 'draft',
-        new_status: 'submitted',
-        changed_by: by_user.id,
-        notes: 'Quotation submitted by provider'
-      )
-    end
-  end
-
-  def withdraw!(by_user: nil, reason: nil)
-    transaction do
-      update!(status: 'withdrawn')
-      StatusHistory.create!(
-        entity_type: 'Quotation',
-        entity_id: id,
-        previous_status: status,
-        new_status: 'withdrawn',
-        changed_by: by_user&.id,
-        notes: reason || 'Quotation withdrawn'
-      )
-    end
-  end
-
-  def approve!(changed_by: nil)
-    raise InvalidTransitionError, "Quotation cannot be approved" unless can_approve?
-
-    transaction do
-      update!(status: 'approved', reviewed_by: changed_by, reviewed_at: Time.current)
-      if booking.present?
-        booking.update!(total_amount: amount, quotation_id: id)
-        booking.approve_quotation! if booking.may_approve_quotation?
-      end
-      service_request.transition_to!('quotation_approved', changed_by: changed_by) if service_request.present? && service_request.can_transition_to?('quotation_approved')
-      StatusHistory.create!(
-        entity_type: 'Quotation',
-        entity_id: id,
-        previous_status: 'pending',
-        new_status: 'approved',
-        changed_by: changed_by&.id
-      )
-    end
-  end
-
-  def reject!(changed_by: nil, reason: nil)
-    raise InvalidTransitionError, "Quotation cannot be rejected" unless can_reject?
-
-    transaction do
-      update!(status: 'rejected', reviewed_by: changed_by, reviewed_at: Time.current)
-      booking.reject_quotation! if booking.present? && booking.may_reject_quotation?
-      if service_request.present? && service_request.can_transition_to?('quotation_rejected')
-        service_request.transition_to!('quotation_rejected', changed_by: changed_by, notes: reason)
-      end
-      StatusHistory.create!(
-        entity_type: 'Quotation',
-        entity_id: id,
-        previous_status: 'pending',
-        new_status: 'rejected',
-        changed_by: changed_by&.id,
-        notes: reason
-      )
-    end
-  end
-
   private
+
+  def on_submit(*args)
+    opts = args.extract_options!
+    by_user = opts[:by_user]
+    self.created_by = by_user.is_a?(User) ? by_user.id : by_user
+
+    if booking.present? && booking.may_send_quotation?
+      booking.send_quotation!
+    elsif service_request.present? && service_request.can_transition_to?('quotation_sent')
+      service_request.transition_to!('quotation_sent', changed_by: by_user)
+    end
+  end
+
+  def on_approve(*args)
+    opts = args.extract_options!
+    user = opts[:changed_by]
+    self.reviewed_by = user
+    self.reviewed_at = Time.current
+
+    if booking.present?
+      booking.update!(total_amount: amount, quotation_id: id)
+      booking.approve_quotation! if booking.may_approve_quotation?
+    end
+    return unless service_request.present? && service_request.can_transition_to?('quotation_approved')
+
+    service_request.transition_to!('quotation_approved', changed_by: user)
+  end
+
+  def on_reject(*args)
+    opts = args.extract_options!
+    user = opts[:changed_by]
+    reason = opts[:reason]
+    self.reviewed_by = user
+    self.reviewed_at = Time.current
+
+    booking.reject_quotation! if booking.present? && booking.may_reject_quotation?
+    return unless service_request.present? && service_request.can_transition_to?('quotation_rejected')
+
+    service_request.transition_to!('quotation_rejected', changed_by: user, notes: reason)
+  end
+
+  def on_withdraw(*args)
+    # no extra side effects
+  end
+
+  def log_status_change(*args)
+    opts = args.extract_options!
+    user = opts[:changed_by] || opts[:by_user]
+    user_id = user.is_a?(User) ? user.id : user
+    notes = opts[:reason] || opts[:notes]
+
+    StatusHistory.create!(
+      entity_type: 'Quotation',
+      entity_id: id,
+      previous_status: aasm.from_state.to_s,
+      new_status: aasm.to_state.to_s,
+      changed_by: user_id,
+      notes: notes
+    )
+  end
 
   def valid_until_must_be_future
     return unless valid_until.present? && valid_until <= Time.current
 
-    errors.add(:valid_until, "must be in the future")
+    errors.add(:valid_until, 'must be in the future')
   end
 
   def only_one_active_quotation_per_request
     if booking && booking.quotations.where(status: %w[draft submitted pending approved]).where.not(id: id).exists?
-      errors.add(:booking_id, "already has an active quotation")
+      errors.add(:booking_id, 'already has an active quotation')
     elsif service_request && service_request.quotations.where(status: %w[draft submitted pending approved]).where.not(id: id).exists?
-      errors.add(:service_request_id, "already has an active quotation")
+      errors.add(:service_request_id, 'already has an active quotation')
     end
   end
 end

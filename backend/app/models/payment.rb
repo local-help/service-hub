@@ -27,11 +27,42 @@
 #  fk_rails_...  (recorded_by => users.id)
 #
 class Payment < ApplicationRecord
+  include AASM
+
   belongs_to :booking
   belongs_to :recorder, class_name: 'User', foreign_key: :recorded_by, optional: true
 
   METHODS = %w[online offline].freeze
   STATUSES = %w[pending processing paid failed refunded partially_refunded].freeze
+
+  aasm column: 'status' do
+    state :pending, initial: true
+    state :processing
+    state :paid
+    state :failed
+    state :refunded
+    state :partially_refunded
+
+    event :process do
+      transitions from: :pending, to: :processing
+    end
+
+    event :mark_paid do
+      transitions from: %i[pending processing], to: :paid
+    end
+
+    event :mark_failed do
+      transitions from: %i[pending processing], to: :failed
+    end
+
+    event :refund do
+      transitions from: %i[paid partially_refunded], to: :refunded
+    end
+
+    event :partially_refund do
+      transitions from: :paid, to: :partially_refunded
+    end
+  end
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :method, presence: true, inclusion: { in: METHODS }
@@ -41,11 +72,11 @@ class Payment < ApplicationRecord
   scope :successful, -> { where(status: 'paid') }
   scope :recent, -> { order(created_at: :desc) }
 
-  def paid?
-    status == 'paid'
+  def can_refund?
+    may_refund?
   end
 
-  def can_refund?
-    paid?
+  def can_transition_to?(new_status)
+    aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
   end
 end

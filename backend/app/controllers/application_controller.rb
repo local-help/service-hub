@@ -7,6 +7,7 @@ class ApplicationController < ActionController::API
   rescue_from ActionController::ParameterMissing, with: :bad_request
   rescue_from DomainError, with: :unprocessable_domain_error
   rescue_from Dry::Types::ConstraintError, with: :unprocessable_domain_error
+  rescue_from AASM::InvalidTransition, with: :unprocessable_domain_error
 
   private
 

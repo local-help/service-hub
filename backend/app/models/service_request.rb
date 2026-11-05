@@ -45,6 +45,8 @@
 #  fk_rails_...  (user_id => users.id)
 #
 class ServiceRequest < ApplicationRecord
+  include AASM
+
   belongs_to :user
   belongs_to :service
   belongs_to :service_variant, optional: true
@@ -57,7 +59,7 @@ class ServiceRequest < ApplicationRecord
   has_one :booking, dependent: :destroy
   has_many :communications, dependent: :destroy
   has_many :status_histories, -> { where(entity_type: 'ServiceRequest') },
-           foreign_key: :entity_id, dependent: :destroy
+           foreign_key: :entity_id, dependent: :destroy, inverse_of: false
   has_many :provider_assignments, -> { order(created_at: :desc) }, dependent: :restrict_with_error
   has_many :assigned_providers, through: :provider_assignments, source: :provider
 
@@ -73,17 +75,49 @@ class ServiceRequest < ApplicationRecord
     cancelled
   ].freeze
 
-  VALID_TRANSITIONS = {
-    'pending_review' => %w[contacting_provider quotation_sent booking_confirmed cancelled],
-    'contacting_provider' => %w[quotation_sent booking_confirmed in_progress cancelled],
-    'quotation_sent' => %w[quotation_approved quotation_rejected cancelled],
-    'quotation_approved' => %w[booking_confirmed in_progress completed cancelled],
-    'quotation_rejected' => %w[contacting_provider cancelled],
-    'booking_confirmed' => %w[in_progress completed cancelled],
-    'in_progress' => %w[completed cancelled],
-    'completed' => [],
-    'cancelled' => []
-  }.freeze
+  aasm column: 'status' do
+    state :pending_review, initial: true
+    state :contacting_provider
+    state :quotation_sent
+    state :quotation_approved
+    state :quotation_rejected
+    state :booking_confirmed
+    state :in_progress
+    state :completed
+    state :cancelled
+
+    event :contact_provider, after: :log_status_change do
+      transitions from: %i[pending_review quotation_rejected], to: :contacting_provider
+    end
+
+    event :send_quotation, after: :log_status_change do
+      transitions from: %i[pending_review contacting_provider], to: :quotation_sent
+    end
+
+    event :approve_quotation, after: :log_status_change do
+      transitions from: :quotation_sent, to: :quotation_approved
+    end
+
+    event :reject_quotation, after: :log_status_change do
+      transitions from: :quotation_sent, to: :quotation_rejected
+    end
+
+    event :confirm_booking, after: :log_status_change do
+      transitions from: %i[pending_review contacting_provider quotation_approved], to: :booking_confirmed
+    end
+
+    event :start_service, after: :log_status_change do
+      transitions from: %i[contacting_provider quotation_approved booking_confirmed], to: :in_progress
+    end
+
+    event :complete, after: :log_status_change do
+      transitions from: %i[quotation_approved booking_confirmed in_progress], to: :completed
+    end
+
+    event :cancel, after: :log_status_change do
+      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved quotation_rejected booking_confirmed in_progress], to: :cancelled
+    end
+  end
 
   validates :reference_number, presence: true, uniqueness: true
   validates :status, inclusion: { in: STATUSES }
@@ -120,7 +154,7 @@ class ServiceRequest < ApplicationRecord
     transaction do
       # If current active assignment exists, close it as reassigned
       current_assignment&.reassign_to!(provider, by_user: assigned_by, notes: notes) || begin
-        provider_assignments.create!(
+        assignment = provider_assignments.create!(
           provider: provider,
           assigned_by: assigned_by,
           assigned_at: Time.current,
@@ -130,32 +164,27 @@ class ServiceRequest < ApplicationRecord
         update!(
           provider: provider,
           assigned_by: assigned_by.id,
-          assigned_at: Time.current,
-          status: status == 'pending_review' ? 'contacting_provider' : status
+          assigned_at: Time.current
         )
+        contact_provider!(changed_by: assigned_by, notes: notes) if may_contact_provider?
+        assignment
       end
     end
   end
 
   def can_transition_to?(new_status)
-    VALID_TRANSITIONS[status]&.include?(new_status)
+    aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
   end
 
   def transition_to!(new_status, changed_by: nil, notes: nil)
-    raise InvalidTransitionError, "Cannot transition from #{status} to #{new_status}" unless can_transition_to?(new_status)
+    target = aasm.permitted_transitions.find { |t| t[:state].to_s == new_status.to_s }
+    raise InvalidTransitionError, "Cannot transition from #{status} to #{new_status}" unless target
 
-    transaction do
-      previous = status
-      update!(status: new_status)
-      StatusHistory.create!(
-        entity_type: 'ServiceRequest',
-        entity_id: id,
-        previous_status: previous,
-        new_status: new_status,
-        changed_by: changed_by&.id,
-        notes: notes
-      )
-    end
+    @current_transition_user = changed_by
+    @current_transition_notes = notes
+    send(:"#{target[:event]}!")
+  rescue AASM::InvalidTransition => e
+    raise InvalidTransitionError, e.message
   end
 
   def fixed_price_service?
@@ -163,6 +192,24 @@ class ServiceRequest < ApplicationRecord
   end
 
   private
+
+  def log_status_change(*args)
+    opts = args.extract_options!
+    user = opts[:changed_by] || @current_transition_user
+    notes = opts[:notes] || @current_transition_notes
+
+    StatusHistory.create!(
+      entity_type: 'ServiceRequest',
+      entity_id: id,
+      previous_status: aasm.from_state.to_s,
+      new_status: aasm.to_state.to_s,
+      changed_by: user&.id,
+      notes: notes
+    )
+  ensure
+    @current_transition_user = nil
+    @current_transition_notes = nil
+  end
 
   def generate_reference_number
     return if reference_number.present?
@@ -173,5 +220,3 @@ class ServiceRequest < ApplicationRecord
     end
   end
 end
-
-class InvalidTransitionError < StandardError; end

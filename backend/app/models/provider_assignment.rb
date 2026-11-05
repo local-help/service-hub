@@ -32,6 +32,8 @@
 #  fk_rails_...  (service_request_id => service_requests.id)
 #
 class ProviderAssignment < ApplicationRecord
+  include AASM
+
   belongs_to :service_request, optional: true
   belongs_to :booking, optional: true
   belongs_to :provider
@@ -49,6 +51,40 @@ class ProviderAssignment < ApplicationRecord
     reassigned
   ].freeze
 
+  aasm column: 'status' do
+    state :assigned, initial: true
+    state :accepted
+    state :rejected
+    state :in_progress
+    state :completed
+    state :cancelled
+    state :reassigned
+
+    event :accept, before: :on_accept, after: :log_status_change do
+      transitions from: :assigned, to: :accepted
+    end
+
+    event :reject, before: :on_reject, after: :log_status_change do
+      transitions from: :assigned, to: :rejected
+    end
+
+    event :start_service, before: :on_start_service, after: :log_status_change do
+      transitions from: :accepted, to: :in_progress
+    end
+
+    event :complete, before: :on_complete, after: :log_status_change do
+      transitions from: %i[accepted in_progress], to: :completed
+    end
+
+    event :cancel, after: :log_status_change do
+      transitions from: %i[assigned accepted in_progress], to: :cancelled
+    end
+
+    event :reassign, before: :on_reassign, after: :log_status_change do
+      transitions from: %i[assigned accepted in_progress], to: :reassigned
+    end
+  end
+
   validates :status, inclusion: { in: STATUSES }
   validates :assigned_at, presence: true
 
@@ -56,116 +92,133 @@ class ProviderAssignment < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
 
   def can_accept?
-    status == 'assigned'
+    may_accept?
   end
 
   def can_reject?
-    status == 'assigned'
+    may_reject?
   end
 
   def can_start?
-    status == 'accepted'
+    may_start_service?
   end
 
   def can_complete?
-    %w[accepted in_progress].include?(status)
+    may_complete?
   end
 
-  def accept!(notes: nil, by_user: nil)
-    raise InvalidTransitionError, "Cannot accept assignment in #{status} status" unless can_accept?
-
-    transaction do
-      update!(
-        status: 'accepted',
-        accepted_at: Time.current,
-        internal_notes: notes.presence || internal_notes
-      )
-      booking.assign_provider! if booking.present? && booking.pending_review? && booking.may_assign_provider?
-      service_request.update!(status: 'contacting_provider') if service_request.present? && service_request.status == 'pending_review'
-      StatusHistory.create!(
-        entity_type: 'ProviderAssignment',
-        entity_id: id,
-        previous_status: 'assigned',
-        new_status: 'accepted',
-        changed_by: by_user&.id || assigned_by_id,
-        notes: notes || 'Provider accepted service assignment'
-      )
-    end
+  def can_cancel?
+    may_cancel?
   end
 
-  def reject!(reason:, notes: nil)
-    raise InvalidTransitionError, "Cannot reject assignment in #{status} status" unless can_reject?
-    raise ArgumentError, "Rejection reason is required" if reason.blank?
-
-    transaction do
-      update!(
-        status: 'rejected',
-        rejected_at: Time.current,
-        rejection_reason: reason,
-        internal_notes: notes.presence || internal_notes
-      )
-      quotations.where(status: %w[draft submitted pending]).update_all(status: 'withdrawn')
-
-      booking&.update!(provider_id: nil)
-      service_request&.update!(provider_id: nil)
-
-      StatusHistory.create!(
-        entity_type: 'ProviderAssignment',
-        entity_id: id,
-        previous_status: 'assigned',
-        new_status: 'rejected',
-        changed_by: assigned_by_id,
-        notes: "Provider rejected assignment: #{reason}"
-      )
-    end
+  def can_reassign?
+    may_reassign?
   end
 
-  def start_service!(notes: nil)
-    raise InvalidTransitionError, "Cannot start service in #{status} status" unless can_start?
-
-    transaction do
-      update!(status: 'in_progress', internal_notes: notes.presence || internal_notes)
-      booking.start_service! if booking.present? && booking.may_start_service?
-      service_request.transition_to!('in_progress', notes: 'Service in progress by provider') if service_request.present? && service_request.can_transition_to?('in_progress')
-    end
-  end
-
-  def complete!(notes: nil)
-    raise InvalidTransitionError, "Cannot complete service in #{status} status" unless can_complete?
-
-    transaction do
-      update!(status: 'completed', completed_at: Time.current, internal_notes: notes.presence || internal_notes)
-      booking.complete! if booking.present? && booking.may_complete?
-      service_request.transition_to!('completed', notes: 'Service marked completed by provider') if service_request.present? && service_request.can_transition_to?('completed')
-    end
+  def can_transition_to?(new_status)
+    aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
   end
 
   def reassign_to!(new_provider, by_user:, notes: nil)
-    transaction do
-      update!(status: 'reassigned', internal_notes: notes.presence || internal_notes)
-      quotations.where(status: %w[draft submitted pending]).update_all(status: 'withdrawn')
+    reassign!(new_provider: new_provider, by_user: by_user, notes: notes)
+  end
 
-      if booking.present?
-        booking.provider_assignments.create!(
-          provider: new_provider,
-          assigned_by: by_user,
-          assigned_at: Time.current,
-          status: 'assigned',
-          internal_notes: "Reassigned from #{provider.name}. #{notes}"
-        )
-        booking.update!(provider: new_provider)
-      end
+  private
 
-      if service_request.present?
-        service_request.provider_assignments.create!(
-          provider: new_provider,
-          assigned_by: by_user,
-          assigned_at: Time.current,
-          status: 'assigned',
-          internal_notes: "Reassigned from #{provider.name}. #{notes}"
-        )
-        service_request.update!(provider: new_provider)
-      end
+  def on_accept(*args)
+    opts = args.extract_options!
+    notes = opts[:notes]
+    self.accepted_at = Time.current
+    self.internal_notes = notes.presence || internal_notes
+
+    booking.assign_provider! if booking.present? && booking.pending_review? && booking.may_assign_provider?
+    service_request.update!(status: 'contacting_provider') if service_request.present? && service_request.status == 'pending_review'
+  end
+
+  def on_reject(*args)
+    opts = args.extract_options!
+    reason = opts[:reason]
+    notes = opts[:notes]
+    raise ArgumentError, 'Rejection reason is required' if reason.blank?
+
+    self.rejected_at = Time.current
+    self.rejection_reason = reason
+    self.internal_notes = notes.presence || internal_notes
+
+    quotations.where(status: %w[draft submitted pending]).update_all(status: 'withdrawn')
+    booking&.update!(provider_id: nil)
+    service_request&.update!(provider_id: nil)
+  end
+
+  def on_start_service(*args)
+    opts = args.extract_options!
+    notes = opts[:notes]
+    self.internal_notes = notes.presence || internal_notes
+
+    booking.start_service! if booking.present? && booking.may_start_service?
+    return unless service_request.present? && service_request.can_transition_to?('in_progress')
+
+    service_request.transition_to!('in_progress', notes: 'Service in progress by provider')
+  end
+
+  def on_complete(*args)
+    opts = args.extract_options!
+    notes = opts[:notes]
+    self.completed_at = Time.current
+    self.internal_notes = notes.presence || internal_notes
+
+    booking.complete! if booking.present? && booking.may_complete?
+    return unless service_request.present? && service_request.can_transition_to?('completed')
+
+    service_request.transition_to!('completed', notes: 'Service marked completed by provider')
+  end
+
+  def on_reassign(*args)
+    opts = args.extract_options!
+    new_provider = opts[:new_provider]
+    by_user = opts[:by_user]
+    notes = opts[:notes]
+    self.internal_notes = notes.presence || internal_notes
+
+    quotations.where(status: %w[draft submitted pending]).update_all(status: 'withdrawn')
+
+    if booking.present?
+      booking.provider_assignments.create!(
+        provider: new_provider,
+        assigned_by: by_user,
+        assigned_at: Time.current,
+        status: 'assigned',
+        internal_notes: "Reassigned from #{provider.name}. #{notes}"
+      )
+      booking.update!(provider: new_provider)
     end
+
+    return unless service_request.present?
+
+    service_request.provider_assignments.create!(
+      provider: new_provider,
+      assigned_by: by_user,
+      assigned_at: Time.current,
+      status: 'assigned',
+      internal_notes: "Reassigned from #{provider.name}. #{notes}"
+    )
+    service_request.update!(provider: new_provider)
+  end
+
+  def log_status_change(*args)
+    opts = args.extract_options!
+    user = opts[:by_user] || opts[:changed_by] || assigned_by
+    user_id = user.is_a?(User) ? user.id : user
+    reason = opts[:reason]
+    notes = opts[:notes] || (reason ? "Provider rejected assignment: #{reason}" : nil)
+
+    StatusHistory.create!(
+      entity_type: 'ProviderAssignment',
+      entity_id: id,
+      previous_status: aasm.from_state.to_s,
+      new_status: aasm.to_state.to_s,
+      changed_by: user_id,
+      notes: notes
+    )
   end
 end
