@@ -2,7 +2,12 @@ module Api
   module V1
     module Admin
       class ServicesController < ApplicationController
-        before_action :require_super_admin!
+        before_action :require_admin!
+
+        def show
+          service = Service.find(params[:id])
+          render json: service, serializer: ServiceDetailSerializer
+        end
 
         def create
           service = Service.new(service_params)
@@ -22,6 +27,20 @@ module Api
           end
         end
 
+        def destroy
+          service = Service.find(params[:id])
+          if service.bookings.exists? || service.service_requests.exists?
+            service.update!(active: false)
+            render json: { success: true, message: 'Service has associated bookings so it was deactivated instead of deleted.', deactivated: true }
+          else
+            service.destroy!
+            render json: { success: true, message: 'Service deleted successfully' }
+          end
+        rescue ActiveRecord::DeleteRestrictionError
+          service.update!(active: false)
+          render json: { success: true, message: 'Service was deactivated due to existing records.', deactivated: true }
+        end
+
         private
 
         def service_params
@@ -37,4 +56,3 @@ module Api
     end
   end
 end
-

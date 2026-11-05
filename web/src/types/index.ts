@@ -77,6 +77,7 @@ export interface Category {
   services_count?: number;
   subcategories_count?: number;
   subcategories?: Subcategory[];
+  services?: Service[];
   active_services?: Service[];
 }
 

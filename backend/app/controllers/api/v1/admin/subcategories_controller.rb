@@ -2,7 +2,7 @@ module Api
   module V1
     module Admin
       class SubcategoriesController < ApplicationController
-        before_action :require_super_admin!
+        before_action :require_admin!
 
         def create
           subcategory = Subcategory.new(subcategory_params)
@@ -24,8 +24,16 @@ module Api
 
         def destroy
           subcategory = Subcategory.find(params[:id])
+          if subcategory.services.joins(:bookings).exists?
+            subcategory.update!(active: false)
+            render json: { success: true, message: 'Subcategory has services with bookings so it was deactivated.', deactivated: true }
+          else
+            subcategory.destroy!
+            render json: { success: true, message: 'Subcategory deleted successfully' }
+          end
+        rescue ActiveRecord::DeleteRestrictionError
           subcategory.update!(active: false)
-          render json: { success: true, message: 'Subcategory deactivated' }
+          render json: { success: true, message: 'Subcategory was deactivated.', deactivated: true }
         end
 
         private
@@ -41,4 +49,3 @@ module Api
     end
   end
 end
-

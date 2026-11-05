@@ -2,13 +2,12 @@ module Api
   module V1
     module Admin
       class ServiceVariantsController < ApplicationController
-        before_action :require_super_admin!
+        before_action :require_admin!
 
         def create
           service = Service.find(params[:service_id])
           variant = service.variants.build(variant_params)
           if variant.save
-            # If initial price passed, create pricing record
             if params[:price].present?
               variant.service_pricings.create!(
                 price: params[:price],
@@ -28,11 +27,10 @@ module Api
           if variant.update(variant_params)
             if params[:price].present?
               pricing = variant.service_pricings.find_or_initialize_by(active: true)
-              pricing.update!(
-                price: params[:price],
-                pricing_type: params[:pricing_type] || pricing.pricing_type || 'fixed',
-                applicable_conditions: params[:applicable_conditions] || pricing.applicable_conditions || {}
-              )
+              pricing.pricing_type ||= params[:pricing_type] || 'fixed'
+              pricing.applicable_conditions ||= params[:applicable_conditions] || {}
+              pricing.price = params[:price]
+              pricing.save!
             end
             render json: variant, serializer: ServiceVariantSerializer
           else
@@ -42,8 +40,16 @@ module Api
 
         def destroy
           variant = ServiceVariant.find(params[:id])
+          if variant.service_requests.exists?
+            variant.update!(active: false)
+            render json: { success: true, message: 'Package variant has associated requests so it was deactivated.', deactivated: true }
+          else
+            variant.destroy!
+            render json: { success: true, message: 'Package variant deleted successfully' }
+          end
+        rescue ActiveRecord::DeleteRestrictionError
           variant.update!(active: false)
-          render json: { success: true, message: 'Variant deactivated' }
+          render json: { success: true, message: 'Package variant was deactivated.', deactivated: true }
         end
 
         private

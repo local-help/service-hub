@@ -2,7 +2,17 @@ module Api
   module V1
     module Admin
       class CategoriesController < ApplicationController
-        before_action :require_super_admin!
+        before_action :require_admin!
+
+        def index
+          categories = Category.sorted.includes(:subcategories, :services)
+          render json: categories, each_serializer: CategoryDetailSerializer
+        end
+
+        def show
+          category = Category.find(params[:id])
+          render json: category, serializer: CategoryDetailSerializer
+        end
 
         def create
           category = Category.new(category_params)
@@ -22,6 +32,20 @@ module Api
           end
         end
 
+        def destroy
+          category = Category.find(params[:id])
+          if category.services.joins(:bookings).exists?
+            category.update!(active: false)
+            render json: { success: true, message: 'Category has bookings so it was deactivated.', deactivated: true }
+          else
+            category.destroy!
+            render json: { success: true, message: 'Category deleted successfully' }
+          end
+        rescue ActiveRecord::DeleteRestrictionError
+          category.update!(active: false)
+          render json: { success: true, message: 'Category was deactivated due to existing records.', deactivated: true }
+        end
+
         private
 
         def category_params
@@ -35,4 +59,3 @@ module Api
     end
   end
 end
-

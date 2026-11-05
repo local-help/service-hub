@@ -2,7 +2,7 @@ module Api
   module V1
     module Admin
       class ServicePricingsController < ApplicationController
-        before_action :require_super_admin!
+        before_action :require_admin!
 
         def create
           variant = ServiceVariant.find(params[:service_variant_id])
@@ -25,6 +25,9 @@ module Api
 
         def destroy
           pricing = ServicePricing.find(params[:id])
+          pricing.destroy!
+          render json: { success: true, message: 'Pricing deleted' }
+        rescue ActiveRecord::DeleteRestrictionError
           pricing.update!(active: false)
           render json: { success: true, message: 'Pricing deactivated' }
         end
@@ -42,4 +45,3 @@ module Api
     end
   end
 end
-

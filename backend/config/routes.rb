@@ -126,9 +126,9 @@ Rails.application.routes.draw do
         resources :users, only: [:index, :update] do
           post :invite, on: :collection
         end
-        resources :categories, only: [:create, :update]
+        resources :categories, only: [:index, :show, :create, :update, :destroy]
         resources :subcategories, only: [:create, :update, :destroy]
-        resources :services, only: [:create, :update] do
+        resources :services, only: [:show, :create, :update, :destroy] do
           resources :variants, controller: 'service_variants', only: [:create, :update, :destroy]
         end
         resources :service_variants, only: [:update, :destroy] do
