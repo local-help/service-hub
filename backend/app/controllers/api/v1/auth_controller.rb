@@ -1,7 +1,22 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:register, :login, :send_otp, :verify_otp, :refresh, :reset_password]
+      skip_before_action :authenticate_user!, only: [:register, :login, :send_otp, :verify_otp, :google, :refresh, :reset_password]
+
+      def google
+        result = Auth::GoogleAuthService.call(params, request)
+        if result.success?
+          render json: {
+            message: 'Google authentication successful',
+            user: UserSerializer.new(result.user).as_json,
+            access_token: result.access_token,
+            refresh_token: result.refresh_token,
+            is_new_user: result.is_new_user
+          }
+        else
+          render json: { error: result.error }, status: :unauthorized
+        end
+      end
 
       def register
         result = Auth::RegisterService.call(register_params)

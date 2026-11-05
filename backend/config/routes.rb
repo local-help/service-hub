@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       post 'auth/login', to: 'auth#login'
       post 'auth/otp/send', to: 'auth#send_otp'
       post 'auth/otp/verify', to: 'auth#verify_otp'
+      post 'auth/google', to: 'auth#google'
       post 'auth/refresh', to: 'auth#refresh'
       delete 'auth/logout', to: 'auth#logout'
       get 'auth/me', to: 'auth#me'

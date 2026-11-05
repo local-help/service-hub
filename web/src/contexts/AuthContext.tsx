@@ -18,6 +18,13 @@ interface AuthContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   loginWithEmail: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: (payload: {
+    id_token?: string;
+    email?: string;
+    name?: string;
+    avatar_url?: string;
+    google_uid?: string;
+  }) => Promise<User>;
   sendOtp: (phone: string) => Promise<{ cooldown: number }>;
   verifyOtp: (phone: string, otp: string) => Promise<User>;
   register: (data: { name?: string; email?: string; phone?: string; password?: string }) => Promise<User>;
@@ -87,6 +94,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await apiRequest<{ user: User; access_token: string; refresh_token: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('localhelp_access_token', data.access_token);
+      localStorage.setItem('localhelp_refresh_token', data.refresh_token);
+    }
+    setUser(data.user);
+
+    if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+      setViewMode('admin');
+    } else if (data.user.role === 'provider') {
+      setViewMode('provider');
+    }
+
+    return data.user;
+  };
+
+  const loginWithGoogle = async (payload: {
+    id_token?: string;
+    email?: string;
+    name?: string;
+    avatar_url?: string;
+    google_uid?: string;
+  }): Promise<User> => {
+    const data = await apiRequest<{
+      user: User;
+      access_token: string;
+      refresh_token: string;
+      is_new_user?: boolean;
+    }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
 
     if (typeof window !== 'undefined') {
@@ -207,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         viewMode,
         setViewMode,
         loginWithEmail,
+        loginWithGoogle,
         sendOtp,
         verifyOtp,
         register,

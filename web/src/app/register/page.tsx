@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -68,7 +69,20 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="border border-slate-200 rounded-xl p-6">
+        <div className="border border-slate-200 rounded-xl p-6 space-y-5">
+          {/* Google One-Click Registration */}
+          <GoogleSignInButton
+            mode="signup"
+            onError={(err) => setError(err)}
+          />
+
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 absolute">
+              or continue with email
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-medium text-slate-700 block mb-1">Email Address</label>
