@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Phone, Mail, Lock, KeyRound, AlertCircle, Wrench, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, Lock, KeyRound, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
@@ -77,47 +77,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF]">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-block group mb-1">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-white">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center space-y-1">
+          <Link href="/" className="inline-block mb-3">
             <img
               src="/local-logo.svg"
               alt="LocalHelp"
-              className="h-12 w-auto mx-auto object-contain transition group-hover:opacity-90"
+              className="h-8 w-auto mx-auto object-contain"
             />
           </Link>
-          <h1 className="text-2xl font-black text-[#242D2B] tracking-tight">Welcome to LocalHelp</h1>
-          <p className="text-xs text-slate-500">Sign in to coordinate and manage your local services</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Sign in to LocalHelp</h1>
+          <p className="text-xs text-slate-500">Manage and coordinate your local services</p>
         </div>
 
         {error && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2.5 text-rose-700 text-xs font-medium">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-rose-700 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-          {/* Method tabs */}
-          <div className="grid grid-cols-2 p-1 bg-[#F7F5EF] border border-[#E7E2D8] rounded-xl text-xs font-bold">
+        <div className="border border-slate-200 rounded-xl p-6 space-y-5">
+          {/* Tabs */}
+          <div className="grid grid-cols-2 p-0.5 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium">
             <button
+              type="button"
               onClick={() => setTab('otp')}
-              className={`py-2 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                tab === 'otp' ? 'bg-[#176B65] text-[#F7F5EF] shadow-xs' : 'text-slate-600 hover:text-[#242D2B]'
+              className={`py-1.5 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                tab === 'otp' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Phone className="w-3.5 h-3.5" />
               <span>Mobile OTP</span>
             </button>
             <button
+              type="button"
               onClick={() => setTab('password')}
-              className={`py-2 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                tab === 'password' ? 'bg-[#176B65] text-[#F7F5EF] shadow-xs' : 'text-slate-600 hover:text-[#242D2B]'
+              className={`py-1.5 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                tab === 'password' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>Email & Password</span>
+              <span>Password</span>
             </button>
           </div>
 
@@ -126,44 +128,44 @@ export default function LoginPage() {
             !otpSent ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-[#242D2B] block mb-1">Mobile Phone Number</label>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Mobile Phone Number</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
                       type="tel"
                       required
                       placeholder="+919876543210"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] focus:ring-2 focus:ring-[#25877C]/20 transition text-[#242D2B]"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">We'll send a 6-digit verification code via SMS.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">We'll send a 6-digit code via SMS.</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-[#176B65] hover:bg-[#135752] disabled:opacity-50 text-[#F7F5EF] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition cursor-pointer"
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
                 >
-                  {loading ? 'Sending Code...' : 'Send Verification OTP'}
+                  {loading ? 'Sending code…' : 'Send OTP'}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-[#242D2B]">Enter 6-Digit OTP</label>
+                    <label className="text-xs font-medium text-slate-700">Enter OTP</label>
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="text-[11px] text-[#176B65] font-semibold hover:underline"
+                      className="text-xs text-slate-500 hover:text-slate-800"
                     >
-                      Change Phone
+                      Change phone
                     </button>
                   </div>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
                       type="text"
                       required
@@ -171,20 +173,20 @@ export default function LoginPage() {
                       placeholder="123456"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-base font-mono tracking-widest border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] transition text-center text-[#242D2B]"
+                      className="w-full pl-9 pr-3 py-2 text-sm font-mono tracking-wider border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-center text-slate-900"
                     />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1 text-center">
-                    Sent to {phone}. (In dev/test, use OTP 123456)
+                    Sent to {phone}.
                   </p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading || otp.length < 4}
-                  className="w-full py-3 bg-[#25877C] hover:bg-[#176B65] disabled:opacity-50 text-[#F7F5EF] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition cursor-pointer"
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
                 >
-                  {loading ? 'Verifying...' : 'Verify & Continue'}
+                  {loading ? 'Verifying…' : 'Continue'}
                 </button>
               </form>
             )
@@ -192,31 +194,31 @@ export default function LoginPage() {
             /* Email Password Form */
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-[#242D2B] block mb-1">Email Address</label>
+                <label className="text-xs font-medium text-slate-700 block mb-1">Email Address</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="email"
                     required
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] transition text-[#242D2B]"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-[#242D2B] block mb-1">Password</label>
+                <label className="text-xs font-medium text-slate-700 block mb-1">Password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] transition text-[#242D2B]"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                   />
                 </div>
               </div>
@@ -224,18 +226,18 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[#176B65] hover:bg-[#135752] disabled:opacity-50 text-[#F7F5EF] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition cursor-pointer"
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-600">
-          Don't have an account yet?{' '}
-          <Link href="/register" className="text-[#176B65] font-bold hover:underline">
-            Create Customer Account
+        <p className="text-center text-xs text-slate-500">
+          Don't have an account?{' '}
+          <Link href="/register" className="text-slate-900 font-medium hover:underline">
+            Sign up
           </Link>
         </p>
       </div>

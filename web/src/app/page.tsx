@@ -12,8 +12,6 @@ import {
   ArrowRight, 
   Clock, 
   Search,
-  ShieldCheck,
-  CheckCircle2,
   MapPin,
   Phone
 } from 'lucide-react';
@@ -48,13 +46,14 @@ export default function HomePage() {
   }, []);
 
   const getCategoryIcon = (iconName?: string | null) => {
+    const cls = 'w-5 h-5 text-slate-600';
     switch (iconName) {
-      case 'car': return <Car className="w-6 h-6 text-teal-deep" />;
-      case 'sparkles': return <Sparkles className="w-6 h-6 text-teal-accent" />;
-      case 'wrench': return <Wrench className="w-6 h-6 text-teal-deep" />;
-      case 'bolt': return <Bolt className="w-6 h-6 text-amber-600" />;
-      case 'tv': return <Tv className="w-6 h-6 text-teal-accent" />;
-      default: return <Briefcase className="w-6 h-6 text-charcoal-muted" />;
+      case 'car': return <Car className={cls} />;
+      case 'sparkles': return <Sparkles className={cls} />;
+      case 'wrench': return <Wrench className={cls} />;
+      case 'bolt': return <Bolt className={cls} />;
+      case 'tv': return <Tv className={cls} />;
+      default: return <Briefcase className={cls} />;
     }
   };
 
@@ -64,142 +63,65 @@ export default function HomePage() {
     : services;
 
   return (
-    <div className="space-y-16 pb-16 bg-[#F7F5EF]">
-      {/* Hero Section — Deep Teal & Warm Ivory */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#176B65] via-[#145C57] to-[#242D2B] text-[#F7F5EF] pt-14 pb-20 px-4 sm:px-6 lg:px-8 shadow-sm">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#25877C_1px,transparent_1px)] [background-size:16px_16px]" />
-        
-        <div className="relative max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#25877C]/25 border border-[#25877C]/40 text-[#F7F5EF] text-xs font-semibold backdrop-blur-md">
-            <span>📍 Prayagraj (Allahabad) Coverage</span>
-            <span className="text-[#E7E2D8]/60">•</span>
-            <span>Smart Instant Matching</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F7F5EF] leading-tight">
-            Local Services You Can Trust, <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8BE3D9] via-[#F7F5EF] to-[#D5CEC0]">
-              Coordinated with Personal Care.
-            </span>
+    <div className="min-h-screen bg-white">
+      {/* Hero — Clean, white, minimal */}
+      <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center space-y-5">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
+            Local services you can trust
           </h1>
 
-          <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#E7E2D8] font-normal leading-relaxed">
-            From doorstep car detailing to home deep cleaning and electrical repairs. Submit a request, your request is automatically matched with a verified local technician, and delivers transparent pricing.
+          <p className="max-w-xl mx-auto text-base text-slate-500 leading-relaxed">
+            From car detailing to home repairs — submit a request and get automatically matched with a verified local technician in Prayagraj.
           </p>
 
-          {/* Integrated Location & Service Search Bar */}
-          <div className="max-w-2xl mx-auto pt-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-xl overflow-hidden p-1.5 border border-[#E7E2D8] text-[#242D2B] gap-1 sm:gap-2">
-              {/* Step 1: Doorstep Location Selector */}
+          {/* Search bar */}
+          <div className="max-w-lg mx-auto pt-2">
+            <div className="flex items-center bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 gap-3 focus-within:border-slate-400 transition">
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search services…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400 text-slate-900"
+              />
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#F7F5EF] text-slate-700 transition cursor-pointer shrink-0 border-b sm:border-b-0 sm:border-r border-slate-200 text-left group"
-                title="Click to detect or change exact doorstep location in Prayagraj"
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition shrink-0"
               >
-                <MapPin className="w-4 h-4 text-[#176B65] shrink-0 group-hover:scale-110 transition-transform" />
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Your Doorstep</span>
-                  <span className="text-xs font-bold text-slate-900 truncate max-w-[130px] sm:max-w-[150px]">
-                    {location.locality || location.city || 'Prayagraj'} {location.postal_code ? `(${location.postal_code})` : ''}
-                  </span>
-                </div>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-[#176B65] border border-teal-200 ml-1">
-                  GPS
-                </span>
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{location.locality || 'Prayagraj'}</span>
               </button>
-
-              {/* Step 2: Search Input */}
-              <div className="flex items-center flex-1 min-w-0 px-2 py-1">
-                <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search for 'car wash', 'ac repair', 'plumbing'..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full text-xs sm:text-sm bg-transparent outline-none placeholder:text-slate-400 text-[#242D2B]"
-                />
-              </div>
-
-              {/* Step 3: Find Service CTA */}
-              <button 
-                type="button"
-                className="bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shrink-0 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Find Service</span>
-              </button>
-            </div>
-
-            {/* Coordination Guarantee & Support Helpline Pill */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs text-[#E7E2D8]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#8BE3D9] animate-pulse" />
-                <span>Doorstep local service coordination</span>
-              </span>
-              <span className="text-[#E7E2D8]/40 hidden sm:inline">•</span>
-              <a
-                href={getCallUrl()}
-                className="inline-flex items-center gap-1.5 text-[#F7F5EF] hover:text-[#8BE3D9] transition font-medium bg-black/20 px-3 py-1 rounded-full backdrop-blur-xs border border-white/10"
-              >
-                <Phone className="w-3.5 h-3.5 text-[#8BE3D9]" />
-                <span>Support Helpline: <strong>{supportInfo.phone}</strong></span>
-              </a>
-            </div>
-          </div>
-
-          {/* Highlights */}
-          <div className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto text-center border-t border-[#E7E2D8]/20">
-            <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">100%</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Verified Local Providers</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">GPS Pinned</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Doorstep Accuracy</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">Prayagraj</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Full City Coverage</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black text-[#F7F5EF]">Direct</p>
-              <p className="text-xs text-[#E7E2D8]/80 mt-0.5">Fixed Upfront Rates</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-extrabold text-[#242D2B] tracking-tight">Service Categories</h2>
-            <p className="text-sm text-slate-500 mt-1">Browse our coordinated local service categories</p>
-          </div>
-        </div>
+      {/* Categories */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <h2 className="text-lg font-semibold text-slate-900 mb-6">Categories</h2>
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-32 bg-[#E7E2D8]/50 animate-pulse rounded-2xl" />
+              <div key={n} className="h-24 bg-slate-50 animate-pulse rounded-xl" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/categories/${category.id}`}
-                className="group relative bg-white border border-[#E7E2D8] hover:border-[#25877C] rounded-2xl p-5 text-center shadow-xs hover:shadow-md transition-all duration-200 flex flex-col items-center justify-between"
+                className="group flex flex-col items-center justify-center gap-2.5 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition text-center"
               >
-                <div className="w-14 h-14 rounded-2xl bg-[#F0F8F7] group-hover:bg-[#D6ECE9] flex items-center justify-center transition mb-3 border border-[#B0DCD7]/40">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200">
                   {getCategoryIcon(category.icon_name)}
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-[#242D2B] group-hover:text-[#176B65] transition line-clamp-2">
+                <span className="text-xs font-medium text-slate-700 group-hover:text-slate-900 line-clamp-2">
                   {category.name}
-                </h3>
-                <span className="text-[11px] font-medium text-slate-500 mt-1">
-                  {category.services_count ?? 3} services
                 </span>
               </Link>
             ))}
@@ -208,61 +130,53 @@ export default function HomePage() {
       </section>
 
       {/* Popular Services */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-extrabold text-[#242D2B] tracking-tight">Popular Services</h2>
-            <p className="text-sm text-slate-500 mt-1">Direct-booking fixed price & time-based packages</p>
-          </div>
-        </div>
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <h2 className="text-lg font-semibold text-slate-900 mb-6">Popular Services</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredServices.map((service) => (
             <div
               key={service.id}
-              className="bg-white border border-[#E7E2D8] hover:border-[#25877C]/60 rounded-2xl p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+              className="border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-slate-300 transition"
             >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-[#E6F3F1] text-[#176B65] border border-[#B0DCD7]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
                     {service.booking_type === 'time_based' ? 'Time Based' : 'Fixed Price'}
                   </span>
                   {service.estimated_duration_minutes && (
-                    <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                      <Clock className="w-3.5 h-3.5" />
-                      {service.estimated_duration_minutes} mins
+                    <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                      <Clock className="w-3 h-3" />
+                      {service.estimated_duration_minutes} min
                     </span>
                   )}
                 </div>
 
-                <h3 className="text-base font-bold text-[#242D2B] group-hover:text-[#176B65] transition">
+                <h3 className="text-sm font-semibold text-slate-900">
                   {service.name}
                 </h3>
-                <p className="text-xs text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                   {service.short_description || service.description}
                 </p>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-[#E7E2D8]/70 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-bold block">Pricing</span>
-                  {service.fixed_price ? (
-                    <span className="text-lg font-black text-[#176B65]">
-                      ₹{service.fixed_price}
-                    </span>
-                  ) : (
-                    <span className="text-sm font-bold text-[#25877C]">
-                      Dynamic Tariff
-                    </span>
-                  )}
-                </div>
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                {service.fixed_price ? (
+                  <span className="text-base font-semibold text-slate-900">
+                    ₹{service.fixed_price}
+                  </span>
+                ) : (
+                  <span className="text-sm text-slate-500">
+                    Dynamic pricing
+                  </span>
+                )}
 
                 <Link
                   href={`/services/${service.id}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] text-xs font-semibold rounded-xl transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition"
                 >
-                  <span>Book Now</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Book</span>
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             </div>
@@ -270,57 +184,67 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How LocalHelp Works — Process Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-8 sm:p-12 shadow-sm">
-          <div className="max-w-3xl mx-auto text-center mb-10">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-[#176B65]">Streamlined Marketplace</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] mt-1">How LocalHelp Works for You</h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-2">
-              Unlike open bidding platforms that flood you with spam calls, LocalHelp coordinates directly with certified local professionals.
-            </p>
-          </div>
+      {/* How it works */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="bg-slate-50 rounded-xl p-8 sm:p-10">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">How LocalHelp Works</h2>
+          <p className="text-sm text-slate-500 mb-8">
+            No spam calls, no bidding — just verified local professionals.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 bg-[#F7F5EF] rounded-2xl border border-[#E7E2D8]">
-              <div className="w-12 h-12 rounded-xl bg-[#176B65] text-[#F7F5EF] flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
                 1
               </div>
-              <h4 className="text-base font-bold text-[#242D2B]">Select Service & Options</h4>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Choose your service, select vehicle type or hourly driver duration, and pinpoint your doorstep via GPS.
+              <h4 className="text-sm font-semibold text-slate-900">Select a service</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Choose your service, pick options, and pin your location via GPS.
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-6 bg-[#F7F5EF] rounded-2xl border border-[#E7E2D8]">
-              <div className="w-12 h-12 rounded-xl bg-[#25877C] text-[#F7F5EF] flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
                 2
               </div>
-              <h4 className="text-base font-bold text-[#242D2B]">Verified Specialist Dispatched</h4>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              <h4 className="text-sm font-semibold text-slate-900">Verified match</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Your request is automatically assigned to a verified local professional, who reviews the details and prepares for your doorstep visit.
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-6 bg-[#F7F5EF] rounded-2xl border border-[#E7E2D8]">
-              <div className="w-12 h-12 rounded-xl bg-[#242D2B] text-[#F7F5EF] flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-semibold">
                 3
               </div>
-              <h4 className="text-base font-bold text-[#242D2B]">Approve & Relax</h4>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Review your quote on web or mobile. Once approved, the booking is confirmed with full phone and WhatsApp support until completion.
+              <h4 className="text-sm font-semibold text-slate-900">Approve & relax</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Review the quote, approve the booking, and get full support until completion.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Support Banner Card */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <CustomerSupportButtons variant="banner" />
+      {/* Minimal support bar */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-slate-100">
+          <p className="text-sm text-slate-500">
+            Need help? Our support team is available 8 AM – 9 PM, all days.
+          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href={getCallUrl()}
+              className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition"
+            >
+              <Phone className="w-4 h-4" />
+              <span>{supportInfo.phone}</span>
+            </a>
+          </div>
+        </div>
       </section>
 
-      {/* Floating Support Action */}
+      {/* Floating support — single subtle button */}
       <CustomerSupportButtons variant="floating" />
     </div>
   );

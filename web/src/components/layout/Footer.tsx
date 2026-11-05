@@ -2,115 +2,85 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Wrench, Phone, MessageCircle, Shield, Clock, Award } from 'lucide-react';
+import { Phone, MessageCircle } from 'lucide-react';
 import { useSupport } from '../../contexts/SupportContext';
 
 export const Footer: React.FC = () => {
   const { supportInfo, getCallUrl, getWhatsAppUrl } = useSupport();
 
   return (
-    <footer className="bg-[#242D2B] text-[#D5CEC0] mt-20 border-t border-[#384441]">
-      {/* Trust Badges */}
-      <div className="border-b border-[#384441] py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#25877C]/20 text-[#8BE3D9] flex items-center justify-center shrink-0 border border-[#25877C]/30">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h5 className="text-sm font-bold text-[#F7F5EF]">Central Coordination</h5>
-              <p className="text-xs text-[#D5CEC0]/80 mt-0.5">Verified local providers supervised by our support desk.</p>
-            </div>
+    <footer className="border-t border-slate-100 bg-white mt-0">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div className="space-y-3 sm:col-span-2 md:col-span-1">
+            <Link href="/" className="inline-block">
+              <img
+                src="/local-logo.svg"
+                alt="LocalHelp"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Connecting homeowners and car owners with verified local technicians through an instant, seamless matching experience.
+            </p>
+            <p className="text-xs text-slate-400">
+              Prayagraj (Allahabad), Uttar Pradesh
+            </p>
           </div>
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#176B65]/30 text-[#8BE3D9] flex items-center justify-center shrink-0 border border-[#176B65]/40">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <h5 className="text-sm font-bold text-[#F7F5EF]">Fast Phone & WhatsApp Support</h5>
-              <p className="text-xs text-[#D5CEC0]/80 mt-0.5">Instant human contact for quotations, updates & queries.</p>
-            </div>
+
+          {/* Services */}
+          <div>
+            <h4 className="text-xs font-medium text-slate-900 mb-3">Services</h4>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li><Link href="/categories/1" className="hover:text-slate-600 transition">Car Detailing</Link></li>
+              <li><Link href="/categories/2" className="hover:text-slate-600 transition">Home Cleaning</Link></li>
+              <li><Link href="/categories/3" className="hover:text-slate-600 transition">Plumbing</Link></li>
+              <li><Link href="/categories/4" className="hover:text-slate-600 transition">Electrical</Link></li>
+              <li><Link href="/categories/5" className="hover:text-slate-600 transition">AC & Appliance</Link></li>
+            </ul>
           </div>
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#25877C]/20 text-[#8BE3D9] flex items-center justify-center shrink-0 border border-[#25877C]/30">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <h5 className="text-sm font-bold text-[#F7F5EF]">Transparent Pricing</h5>
-              <p className="text-xs text-[#D5CEC0]/80 mt-0.5">Clear upfront prices or approved quotations before booking.</p>
+
+          {/* Account */}
+          <div>
+            <h4 className="text-xs font-medium text-slate-900 mb-3">Account</h4>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li><Link href="/requests" className="hover:text-slate-600 transition">Track Requests</Link></li>
+              <li><Link href="/bookings" className="hover:text-slate-600 transition">Bookings</Link></li>
+              <li><Link href="/login" className="hover:text-slate-600 transition">Sign In</Link></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-xs font-medium text-slate-900 mb-3">Support</h4>
+            <div className="space-y-2">
+              <a
+                href={getCallUrl()}
+                className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>{supportInfo.phone}</span>
+              </a>
+              <a
+                href={getWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>{supportInfo.whatsapp}</span>
+              </a>
+              <p className="text-[11px] text-slate-300 pt-1">
+                8 AM – 9 PM, all days
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Brand */}
-        <div className="space-y-4 md:col-span-1">
-          <Link href="/" className="inline-block group">
-            <img
-              src="/local-logo-dark.svg"
-              alt="LocalHelp — Happy to Help"
-              className="h-10 w-auto max-w-[160px] object-contain transition group-hover:opacity-90"
-            />
-          </Link>
-          <p className="text-xs leading-relaxed text-[#D5CEC0]/90">
-            Connecting homeowners and car owners with verified local technicians through an instant, seamless matching experience.
-          </p>
-          <p className="text-xs text-[#9DA8A4]">
-            Operating exclusively in Prayagraj (Allahabad), Uttar Pradesh.
-          </p>
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[#F7F5EF] mb-3">Popular Services</h4>
-          <ul className="space-y-2 text-xs">
-            <li><Link href="/categories/1" className="hover:text-[#F7F5EF] transition">Doorstep Car Detailing</Link></li>
-            <li><Link href="/categories/2" className="hover:text-[#F7F5EF] transition">Home Deep Cleaning</Link></li>
-            <li><Link href="/categories/3" className="hover:text-[#F7F5EF] transition">Emergency Plumbing</Link></li>
-            <li><Link href="/categories/4" className="hover:text-[#F7F5EF] transition">Electrical Installations</Link></li>
-            <li><Link href="/categories/5" className="hover:text-[#F7F5EF] transition">AC & Appliance Repair</Link></li>
-          </ul>
-        </div>
-
-        {/* Customer Care */}
-        <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[#F7F5EF] mb-3">Customer Care</h4>
-          <ul className="space-y-2 text-xs">
-            <li><Link href="/requests" className="hover:text-[#F7F5EF] transition">Track Service Request</Link></li>
-            <li><Link href="/bookings" className="hover:text-[#F7F5EF] transition">Manage Bookings</Link></li>
-            <li><Link href="/login" className="hover:text-[#F7F5EF] transition">Customer Sign In</Link></li>
-            <li><Link href="/login" className="hover:text-[#F7F5EF] transition">Admin Portal Login</Link></li>
-          </ul>
-        </div>
-
-        {/* Direct Contact */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[#F7F5EF] mb-3">Contact Support</h4>
-          <a
-            href={getCallUrl()}
-            className="flex items-center gap-2.5 text-xs text-[#E7E2D8] hover:text-[#F7F5EF] transition"
-          >
-            <Phone className="w-4 h-4 text-[#8BE3D9] shrink-0" />
-            <span>Call: {supportInfo.phone}</span>
-          </a>
-          <a
-            href={getWhatsAppUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2.5 text-xs text-[#E7E2D8] hover:text-[#F7F5EF] transition"
-          >
-            <MessageCircle className="w-4 h-4 text-[#25877C] shrink-0" />
-            <span>WhatsApp: {supportInfo.whatsapp}</span>
-          </a>
-          <p className="text-[11px] text-[#9DA8A4] pt-2">
-            Support Desk Hours: 8:00 AM – 9:00 PM, All Days
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t border-[#384441] py-6 text-center text-xs text-[#9DA8A4]">
-        <p>© {new Date().getFullYear()} LocalHelp Technologies Pvt. Ltd. All rights reserved.</p>
+      <div className="border-t border-slate-100 py-5 text-center text-xs text-slate-300">
+        <p>© {new Date().getFullYear()} LocalHelp Technologies Pvt. Ltd.</p>
       </div>
     </footer>
   );

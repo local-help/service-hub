@@ -6,13 +6,11 @@ import Link from 'next/link';
 import { 
   ArrowLeft, 
   Calendar, 
-  Clock, 
   CreditCard, 
   Star, 
-  CheckCircle2, 
-  AlertCircle 
+  CheckCircle2
 } from 'lucide-react';
-import { Booking, Payment } from '../../../types';
+import { Booking } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CustomerSupportButtons } from '../../../components/ui/SupportButtons';
@@ -101,13 +99,11 @@ export default function BookingDetailPage() {
   const handleInitiatePayment = async () => {
     setActionLoading(true);
     try {
-      // Step 1: Initiate payment order on Rails API
       const orderData = await apiRequest(`/bookings/${id}/payments/initiate`, {
         method: 'POST',
       });
 
-      // Step 2: In production this opens Razorpay modal. For V1 demo/testing, simulate gateway verification
-      const verifyData = await apiRequest(`/bookings/${id}/payments/verify`, {
+      await apiRequest(`/bookings/${id}/payments/verify`, {
         method: 'POST',
         body: JSON.stringify({
           gateway_order_id: orderData.gateway_order_id,
@@ -145,9 +141,9 @@ export default function BookingDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-6">
-        <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-        <div className="h-64 bg-slate-200 rounded-3xl" />
+      <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-4">
+        <div className="h-6 w-32 bg-slate-100 rounded-md" />
+        <div className="h-48 bg-slate-100 rounded-xl" />
       </div>
     );
   }
@@ -155,35 +151,35 @@ export default function BookingDetailPage() {
   if (!booking) {
     return (
       <div className="max-w-md mx-auto text-center py-20 px-4">
-        <h2 className="text-xl font-bold text-slate-900">Booking Not Found</h2>
-        <Link href="/bookings" className="inline-block mt-4 text-sm text-blue-600 font-semibold hover:underline">
-          Back to all bookings
+        <h2 className="text-lg font-semibold text-slate-900">Booking not found</h2>
+        <Link href="/bookings" className="inline-block mt-3 text-sm text-slate-600 hover:text-slate-900 underline">
+          All bookings
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <Link
           href="/bookings"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition mb-4"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition mb-3"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>All Bookings</span>
         </Link>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 uppercase">
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 capitalize">
                 {booking.status}
               </span>
-              <span className="text-xs text-slate-500 font-mono">
-                Booking ID: #{booking.id}
+              <span className="text-xs text-slate-400 font-mono">
+                #{booking.id}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 mt-1">
+            <h1 className="text-xl font-semibold text-slate-900 mt-1">
               {booking.service_request?.service_name || 'Doorstep Service'}
             </h1>
           </div>
@@ -197,15 +193,15 @@ export default function BookingDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Details */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-4">
           {/* Schedule Banner */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
                 Technician Schedule
               </span>
-              <div className="flex items-center gap-2 text-base font-bold text-slate-900">
-                <Calendar className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <Calendar className="w-4 h-4 text-slate-500" />
                 <span>
                   {new Date(booking.scheduled_at).toLocaleString('en-IN', {
                     dateStyle: 'full',
@@ -218,7 +214,7 @@ export default function BookingDetailPage() {
             {['confirmed', 'rescheduled'].includes(booking.status) && (
               <button
                 onClick={() => setShowReschedule(!showReschedule)}
-                className="text-xs font-bold text-blue-600 hover:text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg cursor-pointer transition"
+                className="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 px-3 py-1.5 rounded-lg transition cursor-pointer"
               >
                 {showReschedule ? 'Close' : 'Reschedule'}
               </button>
@@ -227,64 +223,64 @@ export default function BookingDetailPage() {
 
           {/* Reschedule Box */}
           {showReschedule && (
-            <form onSubmit={handleReschedule} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
-              <h4 className="text-xs font-bold text-slate-900">Pick New Date & Time</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form onSubmit={handleReschedule} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h4 className="text-xs font-medium text-slate-900">Choose New Schedule</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <input
                   type="date"
                   required
                   min={new Date().toISOString().split('T')[0]}
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 outline-none"
                 />
                 <select
                   value={newTime}
                   onChange={(e) => setNewTime(e.target.value)}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 outline-none"
                 >
-                  <option value="09:00">Morning (9:00 AM - 12:00 PM)</option>
-                  <option value="12:00">Afternoon (12:00 PM - 3:00 PM)</option>
-                  <option value="15:00">Late Afternoon (3:00 PM - 6:00 PM)</option>
-                  <option value="18:00">Evening (6:00 PM - 8:00 PM)</option>
+                  <option value="09:00">Morning (9 AM - 12 PM)</option>
+                  <option value="12:00">Afternoon (12 PM - 3 PM)</option>
+                  <option value="15:00">Late Afternoon (3 PM - 6 PM)</option>
+                  <option value="18:00">Evening (6 PM - 8 PM)</option>
                 </select>
               </div>
               <button
                 type="submit"
                 disabled={actionLoading}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium transition cursor-pointer"
               >
-                {actionLoading ? 'Updating...' : 'Confirm Reschedule'}
+                {actionLoading ? 'Updating…' : 'Confirm Reschedule'}
               </button>
             </form>
           )}
 
           {/* Service details */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-3">
-            <h3 className="text-sm font-bold text-slate-900">Service Request Details</h3>
+          <div className="border border-slate-200 rounded-xl p-5 space-y-2">
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Service Request Details</h3>
             <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
               {booking.service_request?.description}
             </p>
-            <div className="pt-2 text-xs text-slate-500">
-              Reference: <strong className="text-slate-900 font-mono">{booking.service_request?.reference_number}</strong>
+            <div className="pt-2 text-xs text-slate-400">
+              Reference: <span className="font-mono text-slate-600">{booking.service_request?.reference_number}</span>
             </div>
           </div>
 
-          {/* Customer Feedback Card (Post-Completion) */}
+          {/* Feedback */}
           {booking.status === 'completed' && (
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">Service Rating & Feedback</h3>
+            <div className="border border-slate-200 rounded-xl p-5 space-y-3">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Rating & Feedback</h3>
               {feedbackSubmitted ? (
-                <div className="p-4 bg-emerald-50 rounded-xl space-y-2">
+                <div className="p-3 bg-slate-50 rounded-lg space-y-1">
                   <div className="flex items-center gap-1 text-amber-500">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        className={`w-4 h-4 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                        className={`w-3.5 h-3.5 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-emerald-900">{feedback || 'No written feedback provided.'}</p>
+                  <p className="text-xs text-slate-700">{feedback || 'No written feedback provided.'}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitFeedback} className="space-y-3">
@@ -299,23 +295,23 @@ export default function BookingDetailPage() {
                           className="cursor-pointer"
                         >
                           <Star
-                            className={`w-5 h-5 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                            className={`w-4 h-4 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
                           />
                         </button>
                       ))}
                     </div>
                   </div>
                   <textarea
-                    rows={3}
-                    placeholder="How was the technician? Did they arrive on time?"
+                    rows={2}
+                    placeholder="Feedback on service quality…"
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    className="w-full p-3 text-xs border border-slate-300 rounded-lg outline-none"
+                    className="w-full p-2.5 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
                   />
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold cursor-pointer"
+                    className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium cursor-pointer"
                   >
                     Submit Feedback
                   </button>
@@ -325,60 +321,58 @@ export default function BookingDetailPage() {
           )}
         </div>
 
-        {/* Right Column: Payments & Actions */}
-        <div className="space-y-6">
-          {/* Payment Card */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
-              Payment Summary
+        {/* Right Column: Payment */}
+        <div className="space-y-4">
+          <div className="border border-slate-200 rounded-xl p-5 space-y-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-400 block">
+              Payment
             </span>
 
-            <div className="space-y-2 pb-4 border-b border-slate-100">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Total Payable:</span>
-                <span className="font-bold text-slate-900">₹{booking.payment_amount}</span>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Total:</span>
+                <span className="font-semibold text-slate-900">₹{booking.payment_amount}</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Paid Amount:</span>
-                <span className="font-bold text-emerald-600">₹{booking.total_paid}</span>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Paid:</span>
+                <span className="font-semibold text-emerald-600">₹{booking.total_paid}</span>
               </div>
-              <div className="flex justify-between text-xs pt-1 border-t border-slate-100">
+              <div className="flex justify-between pt-1.5 border-t border-slate-100">
                 <span className="text-slate-500">Balance:</span>
-                <span className="font-bold text-slate-900">
+                <span className="font-semibold text-slate-900">
                   ₹{Math.max(0, (booking.payment_amount || 0) - booking.total_paid)}
                 </span>
               </div>
             </div>
 
             {booking.fully_paid ? (
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Service Fully Paid</span>
+              <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Fully Paid</span>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5 pt-1">
                 <button
                   onClick={handleInitiatePayment}
                   disabled={actionLoading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Pay Online (Razorpay)</span>
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Pay Online</span>
                 </button>
                 <p className="text-[11px] text-slate-400 text-center">
-                  You can also pay cash or UPI directly to technician on arrival.
+                  Cash or UPI to technician on arrival also accepted.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Cancellation button */}
           {['confirmed', 'rescheduled'].includes(booking.status) && (
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs text-center">
+            <div className="pt-2 text-center">
               <button
                 onClick={handleCancelBooking}
                 disabled={actionLoading}
-                className="text-xs text-rose-600 hover:text-rose-700 font-semibold cursor-pointer"
+                className="text-xs text-rose-600 hover:text-rose-700 transition cursor-pointer"
               >
                 Cancel Booking
               </button>
@@ -386,13 +380,6 @@ export default function BookingDetailPage() {
           )}
         </div>
       </div>
-
-      <CustomerSupportButtons
-        variant="banner"
-        referenceNumber={booking.service_request?.reference_number}
-        serviceName={booking.service_request?.service_name}
-      />
     </div>
   );
 }
-

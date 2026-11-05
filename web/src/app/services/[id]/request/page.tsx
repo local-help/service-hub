@@ -9,11 +9,7 @@ import {
   Calendar,
   Plus,
   ArrowLeft,
-  AlertCircle,
-  Sparkles,
-  Car,
-  Clock,
-  Crosshair
+  AlertCircle
 } from 'lucide-react';
 import { Service, Address, ServiceRequest, ServiceVariant } from '../../../../types';
 import { apiRequest } from '../../../../api/client';
@@ -171,60 +167,43 @@ function CreateRequestContent() {
   // SUCCESS CONFIRMATION SCREEN
   if (createdRequest) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12 space-y-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-          <CheckCircle2 className="w-10 h-10" />
+      <div className="max-w-md mx-auto px-4 py-16 space-y-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+          <CheckCircle2 className="w-6 h-6" />
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] tracking-tight">
-            Service Request Submitted!
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+            Request Submitted
           </h1>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Your request has been registered in our central system. Our customer support desk will coordinate with a verified local technician.
+          <p className="text-xs text-slate-500">
+            Your request has been matched and is being coordinated with a local technician.
           </p>
         </div>
 
         {/* Reference Code Card */}
-        <div className="p-6 bg-white border border-[#E7E2D8] rounded-3xl shadow-sm space-y-3">
-          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Reference Number</span>
-          <p className="text-3xl font-mono font-black text-[#176B65] tracking-wider">
+        <div className="p-5 border border-slate-200 rounded-xl space-y-2 text-center bg-slate-50/50">
+          <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Reference Number</span>
+          <p className="text-2xl font-mono font-semibold text-slate-900">
             {createdRequest.reference_number}
           </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-            <span>Status:</span>
-            <span className="font-bold text-amber-600 uppercase">
-              {createdRequest.status.replace('_', ' ')}
-            </span>
+          <div className="text-xs text-slate-500 pt-1">
+            Status: <span className="font-medium text-slate-800 capitalize">{createdRequest.status.replace('_', ' ')}</span>
           </div>
-          {selectedVariant && (
-            <p className="text-xs text-slate-600 font-medium pt-2 border-t border-[#E7E2D8]">
-              Selected Package: <strong>{selectedVariant.name}</strong>
-            </p>
-          )}
         </div>
 
-        {/* Help & Support Call/WA buttons */}
-        <div className="pt-2">
-          <CustomerSupportButtons
-            referenceNumber={createdRequest.reference_number}
-            serviceName={createdRequest.service?.name}
-            className="justify-center"
-          />
-        </div>
-
-        <div className="pt-4 flex items-center justify-center gap-4 text-xs font-semibold">
+        <div className="flex items-center justify-center gap-3 text-xs font-medium pt-2">
           <Link
             href={`/requests/${createdRequest.id}`}
-            className="px-5 py-2.5 bg-[#176B65] hover:bg-[#135752] text-white rounded-xl shadow-xs transition"
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition"
           >
-            View Request Details
+            View Details
           </Link>
           <Link
             href="/requests"
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition"
+            className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition"
           >
-            My Requests List
+            All Requests
           </Link>
         </div>
       </div>
@@ -232,147 +211,114 @@ function CreateRequestContent() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <Link
           href={`/services/${id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition mb-4"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition mb-3"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Service</span>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to service</span>
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] tracking-tight">
+        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
           Book Service
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {service?.name} • {service?.booking_type === 'time_based' ? 'Time-Based Driver Shift' : `Fixed Price ₹${service?.fixed_price || 299}`}
+        <p className="text-xs text-slate-500 mt-0.5">
+          {service?.name} {selectedVariant ? `• ${selectedVariant.name}` : ''}
         </p>
       </div>
 
-      {/* Selected Package Banner */}
-      {(selectedVariant || durationHoursParam || vehicleTypeParam) && (
-        <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#E7E2D8] flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#176B65] text-white flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-[#176B65] tracking-wider block">Configured Service</span>
-              <p className="text-xs font-bold text-[#242D2B]">
-                {selectedVariant ? selectedVariant.name : service?.name}
-              </p>
-              <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                {vehicleTypeParam && <span>Vehicle: {vehicleTypeParam.toUpperCase()}</span>}
-                {durationHoursParam && <span>• Duration: {durationHoursParam} Hours</span>}
-                {pickupDropParam === 'true' && <span>• Includes Pickup & Drop</span>}
-              </div>
-            </div>
-          </div>
-          {selectedVariant?.primary_price && (
-            <span className="text-base font-black text-[#176B65] shrink-0">
-              ₹{selectedVariant.primary_price}
-            </span>
-          )}
-        </div>
-      )}
-
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-rose-700 text-xs font-medium">
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-rose-700 text-xs">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Step 1: Address */}
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="border border-slate-200 rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#242D2B] flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#176B65]" />
-              <span>Service Location</span>
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-slate-500" />
+              <span>Doorstep Address</span>
             </h3>
             <button
               type="button"
               onClick={() => setShowNewAddress(!showNewAddress)}
-              className="text-xs font-bold text-[#176B65] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{showNewAddress ? 'Cancel' : 'Add New Address'}</span>
+              <span>{showNewAddress ? 'Cancel' : 'New address'}</span>
             </button>
           </div>
 
           {/* New Address Sub-form */}
           {showNewAddress ? (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                <p className="text-xs font-bold text-slate-700">Add Service Address (Prayagraj, Allahabad)</p>
-                <GpsButton onLocationDetected={handleGpsDetected} label="Detect Exact GPS" />
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <span className="text-xs font-medium text-slate-700">Add Doorstep Address</span>
+                <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS" />
               </div>
 
-              {newAddress.latitude && newAddress.longitude && (
-                <div className="p-2 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-800 flex items-center justify-between">
-                  <span>📍 GPS Coordinates: <strong>{newAddress.latitude.toFixed(4)}, {newAddress.longitude.toFixed(4)}</strong></span>
-                  <span className="text-[10px] font-bold uppercase text-teal-600">Doorstep Pin</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <input
                   type="text"
                   placeholder="Label (e.g. Home, Office)"
                   value={newAddress.label}
                   onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-md bg-white text-slate-900 outline-none"
                 />
                 <input
                   type="text"
                   placeholder="PIN Code (e.g. 211001)"
                   value={newAddress.postal_code}
                   onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-md bg-white text-slate-900 outline-none"
                 />
                 <input
                   type="text"
-                  placeholder="Flat / Floor / Street Address *"
+                  placeholder="Flat / Street Address *"
                   required
                   value={newAddress.address_line}
                   onChange={(e) => setNewAddress({ ...newAddress, address_line: e.target.value })}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white sm:col-span-2"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-md bg-white text-slate-900 outline-none sm:col-span-2"
                 />
                 <input
                   type="text"
                   placeholder="Landmark (Optional)"
                   value={newAddress.landmark}
                   onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
-                  className="px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white sm:col-span-2"
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-md bg-white text-slate-900 outline-none sm:col-span-2"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleCreateAddress}
-                className="px-4 py-2 bg-[#176B65] text-white text-xs font-bold rounded-xl cursor-pointer"
+                className="px-3.5 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-md cursor-pointer"
               >
-                Save & Select This Address
+                Save & Select
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {addresses.map((addr) => (
                 <div
                   key={addr.id}
                   onClick={() => setSelectedAddressId(addr.id)}
-                  className={`p-3.5 rounded-2xl border cursor-pointer transition ${selectedAddressId === addr.id
-                    ? 'border-[#176B65] bg-[#F7F5EF] shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
+                  className={`p-3 rounded-lg border cursor-pointer transition ${
+                    selectedAddressId === addr.id
+                      ? 'border-slate-900 bg-slate-50/50'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-800">{addr.label || 'Address'}</span>
+                    <span className="text-xs font-medium text-slate-900">{addr.label || 'Address'}</span>
                     {selectedAddressId === addr.id && (
-                      <span className="text-[10px] font-bold text-[#176B65] uppercase">Selected</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Selected</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-600 line-clamp-2">{addr.full_address || addr.address_line}</p>
+                  <p className="text-xs text-slate-500 line-clamp-2">{addr.full_address || addr.address_line}</p>
                 </div>
               ))}
             </div>
@@ -380,50 +326,50 @@ function CreateRequestContent() {
         </div>
 
         {/* Step 2: Preferred Schedule */}
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-[#242D2B] flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#176B65]" />
-            <span>Preferred Date & Time</span>
+        <div className="border border-slate-200 rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-slate-500" />
+            <span>Preferred Schedule</span>
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Preferred Date</label>
+              <label className="text-xs text-slate-500 block mb-1">Date</label>
               <input
                 type="date"
                 required
                 value={preferredDate}
                 onChange={(e) => setPreferredDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-xl outline-none"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Preferred Time Window</label>
+              <label className="text-xs text-slate-500 block mb-1">Time Window</label>
               <select
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-xl outline-none bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none bg-white text-slate-900"
               >
-                <option value="09:00">Morning (09:00 AM - 12:00 PM)</option>
-                <option value="13:00">Afternoon (01:00 PM - 04:00 PM)</option>
-                <option value="17:00">Evening (05:00 PM - 08:00 PM)</option>
+                <option value="09:00">Morning (9 AM - 12 PM)</option>
+                <option value="13:00">Afternoon (1 PM - 4 PM)</option>
+                <option value="17:00">Evening (5 PM - 8 PM)</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Step 3: Requirement Description & Uploads */}
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-[#242D2B]">Requirement Details</h3>
+        {/* Step 3: Requirement Details */}
+        <div className="border border-slate-200 rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-slate-900">Details</h3>
           <div>
-            <label className="text-xs text-slate-500 block mb-1">Describe the service needed *</label>
+            <label className="text-xs text-slate-500 block mb-1">Describe your requirement *</label>
             <textarea
               required
-              rows={4}
-              placeholder="e.g. Need comprehensive wash for my Honda City. Car is parked in the basement, power socket and water tap available."
+              rows={3}
+              placeholder="e.g. Need comprehensive wash for my Honda City. Basement parking, water tap available."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-xl outline-none"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
             />
           </div>
 
@@ -432,23 +378,23 @@ function CreateRequestContent() {
             <div className="flex gap-2">
               <input
                 type="url"
-                placeholder="https://example.com/issue-photo.jpg"
+                placeholder="https://example.com/photo.jpg"
                 value={uploadUrl}
                 onChange={(e) => setUploadUrl(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-xl outline-none"
+                className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
               <button
                 type="button"
                 onClick={handleAddAttachment}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition"
               >
-                Add Link
+                Add
               </button>
             </div>
             {attachments.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {attachments.map((att, i) => (
-                  <span key={i} className="text-[11px] px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-mono">
+                  <span key={i} className="text-[11px] px-2 py-0.5 bg-slate-100 rounded text-slate-600">
                     📎 {att.file_name}
                   </span>
                 ))}
@@ -457,24 +403,15 @@ function CreateRequestContent() {
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full py-4 bg-[#176B65] hover:bg-[#135752] text-white font-bold text-sm rounded-2xl shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-lg transition disabled:opacity-50 cursor-pointer"
         >
-          {submitting ? (
-            <span>Submitting Service Request...</span>
-          ) : (
-            <>
-              <span>Submit Service Request</span>
-              <CheckCircle2 className="w-4 h-4" />
-            </>
-          )}
+          {submitting ? 'Submitting…' : 'Submit Request'}
         </button>
       </form>
-
-      <CustomerSupportButtons variant="banner" />
     </div>
   );
 }
@@ -482,9 +419,9 @@ function CreateRequestContent() {
 export default function CreateRequestPage() {
   return (
     <Suspense fallback={
-      <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse space-y-6">
-        <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-        <div className="h-48 bg-slate-200 rounded-2xl" />
+      <div className="max-w-2xl mx-auto px-4 py-12 animate-pulse space-y-4">
+        <div className="h-6 w-32 bg-slate-100 rounded-md" />
+        <div className="h-40 bg-slate-100 rounded-xl" />
       </div>
     }>
       <CreateRequestContent />

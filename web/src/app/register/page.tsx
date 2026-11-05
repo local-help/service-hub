@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Phone, Lock, AlertCircle, Wrench } from 'lucide-react';
+import { User, Mail, Phone, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function RegisterPage() {
@@ -34,84 +34,84 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF]">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-block group mb-1">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-white">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center space-y-1">
+          <Link href="/" className="inline-block mb-3">
             <img
               src="/local-logo.svg"
               alt="LocalHelp"
-              className="h-12 w-auto mx-auto object-contain transition group-hover:opacity-90"
+              className="h-8 w-auto mx-auto object-contain"
             />
           </Link>
-          <h1 className="text-2xl font-black text-[#242D2B] tracking-tight">Create Account</h1>
-          <p className="text-xs text-slate-500">Sign up for verified local services coordination</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Create an account</h1>
+          <p className="text-xs text-slate-500">Sign up for verified local services in Prayagraj</p>
         </div>
 
         {error && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2.5 text-rose-700 text-xs font-medium">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-rose-700 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 sm:p-8 shadow-xs">
+        <div className="border border-slate-200 rounded-xl p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-[#242D2B] block mb-1">Full Name *</label>
+              <label className="text-xs font-medium text-slate-700 block mb-1">Full Name</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder="Ramesh Kumar"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] focus:ring-2 focus:ring-[#25877C]/20 transition text-[#242D2B]"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#242D2B] block mb-1">Mobile Phone Number *</label>
+              <label className="text-xs font-medium text-slate-700 block mb-1">Mobile Phone Number</label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="tel"
                   required
                   placeholder="+91 98765 43210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] focus:ring-2 focus:ring-[#25877C]/20 transition text-[#242D2B]"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#242D2B] block mb-1">Email Address</label>
+              <label className="text-xs font-medium text-slate-700 block mb-1">Email (Optional)</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="email"
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] focus:ring-2 focus:ring-[#25877C]/20 transition text-[#242D2B]"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#242D2B] block mb-1">Password</label>
+              <label className="text-xs font-medium text-slate-700 block mb-1">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-[#E7E2D8] rounded-xl outline-none focus:border-[#25877C] focus:ring-2 focus:ring-[#25877C]/20 transition text-[#242D2B]"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-400 transition text-slate-900"
                 />
               </div>
             </div>
@@ -119,17 +119,17 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#176B65] hover:bg-[#135752] disabled:opacity-50 text-[#F7F5EF] font-bold text-xs sm:text-sm rounded-xl shadow-xs transition cursor-pointer mt-2"
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition cursor-pointer mt-2"
             >
-              {loading ? 'Creating Account...' : 'Register Account'}
+              {loading ? 'Creating account…' : 'Sign up'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-xs text-slate-600">
+        <p className="text-center text-xs text-slate-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-[#176B65] font-bold hover:underline">
-            Sign In
+          <Link href="/login" className="text-slate-900 font-medium hover:underline">
+            Sign in
           </Link>
         </p>
       </div>

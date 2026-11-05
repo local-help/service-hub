@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, ArrowRight, Clock, AlertCircle } from 'lucide-react';
+import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { ServiceRequest } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,78 +31,78 @@ export default function RequestsPage() {
   }, [user, router]);
 
   const getStatusBadge = (status: string) => {
+    const format = status.replace(/_/g, ' ');
     switch (status) {
       case 'pending_review':
-        return <span className="bg-amber-50 text-amber-700 border border-amber-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Pending Admin Review</span>;
+        return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Pending Review</span>;
       case 'contacting_provider':
-        return <span className="bg-blue-50 text-blue-700 border border-blue-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Contacting Specialist</span>;
+        return <span className="bg-slate-100 text-slate-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Matching Provider</span>;
       case 'quotation_sent':
-        return <span className="bg-indigo-50 text-indigo-700 border border-indigo-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full animate-pulse">Quotation Ready for Approval</span>;
+        return <span className="bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Quote Ready</span>;
       case 'quotation_approved':
-        return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Quotation Approved</span>;
       case 'booking_confirmed':
-        return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Booking Confirmed</span>;
+        return <span className="bg-emerald-50 text-emerald-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Confirmed</span>;
       case 'in_progress':
-        return <span className="bg-blue-50 text-blue-700 border border-blue-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">In Progress</span>;
+        return <span className="bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-0.5 rounded-md">In Progress</span>;
       case 'completed':
-        return <span className="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Completed</span>;
+        return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md">Completed</span>;
       case 'cancelled':
-        return <span className="bg-rose-50 text-rose-700 border border-rose-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Cancelled</span>;
+        return <span className="bg-rose-50 text-rose-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Cancelled</span>;
       default:
-        return <span className="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">{status}</span>;
+        return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md capitalize">{format}</span>;
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            My Service Requests
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+            My Requests
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Track status, review quotations, and coordinate with customer care
+          <p className="text-xs text-slate-500 mt-0.5">
+            Track status, quotes, and coordination updates
           </p>
         </div>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition self-start sm:self-center"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center"
         >
-          <span>Request New Service</span>
+          <span>New Request</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((n) => <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />)}
+        <div className="space-y-3">
+          {[1, 2, 3].map((n) => <div key={n} className="h-24 bg-slate-100 animate-pulse rounded-xl" />)}
         </div>
       ) : requests.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-md mx-auto space-y-4 shadow-xs">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mx-auto">
-            <ShoppingBag className="w-6 h-6" />
+        <div className="border border-slate-200 rounded-xl p-12 text-center max-w-sm mx-auto space-y-3">
+          <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 mx-auto">
+            <ShoppingBag className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-slate-900">No Service Requests Yet</h3>
-          <p className="text-xs text-slate-500">
-            Browse our verified local services and submit your first doorstep request.
+          <h3 className="text-sm font-semibold text-slate-900">No requests yet</h3>
+          <p className="text-xs text-slate-400">
+            Submit a request to book doorstep services in Prayagraj.
           </p>
           <Link
             href="/"
-            className="inline-block px-5 py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-xs"
+            className="inline-block px-4 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg"
           >
             Explore Services
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {requests.map((req) => (
             <div
               key={req.id}
-              className="bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl p-5 sm:p-6 shadow-xs transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+              className="border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="text-sm font-black text-blue-600 tracking-wide font-mono">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-mono font-medium text-slate-600">
                     {req.reference_number}
                   </span>
                   {getStatusBadge(req.status)}
@@ -110,12 +110,11 @@ export default function RequestsPage() {
                     {new Date(req.created_at).toLocaleDateString('en-IN', {
                       day: 'numeric',
                       month: 'short',
-                      year: 'numeric',
                     })}
                   </span>
                 </div>
 
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-sm font-semibold text-slate-900">
                   {req.service_name}
                 </h3>
                 <p className="text-xs text-slate-500 line-clamp-1 max-w-xl">
@@ -123,24 +122,24 @@ export default function RequestsPage() {
                 </p>
 
                 {req.has_quotation && req.quotation_status === 'pending' && (
-                  <div className="inline-flex items-center gap-2 p-2 rounded-lg bg-indigo-50 text-indigo-800 text-xs font-medium border border-indigo-200/50">
-                    <span>Quotation: <strong>₹{req.quotation_amount}</strong></span>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">
+                    <span>Quote: ₹{req.quotation_amount}</span>
                     <span>•</span>
-                    <span className="text-indigo-600 font-bold">Action Required</span>
+                    <span className="font-medium">Action Required</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+              <div className="flex items-center gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                 <CustomerSupportButtons
                   referenceNumber={req.reference_number}
                   serviceName={req.service_name}
                 />
                 <Link
                   href={`/requests/${req.id}`}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition flex items-center gap-1"
                 >
-                  <span>View Details</span>
+                  <span>Details</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -148,9 +147,6 @@ export default function RequestsPage() {
           ))}
         </div>
       )}
-
-      <CustomerSupportButtons variant="banner" />
     </div>
   );
 }
-

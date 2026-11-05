@@ -213,3 +213,4 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 };
 
 export const useLocation = () => useContext(LocationContext);
+

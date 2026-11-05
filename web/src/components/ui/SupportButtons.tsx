@@ -19,24 +19,24 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
 
   if (variant === 'floating') {
     return (
-      <div className={`fixed bottom-6 right-6 flex flex-col gap-3 z-40 ${className}`}>
+      <div className={`fixed bottom-5 right-5 flex items-center gap-2 z-40 ${className}`}>
         <a
           href={getWhatsAppUrl(referenceNumber, serviceName)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-[#25877C] hover:bg-[#176B65] text-[#F7F5EF] px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-medium text-sm border border-[#8BE3D9]/40"
-          title="Chat with Support on WhatsApp"
+          className="flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 px-3 py-2 rounded-full shadow-sm text-xs font-medium transition"
+          title="Chat on WhatsApp"
         >
-          <MessageCircle className="w-5 h-5" />
-          <span className="hidden sm:inline">WhatsApp Help</span>
+          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+          <span>WhatsApp</span>
         </a>
         <a
           href={getCallUrl()}
-          className="flex items-center gap-2 bg-[#176B65] hover:bg-[#135752] text-[#F7F5EF] px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 font-medium text-sm"
+          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-full shadow-sm text-xs font-medium transition"
           title="Call Customer Care"
         >
-          <Phone className="w-5 h-5" />
-          <span className="hidden sm:inline">Call Support</span>
+          <Phone className="w-3.5 h-3.5" />
+          <span>Support</span>
         </a>
       </div>
     );
@@ -44,29 +44,29 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
 
   if (variant === 'banner') {
     return (
-      <div className={`bg-gradient-to-r from-[#F0F8F7] to-[#F7F5EF] border border-[#B0DCD7] rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs ${className}`}>
+      <div className={`bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${className}`}>
         <div>
-          <h4 className="text-base font-bold text-[#242D2B]">Need immediate assistance or coordination?</h4>
-          <p className="text-sm text-slate-600 mt-0.5">
-            Our central LocalHelp support desk is ready to answer questions and coordinate your booking.
+          <h4 className="text-sm font-semibold text-slate-900">Need assistance or custom coordination?</h4>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Our support desk is ready to assist with quotations, custom bookings, and queries.
           </p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <a
             href={getCallUrl()}
-            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 bg-white border border-[#E7E2D8] hover:bg-[#F7F5EF] text-[#242D2B] px-4 py-2.5 rounded-xl font-medium text-sm shadow-xs transition"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-medium transition"
           >
-            <Phone className="w-4 h-4 text-[#176B65]" />
+            <Phone className="w-3.5 h-3.5 text-slate-500" />
             <span>Call {supportInfo.phone}</span>
           </a>
           <a
             href={getWhatsAppUrl(referenceNumber, serviceName)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 bg-[#25877C] hover:bg-[#176B65] text-[#F7F5EF] px-4 py-2.5 rounded-xl font-medium text-sm shadow-xs transition"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition"
           >
-            <MessageCircle className="w-4 h-4" />
-            <span>WhatsApp Us</span>
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>WhatsApp</span>
           </a>
         </div>
       </div>
@@ -74,22 +74,22 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
   }
 
   return (
-    <div className={`flex flex-wrap items-center gap-2.5 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       <a
         href={getCallUrl()}
-        className="inline-flex items-center gap-2 bg-white border border-[#E7E2D8] hover:border-[#B0DCD7] hover:bg-[#F0F8F7] text-[#242D2B] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition"
+        className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition"
       >
-        <Phone className="w-4 h-4 text-[#176B65]" />
-        <span>Call Support</span>
+        <Phone className="w-3.5 h-3.5 text-slate-500" />
+        <span>Call</span>
       </a>
       <a
         href={getWhatsAppUrl(referenceNumber, serviceName)}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 bg-[#F0F8F7] border border-[#B0DCD7] hover:bg-[#D6ECE9] text-[#176B65] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition"
+        className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition"
       >
-        <MessageCircle className="w-4 h-4 text-[#25877C]" />
-        <span>WhatsApp Support</span>
+        <MessageCircle className="w-3.5 h-3.5 text-slate-600" />
+        <span>WhatsApp</span>
       </a>
     </div>
   );
@@ -114,27 +114,27 @@ export const AdminCommunicationButtons: React.FC<AdminCommunicationButtonsProps>
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       <a
         href={`tel:${customerPhone}`}
-        className="inline-flex items-center gap-1.5 bg-[#F0F8F7] border border-[#B0DCD7] hover:bg-[#D6ECE9] text-[#176B65] px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+        className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
         title="Open phone dialer"
       >
-        <Phone className="w-3.5 h-3.5" />
-        <span>Call Customer</span>
+        <Phone className="w-3.5 h-3.5 text-slate-500" />
+        <span>Call</span>
       </a>
       <a
         href={getAdminWhatsAppUrl(customerPhone, referenceNumber)}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 bg-[#D6ECE9] border border-[#7EC4BC] hover:bg-[#B0DCD7] text-[#104642] px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+        className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
         title="Chat on WhatsApp"
       >
-        <MessageCircle className="w-3.5 h-3.5" />
+        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
         <span>WhatsApp</span>
       </a>
       {onOpenLogModal && (
         <button
           onClick={onOpenLogModal}
-          className="inline-flex items-center gap-1.5 bg-white border border-[#E7E2D8] hover:bg-[#F7F5EF] text-[#242D2B] px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
-          title="Record communication outcome in request history"
+          className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer"
+          title="Record communication note"
         >
           <span>Log Note</span>
         </button>

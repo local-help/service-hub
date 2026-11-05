@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MapPin, Plus, Trash2, ArrowLeft, Check, Crosshair } from 'lucide-react';
+import { MapPin, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { Address } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
@@ -95,68 +95,61 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition mb-4"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition mb-3"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>Home</span>
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Saved Service Addresses
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              Saved Addresses
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Manage your residential and commercial service locations in Prayagraj (Allahabad)
+            <p className="text-xs text-slate-500 mt-0.5">
+              Service locations in Prayagraj (Allahabad)
             </p>
           </div>
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition self-start sm:self-center cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>{showAdd ? 'Cancel' : 'Add New Address'}</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>{showAdd ? 'Cancel' : 'Add Address'}</span>
           </button>
         </div>
       </div>
 
       {showAdd && (
-        <form onSubmit={handleCreate} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900">Add New Service Address</h3>
-            <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS Location" />
+        <form onSubmit={handleCreate} className="border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-900">Add Service Address</h3>
+            <GpsButton onLocationDetected={handleGpsDetected} label="Detect GPS" />
           </div>
-
-          {form.latitude && form.longitude && (
-            <div className="p-2.5 rounded-xl bg-teal-50/70 border border-teal-200 text-xs text-teal-800 flex items-center justify-between">
-              <span>📍 Pinned Coordinates: <strong>{form.latitude.toFixed(4)}, {form.longitude.toFixed(4)}</strong></span>
-              <span className="text-[11px] text-teal-600 font-medium">Exact Doorstep GPS</span>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Address Label</label>
+              <label className="text-xs text-slate-500 block mb-1">Label</label>
               <input
                 type="text"
-                placeholder="e.g. Home, Office, Villa"
+                placeholder="e.g. Home, Office"
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Postal PIN Code</label>
+              <label className="text-xs text-slate-500 block mb-1">PIN Code</label>
               <input
                 type="text"
                 required
-                placeholder="560103"
+                placeholder="211001"
                 value={form.postal_code}
                 onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
             </div>
             <div className="sm:col-span-2">
@@ -164,20 +157,20 @@ export default function AddressesPage() {
               <input
                 type="text"
                 required
-                placeholder="Flat / Floor / Society / Main Road"
+                placeholder="Flat / Floor / Street"
                 value={form.address_line}
                 onChange={(e) => setForm({ ...form, address_line: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
             </div>
             <div>
               <label className="text-xs text-slate-500 block mb-1">Landmark (Optional)</label>
               <input
                 type="text"
-                placeholder="Opposite Central Mall"
+                placeholder="Near landmark"
                 value={form.landmark}
                 onChange={(e) => setForm({ ...form, landmark: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none text-slate-900"
               />
             </div>
             <div>
@@ -185,8 +178,8 @@ export default function AddressesPage() {
               <input
                 type="text"
                 disabled
-                value="Prayagraj (Allahabad), Uttar Pradesh"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500"
+                value="Prayagraj, Uttar Pradesh"
+                className="w-full px-3 py-2 text-xs border border-slate-100 rounded-lg bg-slate-50 text-slate-400"
               />
             </div>
           </div>
@@ -197,17 +190,17 @@ export default function AddressesPage() {
                 type="checkbox"
                 checked={form.is_default}
                 onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
-                className="rounded border-slate-300 text-blue-600"
+                className="rounded border-slate-300 text-slate-900"
               />
-              <span>Set as default service address</span>
+              <span>Set as default</span>
             </label>
 
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer"
             >
-              {submitting ? 'Saving...' : 'Save Address'}
+              {submitting ? 'Saving…' : 'Save Address'}
             </button>
           </div>
         </form>
@@ -215,40 +208,40 @@ export default function AddressesPage() {
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2].map((n) => <div key={n} className="h-24 bg-slate-200 animate-pulse rounded-2xl" />)}
+          {[1, 2].map((n) => <div key={n} className="h-20 bg-slate-100 animate-pulse rounded-xl" />)}
         </div>
       ) : addresses.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
-          <MapPin className="w-10 h-10 text-slate-400 mx-auto" />
-          <h3 className="text-base font-bold text-slate-900">No Addresses Saved</h3>
-          <p className="text-xs text-slate-500">Add your address to book doorstep services quickly.</p>
+        <div className="border border-slate-200 rounded-xl p-12 text-center max-w-sm mx-auto space-y-3">
+          <MapPin className="w-8 h-8 text-slate-300 mx-auto" />
+          <h3 className="text-sm font-semibold text-slate-900">No saved addresses</h3>
+          <p className="text-xs text-slate-400">Add an address to speed up booking.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {addresses.map((addr) => (
             <div
               key={addr.id}
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+              className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 transition"
             >
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-900">{addr.label || 'Address'}</span>
+                  <span className="text-xs font-medium text-slate-900">{addr.label || 'Address'}</span>
                   {addr.is_default && (
-                    <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200/50 font-bold px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-slate-100 text-slate-600 font-medium px-1.5 py-0.5 rounded">
                       Default
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">{addr.full_address}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{addr.full_address}</p>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-end">
+              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-end">
                 <button
                   onClick={() => handleDelete(addr.id)}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
                   title="Delete address"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -258,4 +251,3 @@ export default function AddressesPage() {
     </div>
   );
 }
-

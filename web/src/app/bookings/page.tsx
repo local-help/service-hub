@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Calendar, ArrowRight, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, ArrowRight, Clock } from 'lucide-react';
 import { Booking } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,68 +33,66 @@ export default function BookingsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Confirmed</span>;
+        return <span className="bg-emerald-50 text-emerald-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Confirmed</span>;
       case 'rescheduled':
-        return <span className="bg-amber-50 text-amber-700 border border-amber-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Rescheduled</span>;
+        return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Rescheduled</span>;
       case 'in_progress':
-        return <span className="bg-blue-50 text-blue-700 border border-blue-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Technician On-Site</span>;
+        return <span className="bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-0.5 rounded-md">On-Site</span>;
       case 'completed':
-        return <span className="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Completed</span>;
+        return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md">Completed</span>;
       case 'cancelled':
-        return <span className="bg-rose-50 text-rose-700 border border-rose-200/50 text-[11px] font-bold px-2.5 py-1 rounded-full">Cancelled</span>;
+        return <span className="bg-rose-50 text-rose-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Cancelled</span>;
       default:
-        return <span className="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">{status}</span>;
+        return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md capitalize">{status}</span>;
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            My Bookings
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Confirmed doorstep services, schedules, and payment receipts
-          </p>
-        </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+          My Bookings
+        </h1>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Confirmed doorstep services, schedules, and payment receipts
+        </p>
       </div>
 
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((n) => <div key={n} className="h-28 bg-slate-200 animate-pulse rounded-2xl" />)}
+        <div className="space-y-3">
+          {[1, 2, 3].map((n) => <div key={n} className="h-24 bg-slate-100 animate-pulse rounded-xl" />)}
         </div>
       ) : bookings.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-md mx-auto space-y-4 shadow-xs">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mx-auto">
-            <Calendar className="w-6 h-6" />
+        <div className="border border-slate-200 rounded-xl p-12 text-center max-w-sm mx-auto space-y-3">
+          <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 mx-auto">
+            <Calendar className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-slate-900">No Confirmed Bookings Yet</h3>
-          <p className="text-xs text-slate-500">
-            Submit a service request or approve a pending quotation to schedule your service.
+          <h3 className="text-sm font-semibold text-slate-900">No confirmed bookings</h3>
+          <p className="text-xs text-slate-400">
+            Submit a service request or approve a quotation to schedule.
           </p>
           <Link
             href="/requests"
-            className="inline-block px-5 py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-xs"
+            className="inline-block px-4 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg"
           >
             Check Requests
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {bookings.map((b) => (
             <div
               key={b.id}
-              className="bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl p-5 sm:p-6 shadow-xs transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+              className="border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="text-sm font-black text-blue-600 tracking-wide font-mono">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-mono font-medium text-slate-600">
                     {b.reference_number}
                   </span>
                   {getStatusBadge(b.status)}
-                  <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-400" />
                     <span>{new Date(b.scheduled_at).toLocaleString('en-IN', {
                       dateStyle: 'medium',
                       timeStyle: 'short'
@@ -102,28 +100,28 @@ export default function BookingsPage() {
                   </span>
                 </div>
 
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-sm font-semibold text-slate-900">
                   {b.service_name}
                 </h3>
 
-                <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-3 text-xs">
                   <span className="text-slate-500">
-                    Amount: <strong className="text-slate-900">₹{b.payment_amount}</strong>
+                    Payable: <strong className="text-slate-900">₹{b.payment_amount}</strong>
                   </span>
-                  <span className={b.fully_paid ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
-                    {b.fully_paid ? '✓ Fully Paid' : `Pending Payment (Paid: ₹${b.total_paid})`}
+                  <span className={b.fully_paid ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
+                    {b.fully_paid ? 'Paid' : `Pending: ₹${(b.payment_amount || 0) - (b.total_paid || 0)}`}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+              <div className="flex items-center gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                 <CustomerSupportButtons
                   referenceNumber={b.reference_number}
                   serviceName={b.service_name}
                 />
                 <Link
                   href={`/bookings/${b.id}`}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition flex items-center gap-1"
                 >
                   <span>Manage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -133,9 +131,6 @@ export default function BookingsPage() {
           ))}
         </div>
       )}
-
-      <CustomerSupportButtons variant="banner" />
     </div>
   );
 }
-

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Clock, CheckCircle, ArrowRight, ArrowLeft, Car, Shield, AlertTriangle, Moon, Sparkles } from 'lucide-react';
+import { Clock, ArrowRight, ArrowLeft, Car, AlertTriangle, Moon } from 'lucide-react';
 import { Service, ServiceVariant } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { CustomerSupportButtons } from '../../../components/ui/SupportButtons';
@@ -68,9 +68,9 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-6">
-        <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-        <div className="h-48 bg-slate-200 rounded-2xl" />
+      <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse space-y-6">
+        <div className="h-6 w-32 bg-slate-100 rounded-md" />
+        <div className="h-40 bg-slate-100 rounded-xl" />
       </div>
     );
   }
@@ -78,8 +78,8 @@ export default function ServiceDetailPage() {
   if (!service) {
     return (
       <div className="max-w-md mx-auto text-center py-20 px-4">
-        <h2 className="text-xl font-bold text-slate-900">Service Not Found</h2>
-        <Link href="/" className="inline-block mt-4 text-sm text-[#176B65] font-semibold hover:underline">
+        <h2 className="text-lg font-semibold text-slate-900">Service not found</h2>
+        <Link href="/" className="inline-block mt-3 text-sm text-slate-600 hover:text-slate-900 underline">
           Browse services
         </Link>
       </div>
@@ -90,7 +90,6 @@ export default function ServiceDetailPage() {
   const bType = service.booking_type || service.pricing_type;
   const hasVariants = service.variants && service.variants.length > 0;
 
-  // Filter variants matching selected vehicle type if variant has vehicle_types attribute
   const matchingVariants = hasVariants
     ? service.variants!.filter((v) => {
         const vTypes = (v.variant_attributes || {})['vehicle_types'];
@@ -116,97 +115,77 @@ export default function ServiceDetailPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Breadcrumb Navigation */}
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Breadcrumbs */}
       <div>
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-4">
-          <Link href="/" className="hover:text-slate-800 transition">Catalogue</Link>
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
+          <Link href="/" className="hover:text-slate-700 transition">Catalogue</Link>
           <span>/</span>
           {service.category && (
             <>
-              <Link href={`/categories/${service.category.id}`} className="hover:text-slate-800 transition">
+              <Link href={`/categories/${service.category.id}`} className="hover:text-slate-700 transition">
                 {service.category.name}
               </Link>
               <span>/</span>
             </>
           )}
-          {service.subcategory && (
-            <span className="text-slate-700">{service.subcategory.name}</span>
-          )}
+          <span className="text-slate-600">{service.name}</span>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#242D2B] tracking-tight">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
                 {service.name}
               </h1>
               {isComingSoon && (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
                   Coming Soon
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
+            <p className="text-sm text-slate-500 mt-1 max-w-xl leading-relaxed">
               {service.description || service.short_description}
             </p>
           </div>
 
-          <div className="shrink-0">
-            <span className={`text-xs font-bold px-3 py-1.5 rounded-xl uppercase tracking-wider block text-center ${
-              isComingSoon
-                ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                : bType === 'fixed_price'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                : bType === 'time_based'
-                ? 'bg-teal-50 text-teal-800 border border-teal-200'
-                : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
-            }`}>
-              {isComingSoon
-                ? 'Coming Soon'
-                : bType === 'fixed_price'
-                ? 'Fixed Price'
-                : bType === 'time_based'
-                ? 'Time Based'
-                : 'Request a Quote'}
-            </span>
-          </div>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 self-start sm:self-center">
+            {isComingSoon ? 'Coming Soon' : bType === 'time_based' ? 'Time Based' : 'Fixed Price'}
+          </span>
         </div>
       </div>
 
       {/* Coming Soon Notice */}
       {isComingSoon && (
-        <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 space-y-1">
-            <p className="font-bold text-sm">Service Launching Soon in Prayagraj</p>
-            <p>
-              We are actively onboarding and verifying licensed service providers for this category. Bookings will open shortly.
-            </p>
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 space-y-0.5">
+            <p className="font-medium">Launching Soon in Prayagraj</p>
+            <p className="text-amber-700">We are onboarding verified providers. Bookings will open shortly.</p>
           </div>
         </div>
       )}
 
-      {/* Vehicle Type Selector (If supported) */}
+      {/* Vehicle Type Selector */}
       {!isComingSoon && service.supported_vehicle_types && service.supported_vehicle_types.length > 0 && (
-        <div className="p-6 bg-white border border-[#E7E2D8] rounded-3xl space-y-3">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Car className="w-4 h-4 text-[#176B65]" />
-            <span>Select Vehicle Category</span>
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-5 border border-slate-200 rounded-xl space-y-2.5">
+          <label className="text-xs font-medium text-slate-500 block flex items-center gap-1.5">
+            <Car className="w-3.5 h-3.5" />
+            <span>Select Vehicle Type</span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {service.supported_vehicle_types.map((vt) => (
               <button
                 key={vt}
                 onClick={() => setSelectedVehicle(vt)}
-                className={`p-3 rounded-2xl border text-xs font-bold transition text-center ${
+                className={`py-2 px-3 rounded-lg border text-xs font-medium transition text-center cursor-pointer ${
                   selectedVehicle === vt
-                    ? 'bg-[#176B65] text-white border-[#176B65] shadow-xs'
-                    : 'bg-[#F7F5EF] text-slate-700 border-[#E7E2D8] hover:bg-white'
+                    ? 'bg-slate-900 text-white border-slate-900'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 {vt === 'suv_muv'
-                  ? 'SUV / Big Car'
+                  ? 'SUV / MUV'
                   : vt === 'bike_scooter'
                   ? 'Bike / Scooter'
                   : vt.charAt(0).toUpperCase() + vt.slice(1)}
@@ -218,18 +197,17 @@ export default function ServiceDetailPage() {
 
       {/* Service Packages & Variants Selector */}
       {!isComingSoon && displayVariants.length > 0 && (
-        <div className="p-6 bg-white border border-[#E7E2D8] rounded-3xl space-y-4">
+        <div className="p-5 border border-slate-200 rounded-xl space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#242D2B] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#25877C]" />
-              <span>Choose Service Package / Option</span>
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Select Package
             </h3>
-            <span className="text-xs text-slate-400 font-medium">
-              {displayVariants.length} option{displayVariants.length > 1 ? 's' : ''} available
+            <span className="text-xs text-slate-400">
+              {displayVariants.length} option{displayVariants.length > 1 ? 's' : ''}
             </span>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {displayVariants.map((variant) => {
               const isSelected = selectedVariantId === variant.id;
               const price = variant.primary_price;
@@ -238,89 +216,85 @@ export default function ServiceDetailPage() {
                 <div
                   key={variant.id}
                   onClick={() => setSelectedVariantId(variant.id)}
-                  className={`p-4 rounded-2xl border cursor-pointer transition flex items-center justify-between gap-4 ${
+                  className={`p-3.5 rounded-lg border cursor-pointer transition flex items-center justify-between gap-3 ${
                     isSelected
-                      ? 'border-[#176B65] bg-[#F7F5EF] shadow-xs'
-                      : 'border-[#E7E2D8] bg-white hover:border-slate-300'
+                      ? 'border-slate-900 bg-slate-50/50'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                        isSelected ? 'border-[#176B65] bg-[#176B65]' : 'border-slate-300'
+                      <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
+                        isSelected ? 'border-slate-900 bg-slate-900' : 'border-slate-300'
                       }`}>
                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
-                      <span className="text-sm font-bold text-[#242D2B]">{variant.name}</span>
+                      <span className="text-sm font-medium text-slate-900">{variant.name}</span>
                     </div>
                     {variant.description && (
-                      <p className="text-xs text-slate-500 pl-6 leading-relaxed">
+                      <p className="text-xs text-slate-500 pl-5.5 leading-relaxed">
                         {variant.description}
                       </p>
                     )}
                   </div>
 
                   {price && (
-                    <div className="text-right shrink-0 pl-2">
-                      <span className="text-sm font-black text-[#176B65]">₹{price}</span>
-                      <span className="text-[10px] text-slate-400 block font-medium">inclusive</span>
-                    </div>
+                    <span className="text-sm font-semibold text-slate-900 shrink-0">
+                      ₹{price}
+                    </span>
                   )}
                 </div>
               );
             })}
           </div>
 
-          {/* Pickup and Drop Add-on for Car Wash */}
+          {/* Optional Pickup & Drop */}
           {service.slug === 'car-wash' && (
-            <div className="pt-4 border-t border-[#E7E2D8] flex items-center justify-between">
-              <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={pickupDrop}
                   onChange={(e) => setPickupDrop(e.target.checked)}
-                  className="rounded text-[#176B65] focus:ring-[#176B65]"
+                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                 />
-                <span>Include Pickup & Drop (Doorstep pickup and return delivery on request)</span>
+                <span>Include Doorstep Pickup & Return Delivery</span>
               </label>
-              <span className="text-xs font-bold text-slate-500">On Request</span>
+              <span className="text-xs text-slate-400">On request</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Time Based Calculator for Driver Services */}
+      {/* Time Based Controls */}
       {!isComingSoon && bType === 'time_based' && (
-        <div className="p-6 bg-white border border-[#E7E2D8] rounded-3xl space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#242D2B] flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#176B65]" />
-              <span>Shift Duration & Schedule</span>
+        <div className="p-5 border border-slate-200 rounded-xl space-y-4">
+          <div>
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+              Shift Duration
             </h3>
-            <span className="text-xs font-bold text-[#176B65]">Time-Based Pricing</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[4, 8, 10, 12].map((hrs) => (
+                <button
+                  key={hrs}
+                  onClick={() => setDriverHours(hrs)}
+                  className={`py-2 px-3 rounded-lg border text-xs font-medium transition text-center cursor-pointer ${
+                    driverHours === hrs
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {hrs} Hours
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[4, 8, 10, 12].map((hrs) => (
-              <button
-                key={hrs}
-                onClick={() => setDriverHours(hrs)}
-                className={`py-3 rounded-2xl border text-xs font-bold transition text-center ${
-                  driverHours === hrs
-                    ? 'bg-[#176B65] text-white border-[#176B65]'
-                    : 'bg-[#F7F5EF] text-slate-700 border-[#E7E2D8] hover:bg-white'
-                }`}
-              >
-                {hrs} Hours Shift
-              </button>
-            ))}
-          </div>
-
-          <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#E7E2D8] space-y-3">
+          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
             <label className="flex items-center justify-between cursor-pointer">
               <div className="flex items-center gap-2">
-                <Moon className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-semibold text-slate-700">
+                <Moon className="w-3.5 h-3.5 text-slate-500" />
+                <span className="text-xs text-slate-700">
                   Duty Extends Past 10:00 PM (Late Night Return)
                 </span>
               </div>
@@ -328,66 +302,47 @@ export default function ServiceDetailPage() {
                 type="checkbox"
                 checked={extendsPastNight}
                 onChange={(e) => setExtendsPastNight(e.target.checked)}
-                className="rounded text-[#176B65] focus:ring-[#176B65]"
+                className="rounded border-slate-300 text-slate-900"
               />
             </label>
-            <p className="text-[11px] text-slate-500">
-              Standard shift: ₹800 for 8 hrs. ₹50/hr extra up to 10 PM. After 10 PM: ₹100/hr + ₹300 fixed night allowance.
+            <p className="text-[11px] text-slate-400">
+              ₹800 for 8 hrs base. Late night includes fixed night allowance.
             </p>
-          </div>
-
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
-            <div>
-              <span className="text-xs font-semibold text-emerald-800 block">Calculated Driver Tariff</span>
-              <span className="text-[11px] text-emerald-600">
-                {driverHours} hrs {extendsPastNight ? '• with night allowance' : '• daytime'}
-              </span>
-            </div>
-            <span className="text-xl font-black text-emerald-900">
-              {calcLoading ? '...' : calculatedPrice ? `₹${calculatedPrice}` : '₹800'}
-            </span>
           </div>
         </div>
       )}
 
-      {/* Summary & Checkout Action Box */}
-      <div className="p-6 bg-white border border-[#E7E2D8] rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Summary Box & Proceed CTA */}
+      <div className="p-5 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Estimated Cost</span>
+          <span className="text-xs text-slate-400 block">Total Price</span>
           {isComingSoon ? (
-            <span className="text-lg font-bold text-slate-400">Not Bookable Yet</span>
+            <span className="text-sm font-medium text-slate-400">Not bookable</span>
           ) : bType === 'time_based' ? (
-            <span className="text-2xl font-black text-[#176B65]">
+            <span className="text-xl font-semibold text-slate-900">
               ₹{calculatedPrice || 800}
             </span>
-          ) : bType === 'fixed_price' ? (
-            <span className="text-2xl font-black text-[#242D2B]">
+          ) : (
+            <span className="text-xl font-semibold text-slate-900">
               ₹{selectedVariant?.primary_price || service.fixed_price || 299}
             </span>
-          ) : (
-            <div>
-              <span className="text-sm font-bold text-slate-500">Quotation Service</span>
-              <span className="text-[11px] text-slate-400 block">Direct booking enabled for fixed/hourly only</span>
-            </div>
           )}
         </div>
 
-        {isComingSoon || bType === 'quotation' ? (
+        {isComingSoon ? (
           <button
             disabled
-            className="px-6 py-3 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed border border-slate-200"
+            className="px-5 py-2.5 bg-slate-100 text-slate-400 text-xs font-medium rounded-lg cursor-not-allowed"
           >
-            {isComingSoon ? 'Service Coming Soon' : 'Online Booking Paused (Call Helpline)'}
+            Coming Soon
           </button>
         ) : (
           <button
             onClick={handleProceed}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#176B65] hover:bg-[#135752] text-white font-bold text-sm rounded-xl transition shadow-sm cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer"
           >
-            <span>
-              {bType === 'time_based' ? 'Book Driver Shift' : 'Proceed to Booking'}
-            </span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Proceed to Booking</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
