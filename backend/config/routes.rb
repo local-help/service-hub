@@ -23,6 +23,7 @@ Rails.application.routes.draw do
         post :calculate_price, on: :member
       end
       get 'platform/support_info', to: 'platform#support_info'
+      post 'uploads', to: 'uploads#create'
 
       # Customer
       resources :addresses, except: [:new, :edit]

@@ -213,6 +213,34 @@ export default function RequestDetailPage() {
                 })}</span>
               </div>
             )}
+
+            {request.request_attachments && request.request_attachments.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+                  Attached Photos ({request.request_attachments.length})
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {request.request_attachments.map((att) => (
+                    <a
+                      key={att.id}
+                      href={att.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-slate-200 rounded-lg p-1.5 bg-white hover:border-slate-400 transition block group overflow-hidden"
+                    >
+                      <img
+                        src={att.file_url}
+                        alt={att.file_name || 'Attachment'}
+                        className="w-full h-24 object-cover rounded bg-slate-50"
+                      />
+                      <span className="text-[11px] text-slate-600 truncate block mt-1 group-hover:text-slate-900">
+                        {att.file_name || 'View Photo'}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

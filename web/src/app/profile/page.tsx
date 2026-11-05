@@ -19,9 +19,12 @@ import {
   LogOut,
   ArrowLeft,
   Camera,
-  X
+  X,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiRequest } from '../../api/client';
 
 export default function ProfilePage() {
   const { user, loading, updateProfile, changePassword, logout } = useAuth();
@@ -33,6 +36,8 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showAvatarInput, setShowAvatarInput] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarFileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
@@ -94,6 +99,33 @@ export default function ProfilePage() {
       setProfileError(err.error || 'Failed to update profile details');
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleAvatarDeviceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setProfileError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await apiRequest<{ file_url: string }>('/uploads', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setAvatarUrl(res.file_url);
+      setProfileSuccess('Photo uploaded from device. Remember to click "Save Profile Details" below.');
+      setTimeout(() => setProfileSuccess(null), 5000);
+    } catch (err: any) {
+      setProfileError(err.error || 'Failed to upload photo from device');
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
     }
   };
 
@@ -241,12 +273,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Optional Avatar URL Input Tray */}
+      {/* Avatar Photo Edit Tray */}
       {showAvatarInput && (
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-medium text-slate-800">
-              Profile Photo URL
+              Update Profile Photo
             </label>
             <button
               type="button"
@@ -256,26 +288,58 @@ export default function ProfilePage() {
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
-              type="url"
-              placeholder="https://example.com/photo.jpg"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-slate-400 text-slate-900 bg-white"
+              ref={avatarFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarDeviceUpload}
+              className="hidden"
+              id="avatar-device-upload"
             />
+            <label
+              htmlFor="avatar-device-upload"
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition cursor-pointer shadow-xs ${
+                uploadingAvatar ? 'opacity-60 pointer-events-none' : ''
+              }`}
+            >
+              {uploadingAvatar ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload from device</span>
+                </>
+              )}
+            </label>
+
             {avatarUrl && (
               <button
                 type="button"
                 onClick={() => setAvatarUrl('')}
                 className="px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition"
               >
-                Clear
+                Remove Photo
               </button>
             )}
           </div>
+
+          <div className="pt-2 border-t border-slate-200">
+            <span className="text-[11px] text-slate-500 block mb-1">Or paste a photo URL:</span>
+            <input
+              type="url"
+              placeholder="https://example.com/photo.jpg"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-slate-400 text-slate-900 bg-white"
+            />
+          </div>
           <p className="text-[11px] text-slate-400">
-            Paste a direct public image link. Click "Save Profile Details" below to apply.
+            Click "Save Profile Details" below after uploading or selecting your photo.
           </p>
         </div>
       )}

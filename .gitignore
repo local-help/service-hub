@@ -34,6 +34,8 @@ backend/storage/*
 backend/tmp/storage/*
 !/tmp/storage/
 !/tmp/storage/.keep
+backend/public/uploads/*
+!backend/public/uploads/.keep
 
 # Ignore master key for decrypting credentials and more.
 backend/config/master.key

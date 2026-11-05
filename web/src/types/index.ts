@@ -146,6 +146,7 @@ export interface ServiceRequest {
   quotation?: Quotation;
   booking?: Booking;
   communications?: Communication[];
+  request_attachments?: { id: number; file_url: string; file_name?: string; content_type?: string; file_size?: number }[];
 }
 
 export interface Quotation {
