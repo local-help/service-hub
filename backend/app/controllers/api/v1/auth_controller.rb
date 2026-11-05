@@ -94,10 +94,13 @@ module Api
       end
 
       def change_password
-        if current_user.authenticate(params[:current_password])
-          if current_user.update(password: params[:new_password])
+        if current_user.password_digest.blank? || current_user.authenticate(params[:current_password])
+          new_pass = params[:new_password].to_s
+          if new_pass.length < 8
+            render json: { error: 'New password must be at least 8 characters long' }, status: :unprocessable_entity
+          elsif current_user.update(password: new_pass)
             current_user.refresh_tokens.update_all(revoked_at: Time.current)
-            render json: { message: 'Password changed successfully' }
+            render json: { message: 'Password updated successfully' }
           else
             render json: { error: current_user.errors.full_messages.join(', ') }, status: :unprocessable_entity
           end
@@ -117,7 +120,7 @@ module Api
       end
 
       def profile_params
-        params.permit(:name, :email, :avatar_url)
+        params.permit(:name, :email, :phone, :avatar_url)
       end
 
       def skip_authorization?

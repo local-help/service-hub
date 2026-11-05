@@ -23,6 +23,8 @@ interface AuthContextType {
   register: (data: { name?: string; email?: string; phone?: string; password?: string }) => Promise<User>;
   logout: () => Promise<void>;
   updateUser: (updated: Partial<User>) => void;
+  updateProfile: (data: { name?: string; email?: string; phone?: string; avatar_url?: string | null }) => Promise<User>;
+  changePassword: (data: { current_password?: string; new_password: string }) => Promise<{ message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -171,6 +173,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (formData: { name?: string; email?: string; phone?: string; avatar_url?: string | null }): Promise<User> => {
+    const data = await apiRequest<{ user: User }>('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(formData),
+    });
+    setUser(data.user);
+    return data.user;
+  };
+
+  const changePassword = async (data: { current_password?: string; new_password: string }): Promise<{ message: string }> => {
+    return await apiRequest<{ message: string }>('/auth/password', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  };
+
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isSuperAdmin = user?.role === 'super_admin';
   const isProvider = user?.role === 'provider';
@@ -194,6 +212,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         updateUser,
+        updateProfile,
+        changePassword,
       }}
     >
       {children}

@@ -2,7 +2,12 @@ class UserSerializer < ActiveModel::Serializer
   attributes :id, :name, :email, :phone, :role, :status,
              :phone_verified, :email_verified, :avatar_url,
              :provider_id, :provider_name, :provider_role,
+             :has_password,
              :created_at
+
+  def has_password
+    object.password_digest.present?
+  end
 
   def provider_id
     object.service_provider&.id

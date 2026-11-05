@@ -31,7 +31,7 @@ class User < ApplicationRecord
   scope :providers, -> { where(role: :provider) }
 
   # Callbacks
-  before_save :normalize_email
+  before_validation :normalize_attributes
 
   def admin_or_super_admin?
     admin? || super_admin?
@@ -64,8 +64,13 @@ class User < ApplicationRecord
 
   private
 
-  def normalize_email
-    self.email = email.downcase.strip if email.present?
+  def normalize_attributes
+    self.email = email.presence&.downcase&.strip
+    if phone.present?
+      self.phone = phone.to_s.gsub(/[\s\-\(\)]/, '').presence
+    else
+      self.phone = nil
+    end
   end
 
   def must_have_email_or_phone

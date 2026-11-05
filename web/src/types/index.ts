@@ -13,6 +13,7 @@ export interface User {
   provider_id?: number | null;
   provider_name?: string | null;
   provider_role?: 'owner' | 'manager' | 'staff' | null;
+  has_password?: boolean;
   created_at: string;
 }
 

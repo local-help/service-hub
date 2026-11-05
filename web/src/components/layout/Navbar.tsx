@@ -97,6 +97,7 @@ export const Navbar: React.FC = () => {
                     <Link href="/requests" className={linkClass('/requests')}>Requests</Link>
                     <Link href="/bookings" className={linkClass('/bookings')}>Bookings</Link>
                     <Link href="/addresses" className={linkClass('/addresses')}>Addresses</Link>
+                    <Link href="/profile" className={linkClass('/profile')}>Profile</Link>
                   </>
                 )}
               </>
@@ -159,8 +160,25 @@ export const Navbar: React.FC = () => {
             )}
 
             {user ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-100">
-                <span className="text-sm text-slate-700">{user.name}</span>
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-100">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-50 transition text-slate-700 hover:text-slate-900 group"
+                  title="View & Edit Profile"
+                >
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.name}
+                      className="w-6 h-6 rounded-full object-cover border border-slate-200"
+                    />
+                  ) : (
+                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-semibold flex items-center justify-center group-hover:bg-slate-200 transition">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  )}
+                  <span className="text-sm font-medium">{user.name}</span>
+                </Link>
                 <button
                   onClick={logout}
                   className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition cursor-pointer"
@@ -232,13 +250,30 @@ export const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-5 space-y-3">
           {user && (
-            <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                <p className="text-xs text-slate-400">{user.phone || user.email}</p>
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="pb-3 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 -mx-1 px-2 py-1.5 rounded-lg transition"
+            >
+              <div className="flex items-center gap-2.5">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center justify-center">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                )}
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                  <p className="text-xs text-slate-400">{user.phone || user.email}</p>
+                </div>
               </div>
-              <span className="text-[10px] text-slate-400 uppercase">{user.role}</span>
-            </div>
+              <span className="text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-medium">Edit Profile</span>
+            </Link>
           )}
 
           {/* Mobile view mode switcher */}
@@ -317,6 +352,12 @@ export const Navbar: React.FC = () => {
                     <Link href="/bookings" onClick={() => setMobileMenuOpen(false)}
                       className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
                     >Bookings</Link>
+                    <Link href="/addresses" onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
+                    >Addresses</Link>
+                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50 font-medium"
+                    >Profile</Link>
                   </>
                 )}
               </>
