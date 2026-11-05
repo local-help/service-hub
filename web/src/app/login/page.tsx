@@ -101,19 +101,6 @@ export default function LoginPage() {
         )}
 
         <div className="border border-slate-200 rounded-xl p-6 space-y-5">
-          {/* Google One-Click Sign In */}
-          <GoogleSignInButton
-            mode="continue"
-            onError={(err) => setError(err)}
-          />
-
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 w-full" />
-            <span className="bg-white px-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 absolute">
-              or continue with
-            </span>
-          </div>
-
           {/* Tabs */}
           <div className="grid grid-cols-2 p-0.5 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium">
             <button
@@ -255,6 +242,20 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center pt-1">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 absolute">
+              or continue with
+            </span>
+          </div>
+
+          {/* Google Sign In */}
+          <GoogleSignInButton
+            mode="continue"
+            onError={(err) => setError(err)}
+          />
         </div>
 
         <p className="text-center text-xs text-slate-500">

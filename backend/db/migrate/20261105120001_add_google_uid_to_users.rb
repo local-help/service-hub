@@ -4,3 +4,4 @@ class AddGoogleUidToUsers < ActiveRecord::Migration[8.0]
     add_index :users, :google_uid, unique: true, where: "google_uid IS NOT NULL"
   end
 end
+

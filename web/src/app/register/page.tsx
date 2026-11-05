@@ -70,19 +70,6 @@ export default function RegisterPage() {
         )}
 
         <div className="border border-slate-200 rounded-xl p-6 space-y-5">
-          {/* Google One-Click Registration */}
-          <GoogleSignInButton
-            mode="signup"
-            onError={(err) => setError(err)}
-          />
-
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 w-full" />
-            <span className="bg-white px-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 absolute">
-              or continue with email
-            </span>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-medium text-slate-700 block mb-1">Email Address</label>
@@ -153,6 +140,20 @@ export default function RegisterPage() {
               {loading ? 'Creating account…' : 'Sign up'}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center pt-1">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-2.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 absolute">
+              or continue with
+            </span>
+          </div>
+
+          {/* Google One-Click Registration */}
+          <GoogleSignInButton
+            mode="signup"
+            onError={(err) => setError(err)}
+          />
         </div>
 
         <p className="text-center text-xs text-slate-500">
