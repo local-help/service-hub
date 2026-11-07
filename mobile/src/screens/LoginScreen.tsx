@@ -12,8 +12,9 @@ import {
   ScrollView,
   Image 
 } from 'react-native';
-import { Phone, Lock, Sparkles, CheckCircle2 } from 'lucide-react-native';
+import { Phone, Lock, Sparkles, CheckCircle2, Mail, ShieldCheck } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { colors } from '../theme/colors';
 
 interface Props {
   onSuccess: () => void;
@@ -23,15 +24,15 @@ interface Props {
 export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
   const { sendOtp, verifyOtp, loginWithPassword } = useAuth();
 
-  const [mode, setMode] = useState<'otp' | 'password'>('otp');
+  const [mode, setMode] = useState<'otp' | 'password'>('password');
   const [phone, setPhone] = useState('+919876543210');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  // Password fields
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPass, setLoginPass] = useState('');
+  // Password fields (Default to customer demo)
+  const [loginEmail, setLoginEmail] = useState('customer@example.com');
+  const [loginPass, setLoginPass] = useState('password123');
 
   const [loading, setLoading] = useState(false);
 
@@ -85,12 +86,18 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
     }
   };
 
+  const setDemoAccount = (email: string, pass: string) => {
+    setMode('password');
+    setLoginEmail(email);
+    setLoginPass(pass);
+  };
+
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Image
             source={require('../../assets/icon.png')}
@@ -99,20 +106,12 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
           />
           <Text style={styles.title}>Welcome to LocalHelp</Text>
           <Text style={styles.subtitle}>
-            Book verified local home services with central customer care support.
+            Book verified local home services with central customer care support in Prayagraj.
           </Text>
         </View>
 
         {/* Tab Switcher */}
         <View style={styles.tabs}>
-          <TouchableOpacity
-            style={[styles.tab, mode === 'otp' && styles.activeTab]}
-            onPress={() => setMode('otp')}
-          >
-            <Text style={[styles.tabText, mode === 'otp' && styles.activeTabText]}>
-              Mobile OTP
-            </Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, mode === 'password' && styles.activeTab]}
             onPress={() => setMode('password')}
@@ -121,20 +120,72 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
               Password
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, mode === 'otp' && styles.activeTab]}
+            onPress={() => setMode('otp')}
+          >
+            <Text style={[styles.tabText, mode === 'otp' && styles.activeTabText]}>
+              Mobile OTP
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {mode === 'otp' ? (
+        {mode === 'password' ? (
+          <View style={styles.form}>
+            <Text style={styles.label}>Email or Phone</Text>
+            <View style={styles.inputWrapper}>
+              <Mail size={18} color={colors.textLight} />
+              <TextInput
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="customer@example.com"
+                placeholderTextColor={colors.textLight}
+                value={loginEmail}
+                onChangeText={setLoginEmail}
+                style={styles.input}
+              />
+            </View>
+
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={18} color={colors.textLight} />
+              <TextInput
+                secureTextEntry
+                placeholder="••••••••"
+                placeholderTextColor={colors.textLight}
+                value={loginPass}
+                onChangeText={setLoginPass}
+                style={styles.input}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handlePasswordLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.primaryBtnText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
           <View style={styles.form}>
             <Text style={styles.label}>Mobile Phone Number</Text>
-            <TextInput
-              keyboardType="phone-pad"
-              placeholder="+91 98765 43210"
-              placeholderTextColor="#94a3b8"
-              value={phone}
-              onChangeText={setPhone}
-              editable={!otpSent}
-              style={styles.input}
-            />
+            <View style={styles.inputWrapper}>
+              <Phone size={18} color={colors.textLight} />
+              <TextInput
+                keyboardType="phone-pad"
+                placeholder="+91 98765 43210"
+                placeholderTextColor={colors.textLight}
+                value={phone}
+                onChangeText={setPhone}
+                editable={!otpSent}
+                style={styles.input}
+              />
+            </View>
 
             {!otpSent ? (
               <TouchableOpacity
@@ -154,11 +205,11 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
                 <TextInput
                   keyboardType="number-pad"
                   placeholder="123456"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={colors.textLight}
                   value={otp}
                   onChangeText={setOtp}
                   maxLength={6}
-                  style={[styles.input, styles.otpInput]}
+                  style={[styles.inputSingle, styles.otpInput]}
                 />
                 <TouchableOpacity
                   style={styles.primaryBtn}
@@ -181,42 +232,32 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
               </View>
             )}
           </View>
-        ) : (
-          <View style={styles.form}>
-            <Text style={styles.label}>Email or Phone</Text>
-            <TextInput
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholder="customer@example.com"
-              placeholderTextColor="#94a3b8"
-              value={loginEmail}
-              onChangeText={setLoginEmail}
-              style={styles.input}
-            />
+        )}
 
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor="#94a3b8"
-              value={loginPass}
-              onChangeText={setLoginPass}
-              style={styles.input}
-            />
-
+        {/* Quick Demo Logins Box */}
+        <View style={styles.demoSection}>
+          <Text style={styles.demoTitle}>One-Click Demo Credentials</Text>
+          <View style={styles.demoRow}>
             <TouchableOpacity
-              style={styles.primaryBtn}
-              onPress={handlePasswordLogin}
-              disabled={loading}
+              style={styles.demoBtn}
+              onPress={() => setDemoAccount('customer@example.com', 'password123')}
             >
-              {loading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.primaryBtnText}>Sign In</Text>
-              )}
+              <Text style={styles.demoBtnText}>Customer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.demoBtn}
+              onPress={() => setDemoAccount('provider@example.com', 'password123')}
+            >
+              <Text style={styles.demoBtnText}>Provider</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.demoBtn}
+              onPress={() => setDemoAccount('admin@example.com', 'password123')}
+            >
+              <Text style={styles.demoBtnText}>Admin</Text>
             </TouchableOpacity>
           </View>
-        )}
+        </View>
 
         {/* Register Prompt */}
         <View style={styles.footerRow}>
@@ -237,36 +278,37 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 48,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   logoImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    marginBottom: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 14,
+    marginBottom: 10,
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
     lineHeight: 18,
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 4,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   tab: {
     flex: 1,
@@ -285,42 +327,60 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748b',
+    color: colors.textMuted,
   },
   activeTabText: {
-    color: '#0f172a',
+    color: colors.primary,
     fontWeight: '700',
   },
   form: {
-    gap: 8,
+    gap: 6,
   },
   label: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
-    marginTop: 4,
+    letterSpacing: 0.5,
+    marginTop: 6,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    marginBottom: 6,
   },
   input: {
-    backgroundColor: '#f8fafc',
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  inputSingle: {
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#0f172a',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   otpInput: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     letterSpacing: 6,
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '800',
   },
   primaryBtn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -337,22 +397,23 @@ const styles = StyleSheet.create({
   },
   changePhoneText: {
     fontSize: 13,
-    color: '#2563eb',
+    color: colors.primary,
     fontWeight: '600',
   },
   demoSection: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.primaryBorder,
     borderRadius: 14,
     padding: 14,
-    marginTop: 28,
+    marginTop: 24,
   },
   demoTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748b',
+    color: colors.primaryDark,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -364,15 +425,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: colors.border,
     paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
   },
   demoBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#334155',
+    color: colors.textPrimary,
   },
   footerRow: {
     flexDirection: 'row',
@@ -380,16 +441,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     marginTop: 24,
-    marginBottom: 40,
+    marginBottom: 30,
   },
   footerText: {
     fontSize: 13,
-    color: '#64748b',
+    color: colors.textMuted,
   },
   footerLink: {
     fontSize: 13,
-    color: '#2563eb',
+    color: colors.primary,
     fontWeight: '700',
   },
 });
-

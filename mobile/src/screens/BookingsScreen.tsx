@@ -12,14 +12,18 @@ import { Calendar, ChevronRight, CheckCircle2, Clock, Star } from 'lucide-react-
 import { Booking } from '../types';
 import { apiRequest } from '../api/client';
 import { SupportBanner } from '../components/SupportBanner';
+import { colors } from '../theme/colors';
 
 interface Props {
   onSelectBooking: (booking: Booking) => void;
   onExploreServices: () => void;
 }
 
+type FilterTab = 'all' | 'confirmed' | 'in_progress' | 'completed';
+
 export const BookingsScreen: React.FC<Props> = ({ onSelectBooking, onExploreServices }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filter, setFilter] = useState<FilterTab>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -45,10 +49,30 @@ export const BookingsScreen: React.FC<Props> = ({ onSelectBooking, onExploreServ
     fetchBookings();
   };
 
+  const filteredBookings = bookings.filter((b) => {
+    if (filter === 'confirmed') return b.status === 'confirmed' || b.status === 'rescheduled';
+    if (filter === 'in_progress') return b.status === 'in_progress';
+    if (filter === 'completed') return b.status === 'completed';
+    return true;
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return { bg: colors.successLight, text: colors.successText, border: colors.successBorder };
+      case 'in_progress':
+        return { bg: colors.warningLight, text: colors.warningText, border: colors.warningBorder };
+      case 'cancelled':
+        return { bg: colors.dangerLight, text: colors.dangerText, border: colors.dangerBorder };
+      default:
+        return { bg: colors.primaryLight, text: colors.primary, border: colors.primaryBorder };
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -60,18 +84,39 @@ export const BookingsScreen: React.FC<Props> = ({ onSelectBooking, onExploreServ
         <Text style={styles.headerSubtitle}>
           Confirmed service schedules and completion reports
         </Text>
+
+        {/* Filter Tabs */}
+        <View style={styles.tabsRow}>
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'confirmed', label: 'Upcoming' },
+            { id: 'in_progress', label: 'In Progress' },
+            { id: 'completed', label: 'Completed' },
+          ].map((tab) => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.tabChip, filter === tab.id && styles.tabChipActive]}
+              onPress={() => setFilter(tab.id as FilterTab)}
+            >
+              <Text style={[styles.tabChipText, filter === tab.id && styles.tabChipTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
       >
-        {bookings.length === 0 ? (
+        {filteredBookings.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Calendar size={48} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>No confirmed bookings yet</Text>
+            <Calendar size={44} color={colors.textLight} />
+            <Text style={styles.emptyTitle}>No bookings found</Text>
             <Text style={styles.emptyText}>
-              Once you approve a quotation or book a fixed-price service, your scheduled jobs will appear here.
+              Once you book a service or approve a quotation, your confirmed jobs will appear here.
             </Text>
             <TouchableOpacity style={styles.exploreBtn} onPress={onExploreServices}>
               <Text style={styles.exploreBtnText}>Explore Services</Text>
@@ -79,59 +124,67 @@ export const BookingsScreen: React.FC<Props> = ({ onSelectBooking, onExploreServ
           </View>
         ) : (
           <View style={styles.list}>
-            {bookings.map((b) => (
-              <TouchableOpacity
-                key={b.id}
-                style={styles.card}
-                onPress={() => onSelectBooking(b)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.refNumber}>{b.reference_number}</Text>
-                  <View style={[styles.statusBadge, b.status === 'completed' ? styles.statusCompleted : styles.statusConfirmed]}>
-                    <Text style={[styles.statusText, b.status === 'completed' ? styles.statusTextCompleted : styles.statusTextConfirmed]}>
-                      {b.status.replace('_', ' ').toUpperCase()}
+            {filteredBookings.map((b) => {
+              const statusStyle = getStatusBadge(b.status);
+
+              return (
+                <TouchableOpacity
+                  key={b.id}
+                  style={styles.card}
+                  onPress={() => onSelectBooking(b)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.refNumber}>{b.reference_number}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border }]}>
+                      <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                        {b.status.replace('_', ' ').toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.serviceName}>{b.service_name || b.service?.name || 'Home Service'}</Text>
+
+                  <View style={styles.metaRow}>
+                    <Clock size={14} color={colors.textMuted} />
+                    <Text style={styles.metaText}>
+                      {b.scheduled_at
+                        ? `Scheduled: ${new Date(b.scheduled_at).toLocaleDateString()} at ${new Date(b.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                        : 'Date coordinating with admin'}
                     </Text>
                   </View>
-                </View>
 
-                <Text style={styles.serviceName}>{b.service_name || 'Confirmed Service'}</Text>
-
-                <View style={styles.metaRow}>
-                  <Clock size={14} color="#64748b" />
-                  <Text style={styles.metaText}>
-                    {b.scheduled_at ? `Scheduled: ${new Date(b.scheduled_at).toLocaleDateString()}` : 'Date confirmed with admin'}
-                  </Text>
-                </View>
-
-                <View style={styles.paymentRow}>
-                  <Text style={styles.paymentText}>
-                    Paid: <Text style={styles.paidAmount}>₹{b.total_paid}</Text> {b.fully_paid ? '✓ Fully Paid' : '(Pending balance)'}
-                  </Text>
-                </View>
-
-                {b.rating && (
-                  <View style={styles.ratingRow}>
-                    <Star size={14} color="#eab308" fill="#eab308" />
-                    <Text style={styles.ratingText}>Rated {b.rating}/5</Text>
+                  <View style={styles.paymentRow}>
+                    <Text style={styles.paymentText}>
+                      Paid: <Text style={styles.paidAmount}>₹{b.total_paid}</Text>{' '}
+                      {b.fully_paid ? '✓ Fully Settled' : '(Payable after service)'}
+                    </Text>
                   </View>
-                )}
 
-                <View style={styles.cardFooter}>
-                  <Text style={styles.footerDate}>
-                    Booked {new Date(b.created_at).toLocaleDateString()}
-                  </Text>
-                  <View style={styles.viewRow}>
-                    <Text style={styles.viewText}>Manage booking</Text>
-                    <ChevronRight size={14} color="#2563eb" />
+                  {b.rating && (
+                    <View style={styles.ratingRow}>
+                      <Star size={14} color="#eab308" fill="#eab308" />
+                      <Text style={styles.ratingText}>Rated {b.rating}/5</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.footerDate}>
+                      Booked {new Date(b.created_at).toLocaleDateString()}
+                    </Text>
+                    <View style={styles.viewRow}>
+                      <Text style={styles.viewText}>Manage booking</Text>
+                      <ChevronRight size={14} color={colors.primary} />
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 
         <SupportBanner compact />
+        <View style={{ height: 20 }} />
       </ScrollView>
     </View>
   );
@@ -140,7 +193,7 @@ export const BookingsScreen: React.FC<Props> = ({ onSelectBooking, onExploreServ
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
@@ -150,20 +203,45 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 16,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.textMuted,
     marginTop: 2,
+    marginBottom: 12,
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  tabChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.borderSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tabChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  tabChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  tabChipTextActive: {
+    color: '#ffffff',
   },
   content: {
     padding: 16,
@@ -174,24 +252,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginTop: 20,
+    borderColor: colors.border,
+    marginTop: 30,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0f172a',
+    color: colors.textPrimary,
     marginTop: 12,
   },
   emptyText: {
     fontSize: 13,
-    color: '#64748b',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
     marginBottom: 16,
+    lineHeight: 18,
   },
   exploreBtn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 10,
@@ -209,7 +288,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -220,38 +299,23 @@ const styles = StyleSheet.create({
   refNumber: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.primary,
     fontFamily: 'monospace',
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    borderWidth: 1,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  statusConfirmed: {
-    backgroundColor: '#dbeafe',
-  },
-  statusTextConfirmed: {
-    color: '#1d4ed8',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  statusCompleted: {
-    backgroundColor: '#dcfce7',
-  },
-  statusTextCompleted: {
-    color: '#15803d',
     fontSize: 10,
     fontWeight: '800',
   },
   serviceName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   metaRow: {
     flexDirection: 'row',
@@ -261,18 +325,18 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.textMuted,
   },
   paymentRow: {
     marginTop: 8,
   },
   paymentText: {
     fontSize: 12,
-    color: '#475569',
+    color: colors.textSecondary,
   },
   paidAmount: {
     fontWeight: '700',
-    color: '#16a34a',
+    color: colors.successText,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -292,11 +356,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: colors.borderSubtle,
   },
   footerDate: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: colors.textLight,
   },
   viewRow: {
     flexDirection: 'row',
@@ -306,6 +370,6 @@ const styles = StyleSheet.create({
   viewText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2563eb',
+    color: colors.primary,
   },
 });

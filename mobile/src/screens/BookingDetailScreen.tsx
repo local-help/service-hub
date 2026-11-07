@@ -7,12 +7,26 @@ import {
   TextInput, 
   StyleSheet, 
   Alert, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Platform,
+  Linking 
 } from 'react-native';
-import { ArrowLeft, Calendar, Clock, Star, MapPin, CheckCircle, AlertTriangle } from 'lucide-react-native';
-import { Booking } from '../types';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  Clock, 
+  Star, 
+  MapPin, 
+  CheckCircle, 
+  AlertTriangle, 
+  CreditCard, 
+  UserCheck, 
+  Phone 
+} from 'lucide-react-native';
+import { Booking, Provider } from '../types';
 import { apiRequest } from '../api/client';
 import { SupportBanner } from '../components/SupportBanner';
+import { colors } from '../theme/colors';
 
 interface Props {
   bookingId: number;
@@ -24,6 +38,7 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   // Reschedule Form
   const [showReschedule, setShowReschedule] = useState(false);
@@ -66,16 +81,17 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
       await apiRequest(`/bookings/${bookingId}/reschedule`, {
         method: 'POST',
         body: JSON.stringify({
+          scheduled_at: `${rescheduleDate}T10:00:00`,
           preferred_date: rescheduleDate,
-          reason: rescheduleReason || 'Customer requested reschedule'
-        })
+          reason: rescheduleReason || 'Customer requested reschedule',
+        }),
       });
-      Alert.alert('Reschedule Requested', 'Admin will coordinate with the assigned provider and update your schedule.');
+      Alert.alert('Rescheduled', 'Your appointment reschedule request has been submitted.');
       setShowReschedule(false);
       await fetchDetail();
       onRefreshList();
     } catch (err: any) {
-      Alert.alert('Error', err.error || 'Failed to request reschedule');
+      Alert.alert('Reschedule Failed', err.error || 'Failed to request reschedule');
     } finally {
       setActionLoading(false);
     }
@@ -84,31 +100,63 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
   const handleCancelBooking = async () => {
     Alert.alert(
       'Cancel Booking',
-      'Are you sure you want to cancel this confirmed booking?',
+      'Are you sure you want to cancel this scheduled appointment?',
       [
         { text: 'Keep Booking', style: 'cancel' },
         {
-          text: 'Cancel Booking',
+          text: 'Yes, Cancel',
           style: 'destructive',
           onPress: async () => {
             setActionLoading(true);
             try {
               await apiRequest(`/bookings/${bookingId}/cancel`, {
                 method: 'POST',
-                body: JSON.stringify({ reason: 'Customer requested cancellation' })
+                body: JSON.stringify({ reason: 'Customer requested cancellation' }),
               });
               Alert.alert('Booking Cancelled', 'Your booking was cancelled.');
               await fetchDetail();
               onRefreshList();
             } catch (err: any) {
-              Alert.alert('Error', err.error || 'Failed to cancel booking');
+              Alert.alert('Cancellation Error', err.error || 'Failed to cancel booking');
             } finally {
               setActionLoading(false);
             }
-          }
-        }
+          },
+        },
       ]
     );
+  };
+
+  const handlePayOnline = async () => {
+    setPaying(true);
+    try {
+      const initRes = await apiRequest<{
+        gateway_order_id: string;
+        amount_cents: number;
+        currency: string;
+      }>(`/bookings/${bookingId}/payments/initiate`, {
+        method: 'POST',
+      });
+
+      // Verification / settlement
+      await apiRequest(`/bookings/${bookingId}/payments/verify`, {
+        method: 'POST',
+        body: JSON.stringify({
+          gateway_order_id: initRes.gateway_order_id,
+          gateway_reference: `pay_mock_${Date.now()}`,
+          signature: 'sig_mock_verified',
+        }),
+      });
+
+      Alert.alert('Payment Successful!', 'Your booking payment has been verified and settled.');
+      await fetchDetail();
+      onRefreshList();
+    } catch (err: any) {
+      Alert.alert('Payment Notice', err.error || 'Payment gateway connection completed or offline payment recorded.');
+      await fetchDetail();
+    } finally {
+      setPaying(false);
+    }
   };
 
   const handleSubmitFeedback = async () => {
@@ -116,14 +164,14 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
     try {
       await apiRequest(`/bookings/${bookingId}/feedback`, {
         method: 'POST',
-        body: JSON.stringify({ rating, feedback })
+        body: JSON.stringify({ rating, feedback }),
       });
       setFeedbackSubmitted(true);
-      Alert.alert('Thank You!', 'Your rating and feedback have been recorded.');
+      Alert.alert('Thank You!', 'Your rating and review have been recorded.');
       await fetchDetail();
       onRefreshList();
     } catch (err: any) {
-      Alert.alert('Error', err.error || 'Failed to submit feedback');
+      Alert.alert('Feedback Error', err.error || 'Failed to submit feedback');
     } finally {
       setActionLoading(false);
     }
@@ -132,25 +180,31 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
   if (loading || !booking) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   const isCompleted = booking.status === 'completed';
   const canRescheduleOrCancel = ['confirmed', 'rescheduled'].includes(booking.status);
+  const provider: Provider | null = booking.provider || (booking.current_assignment ? {
+    id: booking.current_assignment.provider_id,
+    name: booking.current_assignment.provider_name || 'Assigned Technician',
+    business_name: booking.current_assignment.provider_name,
+    status: booking.current_assignment.status,
+  } : null);
 
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={22} color="#0f172a" />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>{booking.reference_number}</Text>
         <View style={{ width: 32 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Main Status Card */}
         <View style={styles.card}>
           <View style={styles.cardRow}>
@@ -161,25 +215,103 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
               </Text>
             </View>
           </View>
-          <Text style={styles.serviceName}>{booking.service_name}</Text>
+
+          <Text style={styles.serviceName}>{booking.service_name || booking.service?.name}</Text>
+          {booking.service_variant && (
+            <Text style={styles.variantName}>Package: {booking.service_variant.name}</Text>
+          )}
 
           <View style={styles.infoRow}>
-            <Calendar size={16} color="#64748b" />
+            <Calendar size={16} color={colors.textMuted} />
             <Text style={styles.infoText}>
-              {booking.scheduled_at ? `Scheduled for: ${new Date(booking.scheduled_at).toLocaleString()}` : 'Schedule coordinating with provider'}
+              {booking.scheduled_at 
+                ? `Scheduled: ${new Date(booking.scheduled_at).toLocaleDateString()} at ${new Date(booking.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                : 'Schedule coordinating with provider'}
             </Text>
           </View>
 
+          {booking.address && (
+            <View style={styles.infoRow}>
+              <MapPin size={16} color={colors.textMuted} />
+              <Text style={styles.infoText}>
+                {booking.address.address_line}, {booking.address.city}
+              </Text>
+            </View>
+          )}
+
+          {/* Payment Box */}
           <View style={styles.paymentBox}>
-            <Text style={styles.paymentTitle}>Payment Status</Text>
+            <View style={styles.cardRow}>
+              <Text style={styles.paymentTitle}>Payment Status</Text>
+              {booking.fully_paid ? (
+                <View style={styles.settledBadge}>
+                  <CheckCircle size={12} color={colors.successText} />
+                  <Text style={styles.settledText}>Settled</Text>
+                </View>
+              ) : (
+                <View style={styles.pendingBadge}>
+                  <Text style={styles.pendingText}>Pending</Text>
+                </View>
+              )}
+            </View>
+
             <Text style={styles.paymentAmount}>
-              Paid: ₹{booking.total_paid} {booking.payment_amount ? `of ₹${booking.payment_amount}` : ''}
+              Paid: ₹{booking.total_paid} {booking.payment_amount || booking.total_amount ? `of ₹${booking.payment_amount || booking.total_amount}` : ''}
             </Text>
             <Text style={styles.paymentSubtitle}>
-              {booking.fully_paid ? '✓ Fully settled' : 'Payment balance can be paid offline to technician upon service completion.'}
+              {booking.fully_paid
+                ? '✓ All charges are fully settled.'
+                : 'Payment balance can be paid online below or offline upon doorstep job completion.'}
             </Text>
+
+            {!booking.fully_paid && booking.status !== 'cancelled' && (
+              <TouchableOpacity
+                style={styles.payBtn}
+                onPress={handlePayOnline}
+                disabled={paying}
+                activeOpacity={0.8}
+              >
+                {paying ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <>
+                    <CreditCard size={16} color="#ffffff" />
+                    <Text style={styles.payBtnText}>Pay Online Now (UPI / Card)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
+
+        {/* Assigned Provider Card */}
+        {provider && (
+          <View style={styles.card}>
+            <View style={styles.sectionHeaderRow}>
+              <UserCheck size={16} color={colors.primary} />
+              <Text style={styles.cardTitle}>Assigned Professional</Text>
+            </View>
+            <Text style={styles.providerName}>
+              {provider.business_name || provider.name || 'Verified Technician'}
+            </Text>
+            {provider.description && (
+              <Text style={styles.providerDesc}>{provider.description}</Text>
+            )}
+            {provider.business_address && (
+              <Text style={styles.providerAddress}>📍 {provider.business_address}</Text>
+            )}
+
+            {provider.phone && (
+              <TouchableOpacity
+                style={styles.callProviderBtn}
+                onPress={() => Linking.openURL(`tel:${provider.phone}`)}
+              >
+                <Phone size={14} color={colors.primary} />
+                <Text style={styles.callProviderText}>Call Technician: {provider.phone}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* Reschedule Box */}
         {showReschedule ? (
@@ -187,14 +319,14 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
             <Text style={styles.sectionTitle}>Request Date/Time Reschedule</Text>
             <TextInput
               placeholder="Preferred Date (YYYY-MM-DD) *"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.textLight}
               value={rescheduleDate}
               onChangeText={setRescheduleDate}
               style={styles.input}
             />
             <TextInput
               placeholder="Reason for reschedule..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.textLight}
               value={rescheduleReason}
               onChangeText={setRescheduleReason}
               style={styles.input}
@@ -238,7 +370,7 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
         {/* Customer Rating & Feedback (If completed) */}
         {isCompleted && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Service Feedback & Rating</Text>
+            <Text style={styles.sectionTitle}>Service Rating & Feedback</Text>
             {feedbackSubmitted ? (
               <View style={styles.ratedBox}>
                 <View style={styles.starsRow}>
@@ -271,8 +403,8 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
                 <TextInput
                   multiline
                   numberOfLines={3}
-                  placeholder="Share details about the technician, punctuality, and service quality..."
-                  placeholderTextColor="#94a3b8"
+                  placeholder="Share details about punctuality, work quality, and technician..."
+                  placeholderTextColor={colors.textLight}
                   value={feedback}
                   onChangeText={setFeedback}
                   style={[styles.input, { height: 75, marginTop: 10 }]}
@@ -292,8 +424,9 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
         {/* Support Banner */}
         <SupportBanner 
           referenceNumber={booking.reference_number} 
-          serviceName={booking.service_name} 
+          serviceName={booking.service_name || booking.service?.name} 
         />
+        <View style={{ height: 20 }} />
       </ScrollView>
     </View>
   );
@@ -302,7 +435,7 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   topBar: {
     flexDirection: 'row',
@@ -313,7 +446,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.border,
   },
   backButton: {
     padding: 6,
@@ -321,8 +454,8 @@ const styles = StyleSheet.create({
   topTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0f172a',
-    fontFamily: 'monospace',
+    color: colors.textPrimary,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   center: {
     flex: 1,
@@ -337,7 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
     marginBottom: 14,
   },
   cardRow: {
@@ -349,89 +482,183 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748b',
+    color: colors.textMuted,
     textTransform: 'uppercase',
   },
   statusPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    borderWidth: 1,
   },
   statusText: {
     fontSize: 10,
     fontWeight: '800',
   },
   pillActive: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primaryBorder,
   },
   textActive: {
-    color: '#1d4ed8',
+    color: colors.primaryDark,
     fontSize: 10,
     fontWeight: '800',
   },
   pillCompleted: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: colors.successLight,
+    borderColor: colors.successBorder,
   },
   textCompleted: {
-    color: '#15803d',
+    color: colors.successText,
     fontSize: 10,
     fontWeight: '800',
   },
   serviceName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.textPrimary,
+  },
+  variantName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: 2,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 10,
+    marginTop: 8,
   },
   infoText: {
     fontSize: 13,
-    color: '#475569',
+    color: colors.textSecondary,
+    flex: 1,
   },
   paymentBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginTop: 14,
+    borderColor: colors.border,
+    marginTop: 12,
   },
   paymentTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748b',
+    color: colors.textMuted,
     textTransform: 'uppercase',
+  },
+  settledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  settledText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.successText,
+  },
+  pendingBadge: {
+    backgroundColor: colors.warningLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  pendingText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.warningText,
   },
   paymentAmount: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#15803d',
+    color: colors.successText,
     marginTop: 2,
   },
   paymentSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.textMuted,
     marginTop: 2,
+  },
+  payBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  payBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  cardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  providerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  providerDesc: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  providerAddress: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  callProviderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+  },
+  callProviderText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0f172a',
-    marginBottom: 12,
+    color: colors.textPrimary,
+    marginBottom: 10,
   },
   input: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#0f172a',
+    color: colors.textPrimary,
     marginBottom: 10,
   },
   buttonRow: {
@@ -440,9 +667,9 @@ const styles = StyleSheet.create({
   },
   rescheduleBtn: {
     flex: 1,
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: colors.primaryBorder,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
@@ -450,13 +677,13 @@ const styles = StyleSheet.create({
   rescheduleBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1d4ed8',
+    color: colors.primary,
   },
   cancelBookingBtn: {
     flex: 1,
-    backgroundColor: '#fee2e2',
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
-    borderColor: '#fca5a5',
+    borderColor: colors.dangerBorder,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
@@ -464,11 +691,11 @@ const styles = StyleSheet.create({
   cancelBookingBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#dc2626',
+    color: colors.danger,
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderSubtle,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
@@ -476,11 +703,11 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   confirmBtn: {
     flex: 2,
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
@@ -492,7 +719,7 @@ const styles = StyleSheet.create({
   },
   rateLabel: {
     fontSize: 13,
-    color: '#475569',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   starsRow: {
@@ -501,7 +728,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   submitReviewBtn: {
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -518,14 +745,14 @@ const styles = StyleSheet.create({
   },
   feedbackGiven: {
     fontSize: 13,
-    color: '#475569',
+    color: colors.textSecondary,
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 8,
   },
   thankYouText: {
     fontSize: 12,
-    color: '#16a34a',
+    color: colors.successText,
     fontWeight: '600',
     marginTop: 6,
   },

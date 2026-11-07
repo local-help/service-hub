@@ -1,36 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
 import { Compass, FileText, Calendar, User } from 'lucide-react-native';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { SupportProvider } from './src/contexts/SupportContext';
 import { Category, Service, ServiceRequest, Booking } from './src/types';
+import { apiRequest } from './src/api/client';
+import { colors } from './src/theme/colors';
 
 import { HomeScreen } from './src/screens/HomeScreen';
 import { CategoryScreen } from './src/screens/CategoryScreen';
-import { ServiceDetailScreen } from './src/screens/ServiceDetailScreen';
+import { ServiceDetailScreen, BookingOptions } from './src/screens/ServiceDetailScreen';
 import { CreateRequestScreen } from './src/screens/CreateRequestScreen';
 import { RequestsScreen } from './src/screens/RequestsScreen';
 import { RequestDetailScreen } from './src/screens/RequestDetailScreen';
 import { BookingsScreen } from './src/screens/BookingsScreen';
 import { BookingDetailScreen } from './src/screens/BookingDetailScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
+import { RegisterScreen } from './src/screens/RegisterScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
 
 type Tab = 'explore' | 'requests' | 'bookings' | 'profile';
 
 function MainNavigator() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('explore');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Navigation Stack State
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedBookingOptions, setSelectedBookingOptions] = useState<BookingOptions | undefined>(undefined);
   const [isCreatingRequest, setIsCreatingRequest] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Fetch unread notifications
+  const fetchUnread = async () => {
+    if (!user) return;
+    try {
+      const data = await apiRequest<{ unread_count: number }>('/notifications/unread_count');
+      if (data && typeof data.unread_count === 'number') {
+        setUnreadNotifications(data.unread_count);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchUnread();
+  }, [user, activeTab, refreshKey]);
 
   if (loading) {
     return (
@@ -40,13 +65,46 @@ function MainNavigator() {
     );
   }
 
-  // Not logged in -> Show Login
+  // Not logged in -> Show Login or Register
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <LoginScreen
-          onSuccess={() => setActiveTab('explore')}
-          onGoToRegister={() => {}}
+        <StatusBar style="dark" />
+        {authMode === 'login' ? (
+          <LoginScreen
+            onSuccess={() => setActiveTab('explore')}
+            onGoToRegister={() => setAuthMode('register')}
+          />
+        ) : (
+          <RegisterScreen
+            onSuccess={() => setActiveTab('explore')}
+            onGoToLogin={() => setAuthMode('login')}
+          />
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  // Notifications Modal / Screen
+  if (isNotificationsOpen) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <NotificationsScreen
+          onBack={() => {
+            setIsNotificationsOpen(false);
+            fetchUnread();
+          }}
+          onSelectBooking={(bId) => {
+            setIsNotificationsOpen(false);
+            setSelectedBookingId(bId);
+            setActiveTab('bookings');
+          }}
+          onSelectRequest={(rId) => {
+            setIsNotificationsOpen(false);
+            setSelectedRequestId(rId);
+            setActiveTab('requests');
+          }}
         />
       </SafeAreaView>
     );
@@ -59,13 +117,20 @@ function MainNavigator() {
           return (
             <CreateRequestScreen
               service={selectedService}
+              options={selectedBookingOptions}
               onBack={() => setIsCreatingRequest(false)}
               onComplete={(req) => {
                 setIsCreatingRequest(false);
                 setSelectedService(null);
                 setSelectedCategory(null);
-                setSelectedRequestId(req.id);
-                setActiveTab('requests');
+                setSelectedBookingOptions(undefined);
+                if (req.booking?.id) {
+                  setSelectedBookingId(req.booking.id);
+                  setActiveTab('bookings');
+                } else {
+                  setSelectedRequestId(req.id);
+                  setActiveTab('requests');
+                }
               }}
             />
           );
@@ -75,7 +140,10 @@ function MainNavigator() {
             <ServiceDetailScreen
               service={selectedService}
               onBack={() => setSelectedService(null)}
-              onRequestBooking={() => setIsCreatingRequest(true)}
+              onRequestBooking={(options) => {
+                setSelectedBookingOptions(options);
+                setIsCreatingRequest(true);
+              }}
             />
           );
         }
@@ -92,6 +160,8 @@ function MainNavigator() {
           <HomeScreen
             onSelectCategory={(cat) => setSelectedCategory(cat)}
             onSelectService={(svc) => setSelectedService(svc)}
+            onOpenNotifications={() => setIsNotificationsOpen(true)}
+            unreadNotifications={unreadNotifications}
           />
         );
 
@@ -101,7 +171,12 @@ function MainNavigator() {
             <RequestDetailScreen
               requestId={selectedRequestId}
               onBack={() => setSelectedRequestId(null)}
-              onRefreshList={() => setRefreshKey(k => k + 1)}
+              onRefreshList={() => setRefreshKey((k) => k + 1)}
+              onGoToBooking={(bId) => {
+                setSelectedRequestId(null);
+                setSelectedBookingId(bId);
+                setActiveTab('bookings');
+              }}
             />
           );
         }
@@ -119,7 +194,7 @@ function MainNavigator() {
             <BookingDetailScreen
               bookingId={selectedBookingId}
               onBack={() => setSelectedBookingId(null)}
-              onRefreshList={() => setRefreshKey(k => k + 1)}
+              onRefreshList={() => setRefreshKey((k) => k + 1)}
             />
           );
         }
@@ -136,6 +211,7 @@ function MainNavigator() {
           <ProfileScreen
             onLogout={() => {
               setActiveTab('explore');
+              setAuthMode('login');
             }}
           />
         );
@@ -148,6 +224,7 @@ function MainNavigator() {
     if (tab === 'explore') {
       setSelectedCategory(null);
       setSelectedService(null);
+      setSelectedBookingOptions(undefined);
       setIsCreatingRequest(false);
     } else if (tab === 'requests') {
       setSelectedRequestId(null);
@@ -173,7 +250,7 @@ function MainNavigator() {
           >
             <Compass
               size={22}
-              color={activeTab === 'explore' ? '#176B65' : '#6C7B77'}
+              color={activeTab === 'explore' ? colors.primary : colors.textMuted}
             />
             <Text
               style={[
@@ -192,7 +269,7 @@ function MainNavigator() {
           >
             <FileText
               size={22}
-              color={activeTab === 'requests' ? '#176B65' : '#6C7B77'}
+              color={activeTab === 'requests' ? colors.primary : colors.textMuted}
             />
             <Text
               style={[
@@ -211,7 +288,7 @@ function MainNavigator() {
           >
             <Calendar
               size={22}
-              color={activeTab === 'bookings' ? '#176B65' : '#6C7B77'}
+              color={activeTab === 'bookings' ? colors.primary : colors.textMuted}
             />
             <Text
               style={[
@@ -230,7 +307,7 @@ function MainNavigator() {
           >
             <User
               size={22}
-              color={activeTab === 'profile' ? '#176B65' : '#6C7B77'}
+              color={activeTab === 'profile' ? colors.primary : colors.textMuted}
             />
             <Text
               style={[
@@ -260,11 +337,11 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FDFCF9',
+    backgroundColor: '#ffffff',
   },
   container: {
     flex: 1,
-    backgroundColor: '#F7F5EF',
+    backgroundColor: colors.background,
   },
   screenContent: {
     flex: 1,
@@ -273,19 +350,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F7F5EF',
+    backgroundColor: colors.background,
   },
   loadingText: {
     fontSize: 14,
-    color: '#6C7B77',
+    color: colors.textMuted,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#E7E2D8',
+    borderTopColor: colors.border,
     paddingVertical: 8,
-    paddingBottom: 14,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
     elevation: 8,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -301,11 +378,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#6C7B77',
+    color: colors.textMuted,
   },
   tabLabelActive: {
-    color: '#176B65',
+    color: colors.primary,
     fontWeight: '700',
   },
 });
-

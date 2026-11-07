@@ -21,11 +21,16 @@ export async function apiRequest<T = any>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = await AsyncStorage.getItem('localhelp_access_token');
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
     ...(options.headers as Record<string, string>),
   };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -83,3 +88,46 @@ export async function apiRequest<T = any>(
   return response.json();
 }
 
+export async function uploadImage(
+  uri: string,
+  name?: string
+): Promise<{ file_url: string; file_name: string; url?: string }> {
+  const token = await AsyncStorage.getItem('localhelp_access_token');
+  const formData = new FormData();
+  const filename = name || uri.split('/').pop() || 'photo.jpg';
+  const match = /\.(\w+)$/.exec(filename);
+  const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+  formData.append('file', {
+    uri,
+    name: filename,
+    type,
+  } as any);
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE}/uploads`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errMessage = 'Photo upload failed';
+    try {
+      const err = await response.json();
+      errMessage = err.error || errMessage;
+    } catch {
+      // ignore
+    }
+    throw new Error(errMessage);
+  }
+
+  return response.json();
+}

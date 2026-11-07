@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'admin' | 'super_admin';
+export type UserRole = 'customer' | 'provider' | 'admin' | 'super_admin';
 
 export interface User {
   id: number;
@@ -9,6 +9,7 @@ export interface User {
   status: 'active' | 'inactive' | 'suspended';
   phone_verified: boolean;
   email_verified: boolean;
+  avatar_url?: string | null;
   created_at: string;
 }
 
@@ -73,13 +74,48 @@ export interface Service {
 
 export interface Address {
   id: number;
-  label: string | null;
+  label?: string | null;
   address_line: string;
   landmark?: string | null;
   city: string;
   state: string;
   postal_code: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_default: boolean;
+  full_address?: string;
+}
+
+export interface Attachment {
+  id?: number;
+  file_url: string;
+  file_name?: string | null;
+  content_type?: string | null;
+  file_size?: number | null;
+}
+
+export interface Provider {
+  id: number;
+  name: string;
+  business_name?: string;
+  description?: string | null;
+  business_address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  status?: string;
+  verified?: boolean;
+  rating?: number | null;
+  jobs_completed?: number;
+}
+
+export interface ProviderAssignment {
+  id: number;
+  provider_id: number;
+  provider_name?: string;
+  status: 'pending' | 'accepted' | 'declined' | 'reassigned' | 'completed';
+  assigned_at?: string | null;
+  accepted_at?: string | null;
+  internal_notes?: string | null;
 }
 
 export type RequestStatus = 
@@ -98,12 +134,21 @@ export interface ServiceRequest {
   reference_number: string;
   status: RequestStatus;
   description: string;
+  preferred_at?: string | null;
   preferred_date?: string | null;
   preferred_time_slot?: string | null;
+  vehicle_type?: string | null;
+  duration_hours?: number | null;
+  selected_options?: Record<string, any>;
   service?: Service;
+  service_variant?: ServiceVariant | null;
   address?: Address;
-  quotation?: Quotation;
-  booking?: Booking;
+  provider?: Provider | null;
+  current_assignment?: ProviderAssignment | null;
+  quotation?: Quotation | null;
+  booking?: Booking | null;
+  booking_status?: string | null;
+  request_attachments?: Attachment[];
   created_at: string;
 }
 
@@ -129,17 +174,31 @@ export type BookingStatus =
 
 export interface Booking {
   id: number;
-  service_request_id: number;
+  service_request_id?: number | null;
   reference_number: string;
   status: BookingStatus;
+  booking_type?: 'fixed_price' | 'quotation' | 'time_based';
   scheduled_at?: string | null;
+  preferred_at?: string | null;
   completed_at?: string | null;
+  description?: string | null;
+  vehicle_type?: string | null;
+  duration_hours?: number | null;
+  selected_options?: Record<string, any>;
   rating?: number | null;
   feedback?: string | null;
   total_paid: number;
-  payment_amount: number | null;
+  payment_amount?: number | null;
+  total_amount?: number | null;
   fully_paid: boolean;
+  service?: Service;
   service_name?: string;
+  service_variant?: ServiceVariant | null;
+  address?: Address;
+  provider?: Provider | null;
+  current_assignment?: ProviderAssignment | null;
+  quotation?: Quotation | null;
+  request_attachments?: Attachment[];
   created_at: string;
 }
 
@@ -149,3 +208,13 @@ export interface SupportInfo {
   platform_name: string;
 }
 
+export interface Notification {
+  id: number;
+  notification_type: string;
+  title: string;
+  body: string;
+  metadata?: Record<string, any>;
+  read_at?: string | null;
+  is_read: boolean;
+  created_at: string;
+}

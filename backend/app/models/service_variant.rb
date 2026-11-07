@@ -41,8 +41,16 @@ class ServiceVariant < ApplicationRecord
     current_pricing&.price
   end
 
+  def price
+    primary_price
+  end
+
   def vehicle_types
     (variant_attributes || {})['vehicle_types'] || []
+  end
+
+  def vehicle_type
+    (variant_attributes || {})['vehicle_type'] || vehicle_types.first
   end
 
   def package_type

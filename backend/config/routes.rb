@@ -72,8 +72,8 @@ Rails.application.routes.draw do
         end
 
         resources :services, only: [:index, :update]
-        resource :availability, only: [:show, :update]
-        resource :profile, only: [:show, :update] do
+        resource :availability, only: [:show, :update], controller: 'availability'
+        resource :profile, only: [:show, :update], controller: 'profile' do
           get :team
           post 'team', to: 'profile#invite_member'
         end

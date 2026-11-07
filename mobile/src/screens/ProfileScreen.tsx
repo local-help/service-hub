@@ -6,22 +6,45 @@ import {
   TouchableOpacity, 
   TextInput, 
   StyleSheet, 
-  Alert 
+  Alert,
+  ActivityIndicator 
 } from 'react-native';
-import { User, Phone, Mail, MapPin, Plus, LogOut, CheckCircle, Shield } from 'lucide-react-native';
+import { User, Phone, Mail, MapPin, Plus, LogOut, CheckCircle, Shield, Edit3, Trash2 } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { Address } from '../types';
 import { apiRequest } from '../api/client';
 import { SupportBanner } from '../components/SupportBanner';
+import { colors } from '../theme/colors';
 
 interface Props {
   onLogout: () => void;
 }
 
+const PRAYAGRAJ_LOCALITIES = [
+  { name: 'Civil Lines', pin: '211001' },
+  { name: 'Katra', pin: '211002' },
+  { name: 'Tagore Town', pin: '211002' },
+  { name: 'Ashok Nagar', pin: '211001' },
+  { name: 'Georgetown', pin: '211002' },
+  { name: 'Mumfordganj', pin: '211002' },
+  { name: 'Naini', pin: '211008' },
+  { name: 'Jhunsi', pin: '211019' },
+  { name: 'Dhoomanganj', pin: '211011' },
+];
+
 export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
+  
+  // Edit Profile State
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+  const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Add Address State
   const [showAddAddr, setShowAddAddr] = useState(false);
+  const [addrLabel, setAddrLabel] = useState('Home');
   const [addrLine, setAddrLine] = useState('');
   const [landmark, setLandmark] = useState('');
   const [city, setCity] = useState('Prayagraj');
@@ -39,7 +62,35 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
   useEffect(() => {
     fetchAddresses();
-  }, []);
+    if (user) {
+      setEditName(user.name || '');
+      setEditPhone(user.phone || '');
+    }
+  }, [user]);
+
+  const handleUpdateProfile = async () => {
+    if (!editName.trim()) {
+      Alert.alert('Required', 'Please enter your name.');
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      await apiRequest('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: editName.trim(),
+          phone: editPhone.trim() || undefined,
+        }),
+      });
+      await refreshProfile();
+      setEditingProfile(false);
+      Alert.alert('Success', 'Profile updated successfully.');
+    } catch (err: any) {
+      Alert.alert('Error', err.error || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleAddAddress = async () => {
     if (!addrLine.trim()) {
@@ -51,14 +102,15 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
         method: 'POST',
         body: JSON.stringify({
           address: {
+            label: addrLabel,
             address_line: addrLine,
             landmark: landmark || null,
             city,
             postal_code: pincode,
             state: 'Uttar Pradesh',
             is_default: addresses.length === 0,
-          }
-        })
+          },
+        }),
       });
       setShowAddAddr(false);
       setAddrLine('');
@@ -67,6 +119,24 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
     } catch (err: any) {
       Alert.alert('Error', err.error || 'Failed to save address');
     }
+  };
+
+  const handleDeleteAddress = (id: number) => {
+    Alert.alert('Delete Address', 'Are you sure you want to remove this saved address?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await apiRequest(`/addresses/${id}`, { method: 'DELETE' });
+            fetchAddresses();
+          } catch (err: any) {
+            Alert.alert('Error', err.error || 'Failed to delete address');
+          }
+        },
+      },
+    ]);
   };
 
   const handleLogout = () => {
@@ -81,8 +151,8 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
           onPress: async () => {
             await logout();
             onLogout();
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -93,8 +163,8 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
         <Text style={styles.headerTitle}>Account & Profile</Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* User Card */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* User Profile Card */}
         <View style={styles.card}>
           <View style={styles.avatarWrap}>
             <Text style={styles.avatarText}>
@@ -108,32 +178,89 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
           <View style={styles.divider} />
 
-          <View style={styles.infoRow}>
-            <Phone size={16} color="#64748b" />
-            <Text style={styles.infoText}>{user?.phone || 'No phone'}</Text>
-            {user?.phone_verified && (
-              <View style={styles.verifiedBadge}>
-                <CheckCircle size={12} color="#16a34a" />
-                <Text style={styles.verifiedText}>Verified</Text>
-              </View>
-            )}
-          </View>
+          {editingProfile ? (
+            <View style={styles.editSection}>
+              <Text style={styles.fieldLabel}>Full Name</Text>
+              <TextInput
+                value={editName}
+                onChangeText={setEditName}
+                style={styles.input}
+                placeholder="Full Name"
+              />
 
-          {user?.email && (
-            <View style={styles.infoRow}>
-              <Mail size={16} color="#64748b" />
-              <Text style={styles.infoText}>{user.email}</Text>
+              <Text style={styles.fieldLabel}>Phone Number</Text>
+              <TextInput
+                value={editPhone}
+                onChangeText={setEditPhone}
+                keyboardType="phone-pad"
+                style={styles.input}
+                placeholder="+91..."
+              />
+
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={styles.cancelFormBtn}
+                  onPress={() => setEditingProfile(false)}
+                >
+                  <Text style={styles.cancelFormText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.saveFormBtn}
+                  onPress={handleUpdateProfile}
+                  disabled={savingProfile}
+                >
+                  {savingProfile ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={styles.saveFormText}>Save Profile</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <View style={styles.infoRow}>
+                <Phone size={16} color={colors.textMuted} />
+                <Text style={styles.infoText}>{user?.phone || 'No phone added'}</Text>
+                {user?.phone_verified && (
+                  <View style={styles.verifiedBadge}>
+                    <CheckCircle size={12} color={colors.successText} />
+                    <Text style={styles.verifiedText}>Verified</Text>
+                  </View>
+                )}
+              </View>
+
+              {user?.email && (
+                <View style={styles.infoRow}>
+                  <Mail size={16} color={colors.textMuted} />
+                  <Text style={styles.infoText}>{user.email}</Text>
+                  {user.email_verified && (
+                    <View style={styles.verifiedBadge}>
+                      <CheckCircle size={12} color={colors.successText} />
+                      <Text style={styles.verifiedText}>Verified</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.editProfileBtn}
+                onPress={() => setEditingProfile(true)}
+              >
+                <Edit3 size={14} color={colors.primary} />
+                <Text style={styles.editProfileText}>Edit Contact Info</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {/* Addresses */}
+        {/* Saved Addresses Card */}
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardTitle}>Saved Service Addresses</Text>
+            <Text style={styles.cardTitle}>Saved Doorstep Addresses</Text>
             {!showAddAddr && (
               <TouchableOpacity onPress={() => setShowAddAddr(true)} style={styles.addBtn}>
-                <Plus size={14} color="#2563eb" />
+                <Plus size={14} color={colors.primary} />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>
             )}
@@ -141,16 +268,50 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
           {showAddAddr && (
             <View style={styles.addForm}>
+              <Text style={styles.localityHeader}>Quick Locality (Prayagraj):</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                {PRAYAGRAJ_LOCALITIES.map((loc) => (
+                  <TouchableOpacity
+                    key={loc.name}
+                    style={[
+                      styles.locChip,
+                      landmark === loc.name && styles.locChipActive,
+                    ]}
+                    onPress={() => {
+                      setLandmark(loc.name);
+                      setPincode(loc.pin);
+                      if (!addrLine) setAddrLine(`${loc.name}, Prayagraj`);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.locChipText,
+                        landmark === loc.name && styles.locChipTextActive,
+                      ]}
+                    >
+                      📍 {loc.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TextInput
+                placeholder="Label (e.g. Home, Office, Parents)"
+                placeholderTextColor={colors.textLight}
+                value={addrLabel}
+                onChangeText={setAddrLabel}
+                style={styles.input}
+              />
               <TextInput
                 placeholder="Street / House No *"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textLight}
                 value={addrLine}
                 onChangeText={setAddrLine}
                 style={styles.input}
               />
               <TextInput
                 placeholder="Landmark (Optional)"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textLight}
                 value={landmark}
                 onChangeText={setLandmark}
                 style={styles.input}
@@ -164,7 +325,7 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
                 <TextInput
                   value={pincode}
                   onChangeText={setPincode}
-                  style={[styles.input, { width: 100 }]}
+                  style={[styles.input, { width: 90 }]}
                 />
               </View>
               <View style={styles.row}>
@@ -190,9 +351,9 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
             <View style={styles.addressList}>
               {addresses.map((a) => (
                 <View key={a.id} style={styles.addressItem}>
-                  <MapPin size={16} color="#2563eb" />
+                  <MapPin size={16} color={colors.primary} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.addressLine}>{a.address_line}</Text>
+                    <Text style={styles.addressLine}>{a.label ? `[${a.label}] ` : ''}{a.address_line}</Text>
                     <Text style={styles.addressSub}>{a.city} - {a.postal_code}</Text>
                   </View>
                   {a.is_default && (
@@ -200,6 +361,12 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
                       <Text style={styles.defaultPillText}>Default</Text>
                     </View>
                   )}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteAddress(a.id)}
+                    style={styles.deleteAddrBtn}
+                  >
+                    <Trash2 size={14} color={colors.danger} />
+                  </TouchableOpacity>
                 </View>
               ))}
             </View>
@@ -211,9 +378,11 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut size={16} color="#dc2626" />
+          <LogOut size={16} color={colors.danger} />
           <Text style={styles.logoutBtnText}>Sign Out</Text>
         </TouchableOpacity>
+
+        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -222,7 +391,7 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -230,12 +399,12 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   content: {
     padding: 16,
@@ -245,44 +414,53 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
     marginBottom: 14,
   },
   avatarWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#bfdbfe',
+    borderColor: colors.primaryBorder,
   },
   avatarText: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#2563eb',
+    color: colors.primary,
   },
   userName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0f172a',
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   userRole: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748b',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 2,
     letterSpacing: 0.5,
   },
   divider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderSubtle,
     marginVertical: 14,
+  },
+  editSection: {
+    gap: 4,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
   },
   infoRow: {
     flexDirection: 'row',
@@ -292,14 +470,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: '#334155',
+    color: colors.textSecondary,
     flex: 1,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#dcfce7',
+    backgroundColor: colors.successLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -307,7 +485,19 @@ const styles = StyleSheet.create({
   verifiedText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#15803d',
+    color: colors.successText,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  editProfileText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -318,7 +508,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   addBtn: {
     flexDirection: 'row',
@@ -327,16 +517,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 6,
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.primaryLight,
   },
   addBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2563eb',
+    color: colors.primary,
   },
   emptyText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: colors.textLight,
     fontStyle: 'italic',
   },
   addressList: {
@@ -347,23 +537,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     padding: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
   },
   addressLine: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   addressSub: {
     fontSize: 11,
-    color: '#64748b',
+    color: colors.textMuted,
     marginTop: 2,
   },
   defaultPill: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -371,25 +561,55 @@ const styles = StyleSheet.create({
   defaultPillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#2563eb',
+    color: colors.primary,
+  },
+  deleteAddrBtn: {
+    padding: 4,
   },
   addForm: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
+  },
+  localityHeader: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  locChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: colors.borderSubtle,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  locChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  locChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  locChipTextActive: {
+    color: '#ffffff',
   },
   input: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 13,
-    color: '#0f172a',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   row: {
@@ -400,19 +620,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderSubtle,
     borderRadius: 8,
   },
   cancelFormText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   saveFormBtn: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   saveFormText: {
@@ -425,18 +645,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#fee2e2',
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
-    borderColor: '#fca5a5',
+    borderColor: colors.dangerBorder,
     borderRadius: 14,
     paddingVertical: 14,
     marginTop: 8,
-    marginBottom: 40,
   },
   logoutBtnText: {
-    color: '#dc2626',
+    color: colors.danger,
     fontSize: 14,
     fontWeight: '700',
   },
 });
-
