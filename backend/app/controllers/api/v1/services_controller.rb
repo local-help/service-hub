@@ -14,13 +14,13 @@ module Api
       end
 
       def show
-        service = Service.active.find(params[:id])
+        service = find_service
         render json: service, serializer: ServiceDetailSerializer
       end
 
       # Dynamic calculation for variants & time-based bookings
       def calculate_price
-        service = Service.active.find(params[:id])
+        service = find_service
         variant = params[:variant_id].present? ? service.variants.find_by(id: params[:variant_id]) : service.variants.first
         pricing = variant&.current_pricing
 
@@ -64,6 +64,10 @@ module Api
       end
 
       private
+
+      def find_service
+        Service.active.find_by(slug: params[:id]) || Service.active.find(params[:id])
+      end
 
       def skip_authorization?
         true

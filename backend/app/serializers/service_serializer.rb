@@ -4,7 +4,9 @@
 #
 #  id                         :bigint           not null, primary key
 #  active                     :boolean          default(TRUE)
+#  addons                     :jsonb            not null
 #  booking_type               :string           default("quotation"), not null
+#  builder_config             :jsonb            not null
 #  coming_soon                :boolean          default(FALSE), not null
 #  description                :text
 #  estimated_duration_minutes :integer
@@ -43,7 +45,7 @@ class ServiceSerializer < ActiveModel::Serializer
   attributes :id, :name, :slug, :description, :short_description, :pricing_type, :booking_type,
              :fixed_price, :image_url, :estimated_duration_minutes,
              :category_id, :subcategory_id, :active, :coming_soon, :position,
-             :supported_vehicle_types
+             :supported_vehicle_types, :builder_config, :addons
 
   def fixed_price
     object.fixed_price&.to_f

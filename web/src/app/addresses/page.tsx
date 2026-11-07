@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MapPin, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { MapPin, Plus, Trash2, ArrowLeft, X } from 'lucide-react';
 import { Address } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
@@ -117,7 +117,7 @@ export default function AddressesPage() {
             onClick={() => setShowAdd(!showAdd)}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center cursor-pointer shadow-xs"
           >
-            <Plus className="w-3.5 h-3.5" />
+            {showAdd ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
             <span>{showAdd ? 'Cancel' : 'Add Address'}</span>
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function AddressesPage() {
         <form onSubmit={handleCreate} className="border border-slate-200 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
             <h3 className="text-sm font-semibold text-slate-900">Add Service Address</h3>
-            <GpsButton onLocationDetected={handleLocationDetected} label="Use Current Location" />
+            <GpsButton onLocationDetected={handleLocationDetected} label="Current Location" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

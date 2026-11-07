@@ -82,6 +82,46 @@ export interface Category {
   active_services?: Service[];
 }
 
+export interface ServiceAddon {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  icon?: string;
+}
+
+export interface BuilderStepOption {
+  id: string;
+  label: string;
+  subtext?: string;
+  icon?: string;
+}
+
+export interface BuilderStep {
+  id: string;
+  type: 'segmented_control' | 'radio' | 'select';
+  title: string;
+  subtitle?: string;
+  required?: boolean;
+  default_value?: string;
+  options: BuilderStepOption[];
+}
+
+export interface BuilderPackage {
+  id: string;
+  name: string;
+  short_description?: string;
+  badge?: string;
+  prices: Record<string, number>;
+}
+
+export interface BuilderConfig {
+  steps?: BuilderStep[];
+  packages?: BuilderPackage[];
+  platform_fee?: number;
+  guarantee_badge?: string;
+}
+
 export interface Service {
   id: number;
   category_id: number;
@@ -102,6 +142,8 @@ export interface Service {
   category?: Category;
   subcategory?: Subcategory;
   variants?: ServiceVariant[];
+  builder_config?: BuilderConfig;
+  addons?: ServiceAddon[];
 }
 
 export type RequestStatus =

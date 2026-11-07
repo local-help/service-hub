@@ -59,7 +59,7 @@ module ServiceRequests
 
         # For fixed-price services, auto-create booking
         if service.booking_type_fixed_price?
-          final_amount = variant&.price || service.fixed_price
+          final_amount = parsed_params[:total_amount]&.to_f || variant&.price || service.fixed_price
           booking = user.bookings.create!(
             service_request: service_request,
             service: service,

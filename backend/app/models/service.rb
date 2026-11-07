@@ -4,7 +4,9 @@
 #
 #  id                         :bigint           not null, primary key
 #  active                     :boolean          default(TRUE)
+#  addons                     :jsonb            not null
 #  booking_type               :string           default("quotation"), not null
+#  builder_config             :jsonb            not null
 #  coming_soon                :boolean          default(FALSE), not null
 #  description                :text
 #  estimated_duration_minutes :integer

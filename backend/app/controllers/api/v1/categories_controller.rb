@@ -9,7 +9,7 @@ module Api
       end
 
       def show
-        category = Category.active.find(params[:id])
+        category = Category.active.find_by(slug: params[:id]) || Category.active.find(params[:id])
         render json: category, serializer: CategoryDetailSerializer
       end
 

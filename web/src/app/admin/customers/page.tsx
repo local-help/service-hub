@@ -3,17 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  UserCheck, 
-  Search, 
-  Phone, 
-  MessageCircle, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  Calendar, 
-  CheckCircle, 
-  X, 
+import {
+  UserCheck,
+  Search,
+  Phone,
+  MessageCircle,
+  Mail,
+  MapPin,
+  Clock,
+  Calendar,
+  CheckCircle,
+  X,
   FileText,
   CreditCard,
   ChevronRight,
@@ -142,9 +142,8 @@ export default function AdminCustomersPage() {
                   <div
                     key={c.id}
                     onClick={() => loadCustomerDetail(c.id)}
-                    className={`p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition group ${
-                      isSelected ? 'bg-slate-50/90 border-l-4 border-slate-900' : ''
-                    }`}
+                    className={`p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition group ${isSelected ? 'bg-slate-50/90 border-l-4 border-slate-900' : ''
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-3">
                       <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0 group-hover:bg-slate-200 transition">

@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Users, 
-  Search, 
-  Plus, 
-  Phone, 
-  MapPin, 
-  CheckCircle, 
+import {
+  Users,
+  Search,
+  Plus,
+  Phone,
+  MapPin,
+  CheckCircle,
   XCircle,
   Briefcase,
   X,
@@ -323,11 +323,10 @@ export default function AdminProvidersPage() {
               <button
                 key={tab.id}
                 onClick={() => setVerificationFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  verificationFilter === tab.id
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${verificationFilter === tab.id
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
               >
                 <span>{tab.label}</span>
               </button>
@@ -352,18 +351,16 @@ export default function AdminProvidersPage() {
               <button
                 onClick={() => setViewMode('table')}
                 title="Table View"
-                className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                  viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
+                  }`}
               >
                 <TableIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 title="Grid View"
-                className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
+                  }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -797,11 +794,10 @@ export default function AdminProvidersPage() {
                         type="button"
                         key={svc.id}
                         onClick={() => handleToggleService(svc.id)}
-                        className={`p-2 rounded-lg text-left text-xs transition cursor-pointer flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-slate-900 text-white font-semibold'
-                            : 'hover:bg-white text-slate-700 bg-white/60 border border-slate-200/50'
-                        }`}
+                        className={`p-2 rounded-lg text-left text-xs transition cursor-pointer flex items-center justify-between ${isSelected
+                          ? 'bg-slate-900 text-white font-semibold'
+                          : 'hover:bg-white text-slate-700 bg-white/60 border border-slate-200/50'
+                          }`}
                       >
                         <span className="truncate">{svc.name}</span>
                         {isSelected && <Check className="w-3.5 h-3.5 shrink-0 ml-1 text-white" />}

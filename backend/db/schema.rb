@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_05_120001) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_07_020456) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -403,6 +403,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_05_120001) do
     t.boolean "coming_soon", default: false, null: false
     t.integer "position", default: 0, null: false
     t.jsonb "supported_vehicle_types", default: []
+    t.jsonb "builder_config", default: {}, null: false
+    t.jsonb "addons", default: [], null: false
     t.index ["active"], name: "index_services_on_active"
     t.index ["booking_type"], name: "index_services_on_booking_type"
     t.index ["category_id", "active"], name: "index_services_on_category_id_and_active"
