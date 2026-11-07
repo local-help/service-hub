@@ -20,7 +20,8 @@ import {
   User as UserIcon,
   Briefcase,
   XCircle,
-  ArrowRight
+  ArrowRight,
+  Tag
 } from 'lucide-react';
 import { Booking } from '../../../types';
 import { apiRequest } from '../../../api/client';
@@ -76,36 +77,6 @@ export default function BookingDetailPage() {
     }
     fetchBooking();
   }, [id, user]);
-
-  const handleApproveQuotation = async () => {
-    if (!confirm('Approve this quotation and confirm your booking?')) return;
-    setActionLoading(true);
-    try {
-      await apiRequest(`/bookings/${id}/approve_quotation`, { method: 'POST' });
-      fetchBooking();
-    } catch (err: any) {
-      alert(err.error || 'Failed to approve quotation');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRejectQuotation = async () => {
-    const reason = prompt('Please provide a reason for declining this quotation:');
-    if (reason === null) return;
-    setActionLoading(true);
-    try {
-      await apiRequest(`/bookings/${id}/reject_quotation`, {
-        method: 'POST',
-        body: JSON.stringify({ reason }),
-      });
-      fetchBooking();
-    } catch (err: any) {
-      alert(err.error || 'Failed to reject quotation');
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,7 +185,6 @@ export default function BookingDetailPage() {
     );
   }
 
-  const quotation = booking.quotation;
   const serviceName = booking.service?.name || booking.service_name || 'Doorstep Service';
   const referenceNumber = booking.reference_number;
 
@@ -281,66 +251,29 @@ export default function BookingDetailPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Details & Quotation */}
+        {/* Left Column: Details & Fixed Price Guarantee */}
         <div className="md:col-span-2 space-y-4">
-          {/* Quotation Card (if applicable) */}
-          {quotation && (
-            <div className="border border-teal-200 bg-teal-50/40 rounded-xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-teal-600" />
-                  <span>Itemized Quotation</span>
-                </span>
-                <span className="text-xs font-medium capitalize px-2 py-0.5 rounded-md bg-white border border-teal-200 text-teal-800">
-                  {quotation.status}
-                </span>
-              </div>
-
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-slate-900">₹{quotation.amount}</span>
-                <span className="text-xs text-slate-400">estimated total</span>
-              </div>
-
-              {quotation.description && (
-                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/80 p-3 rounded-lg border border-teal-100">
-                  {quotation.description}
-                </p>
-              )}
-
-              {quotation.valid_until && (
-                <div className="text-xs text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-teal-600" />
-                  <span>
-                    Valid until: {new Date(quotation.valid_until).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
-                </div>
-              )}
-
-              {['pending', 'submitted'].includes(quotation.status) && (
-                <div className="flex items-center gap-2 pt-3 border-t border-teal-100">
-                  <button
-                    onClick={handleApproveQuotation}
-                    disabled={actionLoading}
-                    className="flex-1 py-2 px-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Approve & Confirm</span>
-                  </button>
-                  <button
-                    onClick={handleRejectQuotation}
-                    disabled={actionLoading}
-                    className="py-2 px-3 border border-slate-200 hover:bg-white text-slate-600 text-xs font-medium rounded-lg transition cursor-pointer"
-                  >
-                    <span>Reject</span>
-                  </button>
-                </div>
-              )}
+          {/* Fixed Price Guarantee Card */}
+          <div className="border border-slate-200/80 bg-slate-50/70 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-4 h-4 text-emerald-600" />
+                <span>Fixed Price Guarantee</span>
+              </span>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Admin Fixed Rate
+              </span>
             </div>
-          )}
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900">₹{booking.total_amount || booking.service?.fixed_price || 0}</span>
+              <span className="text-xs text-slate-400">transparent fixed fee</span>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-200/60">
+              No hidden charges or on-site haggling. The price for this service is pre-determined by LocalHelp administration and includes all standard labor and technician travel in Prayagraj.
+            </p>
+          </div>
 
           {/* Schedule Banner */}
           {booking.scheduled_at && (
@@ -641,7 +574,7 @@ export default function BookingDetailPage() {
                     'Change in schedule / Need to reschedule',
                     'Found alternative service provider',
                     'Booked by mistake / duplicate request',
-                    'Price or quotation too high',
+                    'Price concern / Changed mind',
                     'Personal emergency',
                     'Other reason',
                   ].map((cat) => (

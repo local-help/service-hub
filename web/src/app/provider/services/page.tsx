@@ -191,7 +191,7 @@ export default function ProviderServicesPage() {
                 <div className="flex items-center justify-between text-xs text-slate-600">
                   <span>Catalogue Base Price:</span>
                   <strong className="text-slate-800 text-sm">
-                    {item.base_price ? `₹${item.base_price}` : 'Quotation Required'}
+                    {item.base_price ? `₹${item.base_price}` : 'Fixed Price'}
                   </strong>
                 </div>
 
@@ -223,13 +223,13 @@ export default function ProviderServicesPage() {
                               {v.name}
                             </span>
                             <span className="text-[11px] text-slate-400 block">
-                              Platform: {v.price ? `₹${v.price}` : 'Quote'}
+                              Platform: {v.price ? `₹${v.price}` : 'Fixed Rate'}
                             </span>
                             <div className="pt-1 flex items-center gap-1.5">
                               <span className="text-xs text-slate-500">₹</span>
                               <input
                                 type="number"
-                                placeholder={v.price ? v.price.toString() : 'Quote'}
+                                placeholder={v.price ? v.price.toString() : 'Fixed Rate'}
                                 value={customVal}
                                 onChange={(e) =>
                                   handleCustomPriceChange(item.id, v.id, e.target.value)

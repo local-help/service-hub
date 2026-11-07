@@ -2,3 +2,4 @@
 
 class InvalidTransitionError < DomainError
 end
+

@@ -185,7 +185,7 @@ catalogue_data = [
             slug: 'car-servicing-maintenance',
             description: 'Comprehensive mechanical checkup, engine oil replacement, filter cleaning, and brake checks.',
             short_description: 'Engine oil, filter service, brake inspection and multi-point checkup.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 2,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv']
           },
@@ -194,7 +194,7 @@ catalogue_data = [
             slug: 'car-detailing',
             description: 'Ceramic coating, paint protection films (PPF), and advanced exterior paint correction.',
             short_description: 'Ceramic paint protection and scratch correction.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv']
           },
@@ -213,7 +213,7 @@ catalogue_data = [
             slug: 'car-insurance-assistance',
             description: 'Expert guidance on claim estimation, cashless claims coordination, and policy renewals.',
             short_description: 'Insurance claims assistance and surveyor coordination.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 5,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv']
           }
@@ -230,7 +230,7 @@ catalogue_data = [
             slug: 'bike-repair',
             description: 'Diagnosis and repair for engine starting troubles, clutch cables, brakes, and electricals.',
             short_description: 'Two-wheeler mechanical and electrical diagnosis and repairs.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1,
             supported_vehicle_types: ['bike_scooter']
           },
@@ -277,7 +277,7 @@ catalogue_data = [
             slug: 'battery-jump-start',
             description: 'Fast doorstep or roadside technician dispatch with heavy-duty jump leads / portable booster.',
             short_description: 'Quick on-spot battery jump start for cars and bikes.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv', 'bike_scooter']
           },
@@ -286,7 +286,7 @@ catalogue_data = [
             slug: 'puncture-assistance',
             description: 'Tubeless puncture repair or spare tyre stepney change at your current spot.',
             short_description: 'Tyre puncture fixing or stepney tyre change.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 2,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv', 'bike_scooter']
           },
@@ -295,7 +295,7 @@ catalogue_data = [
             slug: 'fuel-delivery',
             description: 'Emergency petrol or diesel delivered in safe compliant fuel canisters directly to your stranded vehicle.',
             short_description: 'Emergency 3-5 litres fuel delivered on the spot.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv', 'bike_scooter']
           },
@@ -304,7 +304,7 @@ catalogue_data = [
             slug: 'key-lockout',
             description: 'Specialized non-destructive unlocking service for keys locked inside the car cabin or boot.',
             short_description: 'Safe non-destructive car door lock opening.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 4,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv']
           },
@@ -313,7 +313,7 @@ catalogue_data = [
             slug: 'towing-assistance',
             description: 'Flatbed or hydraulic crane towing truck coordination based on vehicle breakdown location and distance.',
             short_description: 'Safe flatbed or wheel-lift towing to your preferred workshop.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 5,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv', 'bike_scooter']
           },
@@ -322,7 +322,7 @@ catalogue_data = [
             slug: 'mechanical-assistance',
             description: 'On-spot technician evaluation for overheating, alternator failure, or clutch breakdown.',
             short_description: 'Spot emergency troubleshooting and minor roadside fixes.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 6,
             supported_vehicle_types: ['hatchback', 'sedan', 'suv_muv', 'bike_scooter']
           }
@@ -481,7 +481,7 @@ catalogue_data = [
             slug: 'ac-repair-servicing',
             description: 'High-pressure jet pump coil wash, PCB diagnostics, gas leak repair, and capacitor replacement.',
             short_description: 'Jet pump deep foam cleaning and gas/cooling troubleshooting.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -497,7 +497,7 @@ catalogue_data = [
             slug: 'electrical-repair',
             description: 'Fixing tripped MCBs, burnt sockets, light fixture sparking, or phase outages.',
             short_description: 'Troubleshooting tripped breakers, burnt sockets, and faults.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1
           },
           {
@@ -505,7 +505,7 @@ catalogue_data = [
             slug: 'electrical-installation',
             description: 'New concealed wiring, decorative chandelier hanging, distribution box upgrades.',
             short_description: 'New light points, ceiling fans, and distribution board fittings.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 2
           },
           {
@@ -513,7 +513,7 @@ catalogue_data = [
             slug: 'other-electrical-work',
             description: 'Heavy appliance lines, 3-phase balancing, grounding / earthing pit inspection.',
             short_description: 'Custom domestic or small commercial wiring projects.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -529,7 +529,7 @@ catalogue_data = [
             slug: 'plumbing-repair',
             description: 'Fixing dripping taps, concealed pipe seepages, flush tank leakage, and low water pressure.',
             short_description: 'Tap mixer repairs, leak fixes, and flush tank overhaul.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1
           },
           {
@@ -537,7 +537,7 @@ catalogue_data = [
             slug: 'plumbing-installation',
             description: 'Fitting new washbasins, western commodes, water heater connections, and shower sets.',
             short_description: 'Sanitaryware, sink, and CP fitting installations.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 2
           },
           {
@@ -545,7 +545,7 @@ catalogue_data = [
             slug: 'other-plumbing-work',
             description: 'Overhead water tank cleaning, pressure booster pump setup, and main drain clearing.',
             short_description: 'Main pipeline repairs and water tank cleaning.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -556,19 +556,19 @@ catalogue_data = [
         description: 'Expert repair & service for everyday domestic electronics and kitchen machines.',
         position: 4,
         services: [
-          { name: 'Geyser', slug: 'geyser-repair', description: 'Heating coil replacement, thermostat repair, water leak fix.', short_description: 'Water heater coil, thermostat, and valve repair.', booking_type: 'quotation', position: 1 },
-          { name: 'RO Purifier', slug: 'ro-purifier-service', description: 'Filter candle replacement, membrane change, TDS check.', short_description: 'Sediment, carbon, and RO membrane replacement.', booking_type: 'quotation', position: 2 },
-          { name: 'Refrigerator', slug: 'refrigerator-repair', description: 'Gas refill, inverter compressor diagnostics, frost buildup fix.', short_description: 'Cooling, thermostat, and compressor repairs.', booking_type: 'quotation', position: 3 },
-          { name: 'Washing Machine', slug: 'washing-machine-repair', description: 'Drum vibration, drain pump block, error code clearance.', short_description: 'Top/front load drum, motor, and PCB repair.', booking_type: 'quotation', position: 4 },
-          { name: 'BLDC Fan', slug: 'bldc-fan-service', description: 'BLDC remote pairing, PCB driver replacement, silent operation tuning.', short_description: 'BLDC fan remote and driver repair.', booking_type: 'quotation', position: 5 },
-          { name: 'Mixer Grinder', slug: 'mixer-grinder-repair', description: 'Blade coupling replacement, jar bushing, motor carbon brush.', short_description: 'Mixer motor and coupler repairs.', booking_type: 'quotation', position: 6 },
-          { name: 'Microwave & OTG', slug: 'microwave-otg-repair', description: 'Magnetron replacement, turntable motor, touch panel fix.', short_description: 'Heating magnetron, fuse, and turntable fixes.', booking_type: 'quotation', position: 7 },
-          { name: 'Chimney', slug: 'chimney-cleaning-service', description: 'Deep oil degreasing, baffle filter scrub, suction motor service.', short_description: 'Chimney degreasing and suction service.', booking_type: 'quotation', position: 8 },
-          { name: 'Oil Heater & Blower', slug: 'oil-heater-blower-repair', description: 'Heating rod element change, thermal cut-off sensor, fan servicing.', short_description: 'Room heater element and blower repairs.', booking_type: 'quotation', position: 9 },
-          { name: 'Iron / Press', slug: 'iron-press-repair', description: 'Thermostat calibration, steam valve descaling, cord replacement.', short_description: 'Steam and dry iron repairs.', booking_type: 'quotation', position: 10 },
-          { name: 'Air Cooler', slug: 'air-cooler-repair', description: 'Honeybee pad replacement, submersible pump check, motor rewinding.', short_description: 'Cooler pump, pads, and fan repairs.', booking_type: 'quotation', position: 11 },
-          { name: 'LED Light', slug: 'led-light-installation', description: 'Panel light fixture driver change, cove lighting, strip LED setup.', short_description: 'False ceiling LED fixture repair.', booking_type: 'quotation', position: 12 },
-          { name: 'Inverter', slug: 'inverter-battery-service', description: 'Battery gravity test, distilled water top-up, inverter charging card repair.', short_description: 'Inverter motherboard and battery maintenance.', booking_type: 'quotation', position: 13 }
+          { name: 'Geyser', slug: 'geyser-repair', description: 'Heating coil replacement, thermostat repair, water leak fix.', short_description: 'Water heater coil, thermostat, and valve repair.', booking_type: 'fixed_price', position: 1 },
+          { name: 'RO Purifier', slug: 'ro-purifier-service', description: 'Filter candle replacement, membrane change, TDS check.', short_description: 'Sediment, carbon, and RO membrane replacement.', booking_type: 'fixed_price', position: 2 },
+          { name: 'Refrigerator', slug: 'refrigerator-repair', description: 'Gas refill, inverter compressor diagnostics, frost buildup fix.', short_description: 'Cooling, thermostat, and compressor repairs.', booking_type: 'fixed_price', position: 3 },
+          { name: 'Washing Machine', slug: 'washing-machine-repair', description: 'Drum vibration, drain pump block, error code clearance.', short_description: 'Top/front load drum, motor, and PCB repair.', booking_type: 'fixed_price', position: 4 },
+          { name: 'BLDC Fan', slug: 'bldc-fan-service', description: 'BLDC remote pairing, PCB driver replacement, silent operation tuning.', short_description: 'BLDC fan remote and driver repair.', booking_type: 'fixed_price', position: 5 },
+          { name: 'Mixer Grinder', slug: 'mixer-grinder-repair', description: 'Blade coupling replacement, jar bushing, motor carbon brush.', short_description: 'Mixer motor and coupler repairs.', booking_type: 'fixed_price', position: 6 },
+          { name: 'Microwave & OTG', slug: 'microwave-otg-repair', description: 'Magnetron replacement, turntable motor, touch panel fix.', short_description: 'Heating magnetron, fuse, and turntable fixes.', booking_type: 'fixed_price', position: 7 },
+          { name: 'Chimney', slug: 'chimney-cleaning-service', description: 'Deep oil degreasing, baffle filter scrub, suction motor service.', short_description: 'Chimney degreasing and suction service.', booking_type: 'fixed_price', position: 8 },
+          { name: 'Oil Heater & Blower', slug: 'oil-heater-blower-repair', description: 'Heating rod element change, thermal cut-off sensor, fan servicing.', short_description: 'Room heater element and blower repairs.', booking_type: 'fixed_price', position: 9 },
+          { name: 'Iron / Press', slug: 'iron-press-repair', description: 'Thermostat calibration, steam valve descaling, cord replacement.', short_description: 'Steam and dry iron repairs.', booking_type: 'fixed_price', position: 10 },
+          { name: 'Air Cooler', slug: 'air-cooler-repair', description: 'Honeybee pad replacement, submersible pump check, motor rewinding.', short_description: 'Cooler pump, pads, and fan repairs.', booking_type: 'fixed_price', position: 11 },
+          { name: 'LED Light', slug: 'led-light-installation', description: 'Panel light fixture driver change, cove lighting, strip LED setup.', short_description: 'False ceiling LED fixture repair.', booking_type: 'fixed_price', position: 12 },
+          { name: 'Inverter', slug: 'inverter-battery-service', description: 'Battery gravity test, distilled water top-up, inverter charging card repair.', short_description: 'Inverter motherboard and battery maintenance.', booking_type: 'fixed_price', position: 13 }
         ]
       },
       {
@@ -624,7 +624,7 @@ catalogue_data = [
             slug: 'laptop-repair',
             description: 'Motherboard chip-level diagnostics, broken screen repair, keyboard replacement.',
             short_description: 'Screen, keyboard, and motherboard repairs.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1
           },
           {
@@ -641,7 +641,7 @@ catalogue_data = [
             slug: 'laptop-hardware-upgrade',
             description: 'High-speed NVMe SSD addition, RAM expansion, and thermal paste re-application.',
             short_description: 'SSD speed upgrade and RAM expansion.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -657,7 +657,7 @@ catalogue_data = [
             slug: 'desktop-repair',
             description: 'Blue Screen of Death (BSOD), SMPS power supply failure, display graphics issues.',
             short_description: 'PC power, display, and booting diagnostics.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 1
           },
           {
@@ -674,7 +674,7 @@ catalogue_data = [
             slug: 'desktop-hardware-upgrade',
             description: 'Graphics card (GPU) fitment, liquid cooling CPU radiator, and power supply swap.',
             short_description: 'Graphics card, CPU cooler, and storage upgrades.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -708,7 +708,7 @@ catalogue_data = [
             slug: 'software-troubleshooting',
             description: 'Deep malware removal, slow boot optimization, browser adware cleaning, and network connectivity.',
             short_description: 'Adware removal, boot speedup, and error troubleshooting.',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             position: 3
           }
         ]
@@ -740,7 +740,7 @@ catalogue_data = [
             slug: 'ambulance-assistance',
             description: 'Emergency patient transport coordination with local hospitals and private fleet providers.',
             short_description: '24/7 basic and ICU ambulance dispatch (Coming Soon).',
-            booking_type: 'quotation',
+            booking_type: 'fixed_price',
             coming_soon: true,
             position: 1
           }

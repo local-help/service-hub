@@ -187,6 +187,7 @@ export interface Booking {
   selected_options?: Record<string, any>;
   total_paid: number;
   payment_amount: number | null;
+  total_amount?: number | null;
   fully_paid: boolean;
   rating?: number | null;
   feedback?: string | null;

@@ -25,6 +25,9 @@ export const Navbar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const showAdminView = Boolean(user && isAdmin && (viewMode === 'admin' || pathname?.startsWith('/admin')));
+  const showProviderView = Boolean(user && isProvider && viewMode === 'provider' && !pathname?.startsWith('/admin'));
+
   const handleModeSwitch = (mode: ViewMode) => {
     setViewMode(mode);
     if (mode === 'admin') {
@@ -45,12 +48,12 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${showAdminView || showProviderView ? 'max-w-7xl' : 'max-w-5xl'}`}>
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
             <Link
-              href={viewMode === 'admin' ? '/admin' : (viewMode === 'provider' ? '/provider' : '/')}
+              href={showAdminView ? '/admin' : (showProviderView ? '/provider' : '/')}
               className="flex items-center gap-2 group"
             >
               <img
@@ -60,13 +63,14 @@ export const Navbar: React.FC = () => {
               />
             </Link>
 
-            {viewMode === 'admin' && (
-              <span className="hidden lg:inline text-[10px] font-medium tracking-wide uppercase text-slate-400 border border-slate-200 px-2 py-0.5 rounded">
+            {showAdminView && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold tracking-wide uppercase text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 Admin
               </span>
             )}
-            {viewMode === 'provider' && (
-              <span className="hidden lg:inline text-[10px] font-medium tracking-wide uppercase text-slate-400 border border-slate-200 px-2 py-0.5 rounded">
+            {showProviderView && (
+              <span className="hidden sm:inline text-[10px] font-medium tracking-wide uppercase text-slate-400 border border-slate-200 px-2 py-0.5 rounded">
                 Provider
               </span>
             )}
@@ -74,7 +78,7 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-0.5">
-            {viewMode === 'admin' ? (
+            {pathname?.startsWith('/admin') ? null : showAdminView ? (
               <>
                 <Link href="/admin" className={linkClass('/admin')}>Overview</Link>
                 <Link href="/admin/requests" className={linkClass('/admin/requests')}>Requests</Link>
@@ -84,7 +88,7 @@ export const Navbar: React.FC = () => {
                 <Link href="/admin/catalogue" className={linkClass('/admin/catalogue')}>Catalogue</Link>
                 <Link href="/admin/settings" className={linkClass('/admin/settings')}>Settings</Link>
               </>
-            ) : viewMode === 'provider' ? (
+            ) : showProviderView ? (
               <>
                 <Link href="/provider" className={linkClass('/provider')}>Dashboard</Link>
                 <Link href="/provider/requests" className={linkClass('/provider/requests')}>Jobs</Link>
@@ -108,7 +112,7 @@ export const Navbar: React.FC = () => {
           {/* Right side actions */}
           <div className="hidden md:flex items-center gap-2">
             {/* Location pill (customer only) */}
-            {viewMode === 'customer' && (
+            {!showAdminView && !showProviderView && (
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
@@ -121,20 +125,20 @@ export const Navbar: React.FC = () => {
 
             {/* View switcher */}
             {isAdmin && (
-              viewMode === 'admin' ? (
+              viewMode === 'admin' || pathname?.startsWith('/admin') ? (
                 <button
                   onClick={() => handleModeSwitch('customer')}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-md transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                 >
-                  <Store className="w-3.5 h-3.5" />
+                  <Store className="w-3.5 h-3.5 text-slate-500" />
                   <span>Customer View</span>
                 </button>
               ) : (
                 <button
                   onClick={() => handleModeSwitch('admin')}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-md transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
                   <span>Admin</span>
                 </button>
               )
@@ -209,7 +213,7 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="flex md:hidden items-center gap-2">
-            {viewMode === 'customer' && (
+            {!showAdminView && !showProviderView && (
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
@@ -314,7 +318,7 @@ export const Navbar: React.FC = () => {
           )}
 
           <div className="space-y-0.5">
-            {viewMode === 'admin' ? (
+            {showAdminView ? (
               <>
                 {[
                   { href: '/admin', label: 'Dashboard' },
@@ -328,7 +332,7 @@ export const Navbar: React.FC = () => {
                   >{l.label}</Link>
                 ))}
               </>
-            ) : viewMode === 'provider' ? (
+            ) : showProviderView ? (
               <>
                 {[
                   { href: '/provider', label: 'Dashboard' },

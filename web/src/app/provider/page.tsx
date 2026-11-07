@@ -421,12 +421,10 @@ export default function ProviderDashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {req.active_quotation && (
-                      <div className="text-right">
-                        <span className="text-xs text-slate-500 block">Quotation</span>
-                        <strong className="text-sm text-[#176B65]">₹{req.active_quotation.amount}</strong>
-                      </div>
-                    )}
+                    <div className="text-right">
+                      <span className="text-xs text-slate-500 block">Fixed Rate</span>
+                      <strong className="text-sm text-[#176B65]">₹{req.fixed_price || 499}</strong>
+                    </div>
                     <Link
                       href={`/provider/requests/${assignment.id}`}
                       className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-white hover:border-[#176B65] hover:text-[#176B65] transition flex items-center gap-1 shadow-2xs"

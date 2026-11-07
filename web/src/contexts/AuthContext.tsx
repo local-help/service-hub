@@ -41,13 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewModeState] = useState<ViewMode>('customer');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('localhelp_view_mode') as ViewMode;
-      if (savedMode) setViewModeState(savedMode);
-    }
-  }, []);
-
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
     if (typeof window !== 'undefined') {
@@ -63,29 +56,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const token = localStorage.getItem('localhelp_access_token');
     if (!token) {
+      setUser(null);
+      setViewModeState('customer');
+      localStorage.removeItem('localhelp_view_mode');
       setLoading(false);
       return;
     }
+
+    const savedMode = localStorage.getItem('localhelp_view_mode') as ViewMode;
 
     apiRequest<{ user: User }>('/auth/me')
       .then((data) => {
         setUser(data.user);
         if (data.user.role === 'admin' || data.user.role === 'super_admin') {
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-            setViewMode('admin');
-          }
+          setViewModeState(savedMode === 'customer' ? 'customer' : 'admin');
         } else if (data.user.role === 'provider') {
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/provider')) {
-            setViewMode('provider');
-          }
+          setViewModeState(savedMode === 'customer' ? 'customer' : 'provider');
+        } else {
+          setViewModeState('customer');
+          localStorage.removeItem('localhelp_view_mode');
         }
       })
       .catch(() => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('localhelp_access_token');
           localStorage.removeItem('localhelp_refresh_token');
+          localStorage.removeItem('localhelp_view_mode');
         }
         setUser(null);
+        setViewModeState('customer');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -228,9 +227,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const isSuperAdmin = user?.role === 'super_admin';
-  const isProvider = user?.role === 'provider';
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.role === 'super_admin'));
+  const isSuperAdmin = Boolean(user && user.role === 'super_admin');
+  const isProvider = Boolean(user && user.role === 'provider');
+
+  const effectiveViewMode: ViewMode = 
+    !user ? 'customer' :
+    isAdmin && viewMode === 'admin' ? 'admin' :
+    isProvider && viewMode === 'provider' ? 'provider' :
+    'customer';
 
   return (
     <AuthContext.Provider
@@ -243,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         providerId: user?.provider_id || null,
         providerName: user?.provider_name || null,
         providerRole: user?.provider_role || null,
-        viewMode,
+        viewMode: effectiveViewMode,
         setViewMode,
         loginWithEmail,
         loginWithGoogle,

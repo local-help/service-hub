@@ -432,18 +432,18 @@ export default function AdminCataloguePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="space-y-6">
       {/* Toast Notification */}
       {notification && (
         <div
           className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 ${
             notification.type === 'success'
-              ? 'bg-teal-50 text-teal-800 border-teal-200'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
               : 'bg-rose-50 text-rose-800 border-rose-200'
           }`}
         >
           {notification.type === 'success' ? (
-            <Check className="w-4 h-4 text-teal-600" />
+            <Check className="w-4 h-4 text-emerald-600" />
           ) : (
             <AlertCircle className="w-4 h-4 text-rose-600" />
           )}
@@ -452,11 +452,11 @@ export default function AdminCataloguePage() {
       )}
 
       {/* Header */}
-      <div className="border border-slate-200 rounded-2xl p-6 sm:p-7 bg-white shadow-xs">
+      <div className="border border-slate-200/80 rounded-2xl p-6 bg-white shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-teal-800 text-[11px] font-semibold mb-2">
-              <Tag className="w-3 h-3 text-teal-600" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold mb-2">
+              <Tag className="w-3 h-3 text-slate-500" />
               <span>Catalogue & Pricing Administration</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
@@ -470,14 +470,14 @@ export default function AdminCataloguePage() {
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
             <button
               onClick={() => setCategoryModal({ open: true, mode: 'create' })}
-              className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>New Category</span>
             </button>
             <button
               onClick={() => setServiceModal({ open: true, mode: 'create' })}
-              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>New Service</span>
@@ -498,18 +498,22 @@ export default function AdminCataloguePage() {
                 }}
                 className={`group px-3.5 py-2 rounded-xl font-medium transition cursor-pointer flex items-center gap-2 whitespace-nowrap border ${
                   isSelected
-                    ? 'bg-teal-50 border-teal-300 text-teal-900 shadow-xs'
+                    ? 'bg-slate-900 border-slate-900 text-white shadow-xs font-semibold'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <span>{cat.name}</span>
                 {cat.coming_soon && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-800 font-bold">
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                    isSelected ? 'bg-amber-400 text-slate-900' : 'bg-amber-100 text-amber-800'
+                  }`}>
                     Soon
                   </span>
                 )}
                 {cat.active === false && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-100 text-rose-700 font-semibold">
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                    isSelected ? 'bg-rose-400 text-slate-900' : 'bg-rose-100 text-rose-700'
+                  }`}>
                     Off
                   </span>
                 )}
@@ -538,9 +542,9 @@ export default function AdminCataloguePage() {
               <button
                 type="button"
                 onClick={() => setCategoryModal({ open: true, mode: 'edit', category: currentCategory })}
-                className="px-2.5 py-1.5 bg-white border border-slate-200 hover:border-teal-300 text-slate-700 hover:text-teal-800 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-1.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 hover:text-slate-900 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer"
               >
-                <Edit3 className="w-3 h-3 text-teal-600" />
+                <Edit3 className="w-3 h-3 text-slate-500" />
                 <span>Edit Category</span>
               </button>
               <button
@@ -558,10 +562,10 @@ export default function AdminCataloguePage() {
       </div>
 
       {/* Subcategories Bar */}
-      <div className="border border-slate-200 rounded-2xl p-5 bg-white shadow-xs space-y-3">
+      <div className="border border-slate-200/80 rounded-2xl p-5 bg-white shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-teal-700" />
+            <Layers className="w-4 h-4 text-slate-700" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Subcategories</h3>
             <span className="text-xs text-slate-400">({subcategories.length})</span>
           </div>
@@ -569,7 +573,7 @@ export default function AdminCataloguePage() {
           <button
             type="button"
             onClick={() => setSubcategoryModal({ open: true, mode: 'create' })}
-            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 transition flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 transition flex items-center gap-1 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Subcategory</span>
@@ -596,14 +600,14 @@ export default function AdminCataloguePage() {
                 key={subcat.id}
                 className={`group px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-2 border ${
                   isSelected
-                    ? 'bg-teal-700 text-white border-teal-700 shadow-xs'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                     : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                 }`}
               >
                 <span onClick={() => setSelectedSubcatId(subcat.id)}>{subcat.name}</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                    isSelected ? 'bg-teal-800 text-white' : 'bg-slate-100 text-slate-600'
+                    isSelected ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {subcat.services_count || 0}
@@ -640,14 +644,14 @@ export default function AdminCataloguePage() {
       </div>
 
       {/* Services List & Table */}
-      <div className="border border-slate-200 rounded-2xl p-6 bg-white shadow-xs space-y-4">
+      <div className="border border-slate-200/80 rounded-2xl p-6 bg-white shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">
               Services in {currentCategory?.name || 'Category'}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Click "Bundles & Packages" to configure package options, pricing tiers, and vehicle tariffs.
+              Click &ldquo;Bundles & Packages&rdquo; to configure package options, pricing tiers, and vehicle tariffs.
             </p>
           </div>
 
@@ -659,12 +663,12 @@ export default function AdminCataloguePage() {
                 placeholder="Search services…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-500 w-56 sm:w-64 text-slate-900"
+                className="pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 w-56 sm:w-64 text-slate-900"
               />
             </div>
             <button
               onClick={() => setServiceModal({ open: true, mode: 'create' })}
-              className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>Add Service</span>
@@ -679,8 +683,8 @@ export default function AdminCataloguePage() {
               <tr>
                 <th className="p-3">Service Details</th>
                 <th className="p-3">Subcategory</th>
-                <th className="p-3">Model</th>
-                <th className="p-3">Base Price</th>
+                <th className="p-3">Pricing Model</th>
+                <th className="p-3">Fixed Price (Admin)</th>
                 <th className="p-3">Bundles / Packages</th>
                 <th className="p-3">Vehicles</th>
                 <th className="p-3">Status</th>
@@ -724,31 +728,21 @@ export default function AdminCataloguePage() {
                     </td>
 
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded-md font-semibold uppercase text-[10px] ${
-                        svc.booking_type === 'fixed_price'
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : svc.booking_type === 'time_based'
-                          ? 'bg-teal-50 text-teal-800 border border-teal-200'
-                          : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
-                      }`}>
-                        {svc.booking_type === 'fixed_price'
-                          ? 'Fixed'
-                          : svc.booking_type === 'time_based'
-                          ? 'Time Based'
-                          : 'Quote'}
+                      <span className="px-2 py-0.5 rounded-md font-semibold uppercase text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        Fixed Price
                       </span>
                     </td>
 
                     <td className="p-3">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-teal-900 text-sm">
-                          {svc.fixed_price ? `₹${svc.fixed_price}` : svc.booking_type === 'time_based' ? '₹800' : 'Custom Quote'}
+                        <span className="font-bold text-slate-900 text-sm">
+                          ₹{svc.fixed_price || 499}
                         </span>
                         <button
                           type="button"
-                          onClick={() => setPriceQuickModal({ open: true, service: svc, price: `${svc.fixed_price || 0}` })}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-teal-700 transition"
-                          title="Quick Edit Price"
+                          onClick={() => setPriceQuickModal({ open: true, service: svc, price: `${svc.fixed_price || 499}` })}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-700 transition"
+                          title="Quick Edit Fixed Price"
                         >
                           <Edit3 className="w-3 h-3" />
                         </button>
@@ -759,9 +753,9 @@ export default function AdminCataloguePage() {
                       <button
                         type="button"
                         onClick={() => handleOpenBundleDrawer(svc)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 rounded-lg text-xs font-medium transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer"
                       >
-                        <Package className="w-3.5 h-3.5 text-teal-600" />
+                        <Package className="w-3.5 h-3.5 text-slate-500" />
                         <span>Bundles & Packages</span>
                       </button>
                     </td>
@@ -807,7 +801,7 @@ export default function AdminCataloguePage() {
                         <button
                           type="button"
                           onClick={() => setServiceModal({ open: true, mode: 'edit', service: svc })}
-                          className="p-1.5 text-slate-400 hover:text-teal-700 rounded-md transition"
+                          className="p-1.5 text-slate-400 hover:text-slate-800 rounded-md transition"
                           title="Edit Service"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -858,7 +852,7 @@ export default function AdminCataloguePage() {
                   required
                   defaultValue={categoryModal.category?.name || ''}
                   placeholder="e.g. Car Care & Detailing"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -869,7 +863,7 @@ export default function AdminCataloguePage() {
                   rows={2}
                   defaultValue={categoryModal.category?.description || ''}
                   placeholder="Brief description for customer browsing..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -879,7 +873,7 @@ export default function AdminCataloguePage() {
                   <select
                     name="icon_name"
                     defaultValue={categoryModal.category?.icon_name || 'car'}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 bg-white"
                   >
                     {PRESET_ICONS.map((ico) => (
                       <option key={ico.id} value={ico.id}>
@@ -895,7 +889,7 @@ export default function AdminCataloguePage() {
                     type="number"
                     name="position"
                     defaultValue={categoryModal.category?.position ?? 1}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                   />
                 </div>
               </div>
@@ -906,7 +900,7 @@ export default function AdminCataloguePage() {
                     type="checkbox"
                     name="active"
                     defaultChecked={categoryModal.category?.active !== false}
-                    className="rounded text-teal-600 focus:ring-teal-500"
+                    className="rounded text-slate-600 focus:ring-slate-900"
                   />
                   <span className="font-medium text-slate-700">Active in Catalogue</span>
                 </label>
@@ -933,7 +927,7 @@ export default function AdminCataloguePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
                 >
                   {actionLoading ? 'Saving…' : 'Save Category'}
                 </button>
@@ -973,7 +967,7 @@ export default function AdminCataloguePage() {
                   required
                   defaultValue={subcategoryModal.subcategory?.name || ''}
                   placeholder="e.g. Foam Washing & Exterior"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -984,7 +978,7 @@ export default function AdminCataloguePage() {
                   rows={2}
                   defaultValue={subcategoryModal.subcategory?.description || ''}
                   placeholder="Optional notes or scope..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -994,7 +988,7 @@ export default function AdminCataloguePage() {
                   type="number"
                   name="position"
                   defaultValue={subcategoryModal.subcategory?.position ?? 1}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -1004,7 +998,7 @@ export default function AdminCataloguePage() {
                     type="checkbox"
                     name="active"
                     defaultChecked={subcategoryModal.subcategory?.active !== false}
-                    className="rounded text-teal-600 focus:ring-teal-500"
+                    className="rounded text-slate-600 focus:ring-slate-900"
                   />
                   <span className="font-medium text-slate-700">Active</span>
                 </label>
@@ -1021,7 +1015,7 @@ export default function AdminCataloguePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
                 >
                   {actionLoading ? 'Saving…' : 'Save Subcategory'}
                 </button>
@@ -1059,7 +1053,7 @@ export default function AdminCataloguePage() {
                   <select
                     name="category_id"
                     defaultValue={serviceModal.service?.category_id || selectedCatId || ''}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 bg-white"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -1072,7 +1066,7 @@ export default function AdminCataloguePage() {
                   <select
                     name="subcategory_id"
                     defaultValue={serviceModal.service?.subcategory_id || ''}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 bg-white"
                   >
                     <option value="">-- No Subcategory --</option>
                     {subcategories.map((sc) => (
@@ -1090,7 +1084,7 @@ export default function AdminCataloguePage() {
                   required
                   defaultValue={serviceModal.service?.name || ''}
                   placeholder="e.g. Car Wash or AC Deep Cleaning"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -1102,7 +1096,7 @@ export default function AdminCataloguePage() {
                   required
                   defaultValue={serviceModal.service?.short_description || ''}
                   placeholder="One sentence summary for list cards..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -1113,33 +1107,32 @@ export default function AdminCataloguePage() {
                   rows={3}
                   defaultValue={serviceModal.service?.description || ''}
                   placeholder="Detailed breakdown of what is included, tools used, and scope..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="font-medium text-slate-700 block mb-1">Booking Model *</label>
-                  <select
-                    name="booking_type"
-                    defaultValue={serviceModal.service?.booking_type || 'fixed_price'}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 bg-white"
-                  >
-                    <option value="fixed_price">Fixed Price</option>
-                    <option value="time_based">Time-Based (Tariff)</option>
-                    <option value="quotation">Custom Quotation</option>
-                  </select>
+                  <label className="font-medium text-slate-700 block mb-1">Pricing Model</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Fixed Price (Admin Set)"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-500 bg-slate-50 text-xs font-semibold"
+                  />
+                  <input type="hidden" name="booking_type" value="fixed_price" />
                 </div>
 
                 <div>
-                  <label className="font-medium text-slate-700 block mb-1">Base / Fixed Price (₹)</label>
+                  <label className="font-medium text-slate-700 block mb-1">Fixed Price (₹) *</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
+                    required
                     name="fixed_price"
-                    defaultValue={serviceModal.service?.fixed_price ?? 299}
-                    placeholder="299"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                    defaultValue={serviceModal.service?.fixed_price ?? 499}
+                    placeholder="499"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 font-bold"
                   />
                 </div>
 
@@ -1150,7 +1143,7 @@ export default function AdminCataloguePage() {
                     name="estimated_duration_minutes"
                     defaultValue={serviceModal.service?.estimated_duration_minutes ?? 45}
                     placeholder="45"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                   />
                 </div>
               </div>
@@ -1172,7 +1165,7 @@ export default function AdminCataloguePage() {
                           type="checkbox"
                           name={`vehicle_${vt.id}`}
                           defaultChecked={isChecked}
-                          className="rounded text-teal-600 focus:ring-teal-500"
+                          className="rounded text-slate-600 focus:ring-slate-900"
                         />
                         <span className="text-slate-700">{vt.label}</span>
                       </label>
@@ -1187,7 +1180,7 @@ export default function AdminCataloguePage() {
                     type="checkbox"
                     name="active"
                     defaultChecked={serviceModal.service?.active !== false}
-                    className="rounded text-teal-600 focus:ring-teal-500"
+                    className="rounded text-slate-600 focus:ring-slate-900"
                   />
                   <span className="font-medium text-slate-700">Active</span>
                 </label>
@@ -1214,7 +1207,7 @@ export default function AdminCataloguePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
                 >
                   {actionLoading ? 'Saving…' : 'Save Service'}
                 </button>
@@ -1232,7 +1225,7 @@ export default function AdminCataloguePage() {
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                <DollarSign className="w-4 h-4 text-teal-600" />
+                <DollarSign className="w-4 h-4 text-slate-600" />
                 <span>Update Base Price</span>
               </h3>
               <button
@@ -1257,7 +1250,7 @@ export default function AdminCataloguePage() {
                     required
                     value={priceQuickModal.price}
                     onChange={(e) => setPriceQuickModal({ ...priceQuickModal, price: e.target.value })}
-                    className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 text-sm font-bold"
+                    className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 text-sm font-bold"
                   />
                 </div>
 
@@ -1272,7 +1265,7 @@ export default function AdminCataloguePage() {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg text-xs shadow-xs"
+                    className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg text-xs shadow-xs"
                   >
                     {actionLoading ? 'Saving…' : 'Update Price'}
                   </button>
@@ -1293,7 +1286,7 @@ export default function AdminCataloguePage() {
             <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
               <div>
                 <div className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-teal-700" />
+                  <Package className="w-5 h-5 text-slate-700" />
                   <h3 className="text-base font-bold text-slate-900">
                     Bundles & Packages: {bundleDrawer.service.name}
                   </h3>
@@ -1326,7 +1319,7 @@ export default function AdminCataloguePage() {
                 <button
                   type="button"
                   onClick={() => setVariantModal({ open: true, mode: 'create' })}
-                  className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-xs cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-xs cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Package / Bundle</span>
@@ -1348,7 +1341,7 @@ export default function AdminCataloguePage() {
                   <button
                     type="button"
                     onClick={() => setVariantModal({ open: true, mode: 'create' })}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-700 text-white text-xs font-medium rounded-lg hover:bg-teal-800 transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Create First Package</span>
@@ -1363,7 +1356,7 @@ export default function AdminCataloguePage() {
                     return (
                       <div
                         key={v.id}
-                        className="p-4 border border-slate-200 hover:border-teal-200 rounded-xl transition bg-white shadow-xs space-y-2 group"
+                        className="p-4 border border-slate-200 hover:border-slate-300 rounded-xl transition bg-white shadow-xs space-y-2 group"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -1383,8 +1376,8 @@ export default function AdminCataloguePage() {
                           </div>
 
                           <div className="text-right shrink-0">
-                            <span className="text-base font-bold text-teal-800 block">
-                              {price ? `₹${price}` : 'Quote'}
+                            <span className="text-base font-bold text-slate-900 block">
+                              {price ? `₹${price}` : 'Fixed Price'}
                             </span>
                             <span className="text-[10px] text-slate-400">Fixed Package</span>
                           </div>
@@ -1411,9 +1404,9 @@ export default function AdminCataloguePage() {
                             <button
                               type="button"
                               onClick={() => setVariantModal({ open: true, mode: 'edit', variant: v })}
-                              className="px-2.5 py-1 text-slate-600 hover:text-teal-800 hover:bg-slate-50 border border-slate-200 rounded font-medium transition cursor-pointer flex items-center gap-1"
+                              className="px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded font-medium transition cursor-pointer flex items-center gap-1"
                             >
-                              <Edit3 className="w-3 h-3 text-teal-600" />
+                              <Edit3 className="w-3 h-3 text-slate-600" />
                               <span>Edit</span>
                             </button>
                             <button
@@ -1480,7 +1473,7 @@ export default function AdminCataloguePage() {
                   required
                   defaultValue={variantModal.variant?.name || ''}
                   placeholder="e.g. Complete Car Wash (Exterior + Interior)"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -1491,7 +1484,7 @@ export default function AdminCataloguePage() {
                   rows={2}
                   defaultValue={variantModal.variant?.description || ''}
                   placeholder="Inclusions, special features, materials used..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900"
                 />
               </div>
 
@@ -1505,7 +1498,7 @@ export default function AdminCataloguePage() {
                     required
                     defaultValue={variantModal.variant?.primary_price || (variantModal.variant?.service_pricings && variantModal.variant.service_pricings[0]?.price) || 499}
                     placeholder="499"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 font-bold"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 font-bold"
                   />
                 </div>
 
@@ -1516,7 +1509,7 @@ export default function AdminCataloguePage() {
                     name="package_type"
                     defaultValue={variantModal.variant?.variant_attributes?.package_type || 'standard'}
                     placeholder="e.g. complete_wash"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-teal-600 text-slate-900 font-mono text-[11px]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-slate-900 text-slate-900 font-mono text-[11px]"
                   />
                 </div>
               </div>
@@ -1539,7 +1532,7 @@ export default function AdminCataloguePage() {
                           type="checkbox"
                           name={`vt_${vt.id}`}
                           defaultChecked={isChecked}
-                          className="rounded text-teal-600 focus:ring-teal-500"
+                          className="rounded text-slate-600 focus:ring-slate-900"
                         />
                         <span className="text-slate-700">{vt.label}</span>
                       </label>
@@ -1554,7 +1547,7 @@ export default function AdminCataloguePage() {
                     type="checkbox"
                     name="active"
                     defaultChecked={variantModal.variant?.active !== false}
-                    className="rounded text-teal-600 focus:ring-teal-500"
+                    className="rounded text-slate-600 focus:ring-slate-900"
                   />
                   <span className="font-medium text-slate-700">Active Package Option</span>
                 </label>
@@ -1571,7 +1564,7 @@ export default function AdminCataloguePage() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition shadow-xs disabled:opacity-50"
                 >
                   {actionLoading ? 'Saving…' : 'Save Package'}
                 </button>

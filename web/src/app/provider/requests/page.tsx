@@ -88,7 +88,7 @@ export default function ProviderRequestsPage() {
         <div>
           <h2 className="text-xl font-bold text-[#242D2B]">Assigned Service Requests</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Manage incoming bookings, submit quotations and report service completion
+            Manage incoming bookings, accept jobs and report service completion
           </p>
         </div>
 
@@ -209,26 +209,13 @@ export default function ProviderRequestsPage() {
                     )}
                   </div>
 
-                  {/* Actions & Quotation column */}
+                  {/* Actions & Fixed Payout column */}
                   <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-3 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                    {req.active_quotation ? (
-                      <div className="text-left lg:text-right">
-                        <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Quotation Sent</span>
-                        <strong className="text-base text-[#176B65]">₹{req.active_quotation.amount}</strong>
-                        <span className="text-xs text-slate-500 block">Status: {req.active_quotation.status}</span>
-                      </div>
-                    ) : req.pricing_type === 'fixed_price' && req.fixed_price ? (
-                      <div className="text-left lg:text-right">
-                        <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Standard Price</span>
-                        <strong className="text-base text-[#242D2B]">₹{req.fixed_price}</strong>
-                      </div>
-                    ) : (
-                      <div className="text-left lg:text-right">
-                        <span className="text-xs text-amber-600 font-semibold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 inline-block">
-                          Quote Required
-                        </span>
-                      </div>
-                    )}
+                    {/* Fixed payout column */}
+                    <div className="text-left lg:text-right">
+                      <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Fixed Rate</span>
+                      <strong className="text-base text-[#176B65]">₹{req.fixed_price || 499}</strong>
+                    </div>
 
                     <Link
                       href={`/provider/requests/${assignment.id}`}

@@ -2,11 +2,54 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Phone, MessageCircle } from 'lucide-react';
 import { useSupport } from '../../contexts/SupportContext';
 
 export const Footer: React.FC = () => {
   const { supportInfo, getCallUrl, getWhatsAppUrl } = useSupport();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin')) {
+    return (
+      <footer className="border-t border-slate-200/80 bg-white py-3.5 text-xs text-slate-500 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="font-semibold text-slate-800">LocalHelp Operations Console</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">Prayagraj Hub</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-400">All systems operational</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-[11px] text-slate-500">
+            <Link href="/admin/settings" className="hover:text-slate-900 transition">Team & Settings</Link>
+            <span className="text-slate-200">•</span>
+            <Link href="/admin/architecture" className="hover:text-slate-900 transition">API Specs</Link>
+            <span className="text-slate-200">•</span>
+            <span className="text-slate-400">© {new Date().getFullYear()} LocalHelp</span>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  if (pathname?.startsWith('/provider')) {
+    return (
+      <footer className="border-t border-[#25877C]/20 bg-[#176B65] py-3.5 text-xs text-[#E7E2D8]/80 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span className="font-medium text-white">Provider Partner Workspace</span>
+            <span>•</span>
+            <span>Prayagraj Division</span>
+          </div>
+          <p className="text-[11px]">LocalHelp Specialist Partner Network</p>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="border-t border-slate-100 bg-white mt-0">

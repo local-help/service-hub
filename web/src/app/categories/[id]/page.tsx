@@ -26,11 +26,7 @@ export default function CategoryPage() {
       .then((data) => {
         setCategory(data);
         setSubcategories(data.subcategories || []);
-        // Filter out quotation-based services from UI
-        const directServices = (data.active_services || []).filter(
-          (s) => s.pricing_type !== 'quotation' && s.booking_type !== 'quotation'
-        );
-        setServices(directServices);
+        setServices(data.active_services || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

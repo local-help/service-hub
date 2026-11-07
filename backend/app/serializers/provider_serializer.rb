@@ -57,6 +57,10 @@ class ProviderSerializer < ActiveModel::Serializer
     object.name.presence || object.business_name
   end
 
+  def description
+    object.notes
+  end
+
   def business_address
     object.business_address.presence || object.address
   end

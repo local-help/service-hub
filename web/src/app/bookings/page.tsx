@@ -24,7 +24,7 @@ export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'all' | 'quotes' | 'active' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>('all');
 
   useEffect(() => {
     if (!user) {
@@ -46,17 +46,13 @@ export default function BookingsPage() {
       case 'pending_review':
         return <span className="bg-slate-100 text-slate-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Reviewing Scope</span>;
       case 'contacting_provider':
-        return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Matching Provider</span>;
-      case 'quotation_sent':
-        return <span className="bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-semibold px-2 py-0.5 rounded-md">Quote Received</span>;
-      case 'quotation_approved':
-        return <span className="bg-teal-50 text-teal-800 border border-teal-100 text-[11px] font-medium px-2 py-0.5 rounded-md">Quote Approved</span>;
+        return <span className="bg-sky-50 text-sky-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Specialist Assigned</span>;
       case 'confirmed':
         return <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">Confirmed</span>;
       case 'rescheduled':
         return <span className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-0.5 rounded-md">Rescheduled</span>;
       case 'in_progress':
-        return <span className="bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-semibold px-2 py-0.5 rounded-md">On-Site / Active</span>;
+        return <span className="bg-blue-50 text-blue-800 border border-blue-200 text-[11px] font-semibold px-2 py-0.5 rounded-md">On-Site / Active</span>;
       case 'completed':
         return <span className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-md">Completed</span>;
       case 'cancelled':
@@ -67,11 +63,8 @@ export default function BookingsPage() {
   };
 
   const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'quotes') {
-      return ['pending_review', 'contacting_provider', 'quotation_sent'].includes(b.status);
-    }
     if (activeTab === 'active') {
-      return ['quotation_approved', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status);
+      return ['pending_review', 'contacting_provider', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status);
     }
     if (activeTab === 'completed') {
       return ['completed', 'cancelled'].includes(b.status);
@@ -88,12 +81,12 @@ export default function BookingsPage() {
             My Bookings
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Manage your service requests, review quotations, track visits, and view invoices
+            Track your scheduled visits, specialist arrivals, and transparent fixed-price invoices in Prayagraj
           </p>
         </div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition self-start sm:self-center shadow-xs"
         >
           <span>Book New Service</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -105,16 +98,12 @@ export default function BookingsPage() {
         {[
           { key: 'all', label: `All (${bookings.length})` },
           { 
-            key: 'quotes', 
-            label: `Inquiries & Quotes (${bookings.filter(b => ['pending_review', 'contacting_provider', 'quotation_sent'].includes(b.status)).length})` 
-          },
-          { 
             key: 'active', 
-            label: `Active & Scheduled (${bookings.filter(b => ['quotation_approved', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status)).length})` 
+            label: `Active & Scheduled (${bookings.filter(b => ['pending_review', 'contacting_provider', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status)).length})` 
           },
           { 
             key: 'completed', 
-            label: `History (${bookings.filter(b => ['completed', 'cancelled'].includes(b.status)).length})` 
+            label: `Completed & History (${bookings.filter(b => ['completed', 'cancelled'].includes(b.status)).length})` 
           },
         ].map((tab) => (
           <button
@@ -122,8 +111,8 @@ export default function BookingsPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`px-3 py-1.5 text-xs rounded-lg transition font-medium cursor-pointer whitespace-nowrap ${
               activeTab === tab.key
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             {tab.label}
@@ -201,25 +190,15 @@ export default function BookingsPage() {
                 )}
 
                 <div className="flex items-center gap-3 text-xs pt-0.5">
-                  {b.has_quotation && b.quotation_status === 'submitted' ? (
-                    <span className="text-purple-700 font-semibold flex items-center gap-1">
-                      <FileText className="w-3 h-3" /> Quote: ₹{b.quotation_amount} (Approval needed)
-                    </span>
-                  ) : b.payment_amount && b.payment_amount > 0 ? (
-                    <>
-                      <span className="text-slate-500">
-                        Amount: <strong className="text-slate-900">₹{b.payment_amount}</strong>
-                      </span>
-                      <span className={b.fully_paid ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
-                        {b.fully_paid ? 'Paid' : `Due: ₹${(b.payment_amount || 0) - (b.total_paid || 0)}`}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-slate-400">Custom estimate in progress</span>
-                  )}
+                  <span className="text-slate-500">
+                    Fixed Rate: <strong className="text-slate-900">₹{b.payment_amount || b.total_paid || 499}</strong>
+                  </span>
+                  <span className={b.fully_paid ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-medium'}>
+                    {b.fully_paid ? 'Fully Paid' : 'Pay at Doorstep'}
+                  </span>
                   {b.provider_name && (
                     <span className="text-slate-400 border-l border-slate-200 pl-3">
-                      Technician: <strong className="text-slate-700">{b.provider_name}</strong>
+                      Specialist: <strong className="text-slate-700">{b.provider_name}</strong>
                     </span>
                   )}
                 </div>
@@ -232,9 +211,9 @@ export default function BookingsPage() {
                 />
                 <Link
                   href={`/bookings/${b.id}`}
-                  className="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-medium rounded-lg transition flex items-center gap-1 shadow-xs"
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1 shadow-xs"
                 >
-                  <span>{b.status === 'quotation_sent' ? 'Review Quote' : 'Manage'}</span>
+                  <span>Manage Booking</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

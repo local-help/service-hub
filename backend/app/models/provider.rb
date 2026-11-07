@@ -45,6 +45,7 @@ class Provider < ApplicationRecord
   self.table_name = 'providers'
 
   alias_attribute :business_name, :name
+  alias_attribute :description, :notes
 
   # Associations
   has_many :provider_users, dependent: :destroy

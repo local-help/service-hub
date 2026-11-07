@@ -12,7 +12,6 @@ import {
   CheckCircle2, 
   XCircle, 
   PlayCircle, 
-  Send, 
   AlertCircle,
   FileText,
   ShieldCheck,
@@ -34,11 +33,6 @@ export default function ProviderAssignmentDetailPage() {
   // Rejection modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-
-  // Quotation form modal
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [quoteAmount, setQuoteAmount] = useState('');
-  const [quoteDescription, setQuoteDescription] = useState('');
 
   // Notes
   const [actionNotes, setActionNotes] = useState('');
@@ -132,34 +126,6 @@ export default function ProviderAssignmentDetailPage() {
     }
   };
 
-  const handleSubmitQuotation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amountNum = parseFloat(quoteAmount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      alert('Please enter a valid positive quotation amount');
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await apiRequest(`/provider/requests/${assignmentId}/quotations`, {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: amountNum,
-          description: quoteDescription,
-        }),
-      });
-      setShowQuoteModal(false);
-      setQuoteAmount('');
-      setQuoteDescription('');
-      await fetchAssignment();
-    } catch (err: any) {
-      alert(err.error || 'Failed to submit quotation');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -239,7 +205,7 @@ export default function ProviderAssignmentDetailPage() {
           <div className="text-xs text-slate-600">
             <strong>Current Stage:</strong>{' '}
             {assignment.status === 'assigned' && 'Awaiting your acceptance or rejection'}
-            {assignment.status === 'accepted' && 'Accepted. Ready to send quotation or start execution'}
+            {assignment.status === 'accepted' && 'Accepted. Ready to start service execution on-site'}
             {assignment.status === 'in_progress' && 'Job currently in-progress on-site'}
             {assignment.status === 'completed' && 'Service marked completed'}
             {assignment.status === 'rejected' && 'Assignment was rejected'}
@@ -266,26 +232,14 @@ export default function ProviderAssignmentDetailPage() {
             )}
 
             {assignment.status === 'accepted' && (
-              <>
-                {!req.active_quotation && req.pricing_type === 'quotation' && (
-                  <button
-                    onClick={() => setShowQuoteModal(true)}
-                    disabled={actionLoading}
-                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-teal-600 text-white hover:bg-teal-700 transition cursor-pointer shadow-xs flex items-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    Submit Quotation
-                  </button>
-                )}
-                <button
-                  onClick={handleStartService}
-                  disabled={actionLoading}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-xs flex items-center gap-1.5"
-                >
-                  <PlayCircle className="w-3.5 h-3.5" />
-                  Start Service
-                </button>
-              </>
+              <button
+                onClick={handleStartService}
+                disabled={actionLoading}
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                Start Service
+              </button>
             )}
 
             {assignment.status === 'in_progress' && (
@@ -354,7 +308,7 @@ export default function ProviderAssignmentDetailPage() {
         <div className="md:col-span-2 bg-white rounded-2xl border border-[#E7E2D8] p-5 space-y-4">
           <h3 className="font-bold text-sm text-[#242D2B] flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#176B65]" />
-            Job Details & Quotation Status
+            Job Details & Fixed Payout
           </h3>
 
           <div className="space-y-4 text-xs">
@@ -372,39 +326,25 @@ export default function ProviderAssignmentDetailPage() {
               </div>
               <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50">
                 <span className="text-slate-400 block">Pricing Model</span>
-                <span className="font-semibold text-slate-800 uppercase">{req.pricing_type.replace('_', ' ')}</span>
+                <span className="font-semibold text-slate-800">FIXED PRICE</span>
               </div>
             </div>
 
-            {/* Quotation card */}
-            {req.active_quotation ? (
-              <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/60 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-teal-900">Submitted Quotation</span>
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-teal-800 border border-teal-200">
-                    Status: {req.active_quotation.status}
-                  </span>
-                </div>
-                <div className="text-2xl font-extrabold text-[#176B65]">
-                  ₹{req.active_quotation.amount}
-                </div>
-                {req.active_quotation.description && (
-                  <p className="text-teal-800 text-xs">{req.active_quotation.description}</p>
-                )}
-                {req.active_quotation.valid_until && (
-                  <span className="text-[11px] text-teal-700 block">
-                    Valid until: {new Date(req.active_quotation.valid_until).toLocaleDateString('en-IN')}
-                  </span>
-                )}
+            {/* Guaranteed Fixed Payout Card */}
+            <div className="p-4 rounded-xl border border-[#176B65]/20 bg-[#F4F8F7] space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#176B65]">Guaranteed Service Payout</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-[#176B65] border border-[#176B65]/20">
+                  Fixed Rate
+                </span>
               </div>
-            ) : req.pricing_type === 'fixed_price' && req.fixed_price ? (
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
-                <span className="text-slate-500 font-medium">Direct Booking Base Price</span>
-                <div className="text-2xl font-extrabold text-[#242D2B]">
-                  ₹{req.fixed_price}
-                </div>
+              <div className="text-2xl font-extrabold text-[#242D2B]">
+                ₹{req.fixed_price || 499}
               </div>
-            ) : null}
+              <p className="text-slate-500 text-[11px]">
+                Pre-determined fixed pricing set by admin. No on-site quotation required.
+              </p>
+            </div>
 
             {assignment.internal_notes && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -462,68 +402,6 @@ export default function ProviderAssignmentDetailPage() {
                   className="px-4 py-2 text-xs font-semibold rounded-xl bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
                 >
                   {actionLoading ? 'Declining...' : 'Confirm Rejection'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Submit Quotation Modal */}
-      {showQuoteModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 className="text-base font-bold text-slate-900">
-              Submit Quotation for {req.reference_number}
-            </h3>
-            <p className="text-xs text-slate-500">
-              Provide an estimated price and description for the customer to review and approve.
-            </p>
-
-            <form onSubmit={handleSubmitQuotation} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Estimated Total Amount (₹) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="1"
-                  required
-                  value={quoteAmount}
-                  onChange={(e) => setQuoteAmount(e.target.value)}
-                  placeholder="e.g. 1250"
-                  className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#176B65]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Scope / Cost Breakdown
-                </label>
-                <textarea
-                  rows={3}
-                  value={quoteDescription}
-                  onChange={(e) => setQuoteDescription(e.target.value)}
-                  placeholder="e.g. Includes materials, technician charges, and 30-day service warranty."
-                  className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#176B65]"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowQuoteModal(false)}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#176B65] text-white hover:bg-[#12534E] disabled:opacity-50"
-                >
-                  {actionLoading ? 'Sending...' : 'Send Quotation to Customer'}
                 </button>
               </div>
             </form>

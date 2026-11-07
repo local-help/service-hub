@@ -263,9 +263,9 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center text-sm font-semibold shadow-xs">
                 3
               </div>
-              <h4 className="text-sm font-semibold text-slate-900">Approve & relax</h4>
+              <h4 className="text-sm font-semibold text-slate-900">Fixed rate & relax</h4>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Review the quote, approve the booking, and get full support until completion.
+                Enjoy transparent admin-guaranteed fixed pricing with zero on-site haggling and full support until completion.
               </p>
             </div>
           </div>

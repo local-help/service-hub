@@ -536,9 +536,9 @@ function CreateRequestContent() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
+          className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs flex items-center justify-center gap-2"
         >
-          {submitting ? 'Submitting…' : 'Submit Request'}
+          {submitting ? 'Confirming…' : `Confirm Booking • ₹${selectedVariant?.primary_price || service?.fixed_price || 299}`}
         </button>
       </form>
     </div>

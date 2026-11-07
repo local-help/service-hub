@@ -56,6 +56,7 @@ class ServiceRequest < ApplicationRecord
 
   has_many :request_attachments, dependent: :destroy
   has_many :quotations, dependent: :destroy
+  has_one :quotation, -> { order(created_at: :desc) }, dependent: :destroy
   has_one :booking, dependent: :destroy
   has_many :communications, dependent: :destroy
   has_many :status_histories, -> { where(entity_type: 'ServiceRequest') },
@@ -131,7 +132,7 @@ class ServiceRequest < ApplicationRecord
   }
 
   def quotation
-    active_quotation || quotations.order(created_at: :desc).first
+    super || active_quotation || quotations.order(created_at: :desc).first
   end
 
   def build_quotation(attrs = {})

@@ -54,39 +54,39 @@ export default function AdminArchitecturePage() {
   const [selectedState, setSelectedState] = useState<string>('contacting_provider');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#176B65] via-[#145C57] to-[#242D2B] text-[#F7F5EF] p-6 sm:p-8 rounded-3xl shadow-sm">
+      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#25877C]/30 border border-[#25877C]/40 text-[#F7F5EF] text-xs font-semibold mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold mb-3">
               <span>🛡️ System Architecture & Code Review</span>
               <span>•</span>
               <span>Rails 8 API + PostgreSQL 16</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F7F5EF]">
-              LocalHelp V1 Architecture Explorer
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              LocalHelp Architecture Explorer
             </h1>
-            <p className="text-xs sm:text-sm text-[#E7E2D8]/90 mt-1 max-w-2xl">
-              Strict 1-Provider / 1-Quote Business Model, Dual-Token JWT Security, Atomic State Machines, and Multi-Channel Communications.
+            <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+              Strict 1-Provider / Admin Fixed Price Model, Dual-Token JWT Security, AASM Atomic State Machines, and Multi-Channel Communications.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-bold">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               Live Backend Active (Port 4000)
             </span>
             <Link
               href="/admin"
-              className="px-4 py-2 bg-[#F7F5EF] text-[#176B65] font-semibold text-xs rounded-xl shadow hover:bg-white transition"
+              className="px-3.5 py-1.5 bg-white text-slate-900 font-semibold text-xs rounded-xl shadow-xs hover:bg-slate-100 transition"
             >
-              Back to Dashboard
+              Dashboard
             </Link>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 mt-6 border-b border-[#25877C]/40 pb-2 overflow-x-auto text-xs sm:text-sm">
+        <div className="flex gap-2 mt-6 border-b border-slate-800 pb-2 overflow-x-auto text-xs sm:text-sm">
           {[
             { id: 'overview', label: '📊 System Overview' },
             { id: 'statemachine', label: '🔄 Lifecycle & State Machines' },
@@ -96,10 +96,10 @@ export default function AdminArchitecturePage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-xl font-medium transition ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-[#25877C] text-white shadow'
-                  : 'text-[#E7E2D8] hover:bg-[#25877C]/20'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               {tab.label}
@@ -125,7 +125,7 @@ export default function AdminArchitecturePage() {
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E7E2D8] shadow-sm">
               <div className="text-xs text-[#242D2B]/60 uppercase tracking-wider font-semibold">Coordination Model</div>
               <div className="text-2xl font-bold text-[#25877C] mt-1">Manual</div>
-              <div className="text-xs text-slate-500 mt-1">1 Provider & 1 Quote / Request</div>
+              <div className="text-xs text-slate-500 mt-1">1 Provider & Admin Fixed Price / Request</div>
             </div>
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E7E2D8] shadow-sm">
               <div className="text-xs text-[#242D2B]/60 uppercase tracking-wider font-semibold">V1 Spec Compliance</div>
@@ -143,7 +143,7 @@ export default function AdminArchitecturePage() {
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-600 font-bold">✓</span>
                   <div>
-                    <strong>Database-Enforced Business Rules:</strong> Critical V1 constraints (such as exactly one quote per request and exactly one booking per request) are guarded by unique PostgreSQL indexes, guaranteeing zero race conditions even under concurrent requests.
+                    <strong>Database-Enforced Business Rules:</strong> Critical V1 constraints (such as exactly one provider assignment per request and exactly one booking per request) are guarded by unique PostgreSQL indexes, guaranteeing zero race conditions even under concurrent requests.
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
@@ -259,7 +259,7 @@ export default function AdminArchitecturePage() {
                       UNIQUE (service_request_id)
                     </span>
                   </td>
-                  <td className="p-3">Guarantees V1 rule: Exactly 1 quotation per request</td>
+                  <td className="p-3">Guarantees V1 rule: Exactly 1 provider assignment per request</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-mono font-bold text-[#176B65]">bookings</td>
@@ -305,14 +305,14 @@ export default function AdminArchitecturePage() {
             <div className="p-5 rounded-2xl bg-[#F7F5EF] border border-[#E7E2D8] space-y-2">
               <div className="text-xs font-bold uppercase tracking-wider text-[#176B65]">Customer Role</div>
               <p className="text-xs text-slate-700">
-                Can create requests, view own addresses, view & approve single quote, initiate payments, cancel request, and review completed service.
+                Can create requests, view own addresses, view guaranteed fixed price, initiate payments, cancel request, and review completed service.
               </p>
               <div className="text-xs font-mono text-slate-500">Pundit: CustomerPolicy</div>
             </div>
             <div className="p-5 rounded-2xl bg-[#F7F5EF] border border-[#E7E2D8] space-y-2">
               <div className="text-xs font-bold uppercase tracking-wider text-[#25877C]">Admin Role</div>
               <p className="text-xs text-slate-700">
-                Access to admin dashboard, view all customer requests, assign 1 provider, create 1 quote, log phone/WhatsApp notes, record offline payments.
+                Access to admin dashboard, view all customer requests, assign 1 provider, adjust fixed price, log phone/WhatsApp notes, record offline payments.
               </p>
               <div className="text-xs font-mono text-slate-500">Pundit: AdminPolicy</div>
             </div>
