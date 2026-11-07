@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_07_020456) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_07_083000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -157,6 +157,29 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_07_020456) do
     t.index ["phone", "purpose"], name: "index_otp_verifications_on_phone_and_purpose"
   end
 
+  create_table "payment_receipts", force: :cascade do |t|
+    t.bigint "payment_id", null: false
+    t.bigint "booking_id", null: false
+    t.string "receipt_number", null: false
+    t.string "status", default: "issued", null: false
+    t.jsonb "receipt_data", default: {}, null: false
+    t.string "document_storage_key"
+    t.datetime "generated_at", null: false
+    t.datetime "emailed_at"
+    t.string "last_emailed_to"
+    t.datetime "voided_at"
+    t.text "void_reason"
+    t.bigint "original_receipt_id"
+    t.bigint "reissued_receipt_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_payment_receipts_on_booking_id"
+    t.index ["original_receipt_id"], name: "index_payment_receipts_on_original_receipt_id"
+    t.index ["payment_id"], name: "index_payment_receipts_on_payment_id", unique: true
+    t.index ["receipt_number"], name: "index_payment_receipts_on_receipt_number", unique: true
+    t.index ["status"], name: "index_payment_receipts_on_status"
+  end
+
   create_table "payments", force: :cascade do |t|
     t.bigint "booking_id", null: false
     t.decimal "amount", precision: 10, scale: 2, null: false
@@ -295,7 +318,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_07_020456) do
     t.index ["booking_id"], name: "index_quotations_on_booking_id"
     t.index ["provider_assignment_id"], name: "index_quotations_on_provider_assignment_id"
     t.index ["provider_id"], name: "index_quotations_on_provider_id"
-    t.index ["service_request_id"], name: "index_quotations_on_active_per_request", unique: true, where: "((status)::text = ANY ((ARRAY['draft'::character varying, 'submitted'::character varying, 'pending'::character varying, 'approved'::character varying])::text[]))"
+    t.index ["service_request_id"], name: "index_quotations_on_active_per_request", unique: true, where: "((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('submitted'::character varying)::text, ('pending'::character varying)::text, ('approved'::character varying)::text]))"
     t.index ["status"], name: "index_quotations_on_status"
   end
 
@@ -476,6 +499,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_07_020456) do
   add_foreign_key "communications", "users", column: "admin_user_id"
   add_foreign_key "device_tokens", "users"
   add_foreign_key "notifications", "users"
+  add_foreign_key "payment_receipts", "bookings"
+  add_foreign_key "payment_receipts", "payments"
   add_foreign_key "payments", "bookings"
   add_foreign_key "payments", "users", column: "recorded_by"
   add_foreign_key "provider_assignments", "bookings"

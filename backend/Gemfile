@@ -36,6 +36,11 @@ gem "tzinfo-data", platforms: %i[windows jruby]
 # Domain & Types
 gem "dry-initializer", "~> 3.2"
 gem "dry-types", "~> 1.9"
+gem "dry-monads", "~> 1.6"
+
+# PDF Generation
+gem "prawn", "~> 2.5"
+gem "prawn-table", "~> 0.2"
 
 # Deployment
 gem "kamal", require: false

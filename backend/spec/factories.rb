@@ -128,5 +128,29 @@ FactoryBot.define do
     amount { 500.00 }
     add_attribute(:method) { 'online' }
     status { 'pending' }
+
+    trait :paid do
+      status { 'paid' }
+      gateway_reference { "pay_#{SecureRandom.hex(10)}" }
+      gateway_order_id { "order_#{SecureRandom.hex(10)}" }
+    end
+  end
+
+  factory :payment_receipt do
+    payment { association(:payment, :paid) }
+    booking { payment.booking }
+    sequence(:receipt_number) { |n| "LH-REC-20261107-#{n.to_s.rjust(6, '0')}" }
+    status { 'issued' }
+    receipt_data do
+      {
+        'receipt_number' => receipt_number,
+        'breakdown' => { 'total_amount' => payment.amount.to_f, 'package_price' => payment.amount.to_f },
+        'payment' => { 'method' => payment.method, 'transaction_id' => 'pay_test_ref_123', 'amount' => payment.amount.to_f },
+        'customer' => { 'name' => 'Test Customer', 'email' => 'customer@example.com' },
+        'service' => { 'name' => 'AC Repair' }
+      }
+    end
+    document_storage_key { "receipt_#{receipt_number}.pdf" }
+    generated_at { Time.current }
   end
 end

@@ -3,7 +3,13 @@
 puts "== Seeding Platform Settings =="
 PlatformSetting.set('support_phone', '+919876543210', value_type: 'string', description: 'Customer care phone number')
 PlatformSetting.set('support_whatsapp', '+919876543210', value_type: 'string', description: 'Customer care WhatsApp number')
+PlatformSetting.set('support_email', 'care@localhelp.in', value_type: 'string', description: 'Customer care email address')
 PlatformSetting.set('platform_name', 'LocalHelp', value_type: 'string', description: 'Platform brand name')
+PlatformSetting.set('legal_entity_name', 'LocalHelp Technologies Private Limited', value_type: 'string', description: 'Registered business legal entity name')
+PlatformSetting.set('business_address', '3rd Floor, Civil Lines Commercial Complex, MG Marg, Prayagraj, UP 211001', value_type: 'string', description: 'Registered business address')
+PlatformSetting.set('platform_gstin', '09AAACL1234F1Z5', value_type: 'string', description: 'Platform GSTIN (if applicable)')
+PlatformSetting.set('receipt_prefix', 'LOCAL', value_type: 'string', description: 'Unique receipt number prefix')
+PlatformSetting.set('receipt_disclaimer', "This is a reusable service invoice and payment receipt format. Issue it as a tax invoice only where legally applicable and after the supplier's legal name, address, GSTIN (if registered), applicable tax rate and statutory particulars have been verified. Do not show GST or collect tax unless applicable.", value_type: 'string', description: 'Legal document classification disclaimer')
 PlatformSetting.set('city', 'Prayagraj', value_type: 'string', description: 'Operating city')
 
 puts "== Seeding Users =="

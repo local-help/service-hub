@@ -14,7 +14,8 @@ import {
   Cpu,
   ArrowUpRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Receipt
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -56,6 +57,7 @@ export default function AdminLayout({
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/requests', label: 'Requests', icon: ClipboardList },
     { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
+    { href: '/admin/payments', label: 'Receipts', icon: Receipt },
     { href: '/admin/providers', label: 'Providers', icon: Briefcase },
     { href: '/admin/customers', label: 'Customers', icon: Users },
     { href: '/admin/catalogue', label: 'Catalogue', icon: Layers },

@@ -21,10 +21,14 @@ import {
   Briefcase,
   XCircle,
   ArrowRight,
-  Tag
+  Tag,
+  Download,
+  Mail,
+  FileCheck,
+  Loader2
 } from 'lucide-react';
 import { Booking } from '../../../types';
-import { apiRequest } from '../../../api/client';
+import { apiRequest, downloadFile } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CustomerSupportButtons } from '../../../components/ui/SupportButtons';
 
@@ -53,6 +57,44 @@ export default function BookingDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReasonCategory, setCancelReasonCategory] = useState('Change in schedule / Need to reschedule');
   const [cancelDetails, setCancelDetails] = useState('');
+
+  // Payment receipt states
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false);
+  const [emailingReceipt, setEmailingReceipt] = useState(false);
+  const [emailSuccessMsg, setEmailSuccessMsg] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+
+  const handleDownloadReceipt = async () => {
+    setDownloadingReceipt(true);
+    setReceiptError(null);
+    try {
+      await downloadFile(
+        `/bookings/${id}/receipt?download=true`,
+        `LocalHelp_Receipt_${booking?.reference_number || id}.pdf`
+      );
+    } catch (err: any) {
+      setReceiptError(err.message || 'Failed to download receipt');
+    } finally {
+      setDownloadingReceipt(false);
+    }
+  };
+
+  const handleEmailReceipt = async () => {
+    setEmailingReceipt(true);
+    setReceiptError(null);
+    setEmailSuccessMsg(null);
+    try {
+      const res = await apiRequest<{ message: string }>(`/bookings/${id}/receipt/request_email`, {
+        method: 'POST',
+      });
+      setEmailSuccessMsg(res.message || 'Receipt sent to your registered email address.');
+      setTimeout(() => setEmailSuccessMsg(null), 6000);
+    } catch (err: any) {
+      setReceiptError(err.error || err.message || 'Failed to email receipt');
+    } finally {
+      setEmailingReceipt(false);
+    }
+  };
 
   const fetchBooking = () => {
     if (!id) return;
@@ -379,39 +421,146 @@ export default function BookingDetailPage() {
             )}
           </div>
 
-          {/* Payment Card */}
+          {/* Payment & Centralized Receipt Card */}
           {booking.payment_amount && booking.payment_amount > 0 && (
-            <div className="border border-slate-200 rounded-xl p-5 space-y-3 bg-white shadow-xs">
+            <div className="border border-slate-200 rounded-xl p-5 space-y-4 bg-white shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                  Payment Summary
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Payment & Receipt</span>
                 </span>
-                <span className={booking.fully_paid ? 'text-xs text-emerald-600 font-semibold' : 'text-xs text-amber-600 font-semibold'}>
-                  {booking.fully_paid ? 'Paid in Full' : 'Payment Due'}
+                <span className={booking.fully_paid ? 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1' : 'text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold'}>
+                  {booking.fully_paid && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                  <span>{booking.fully_paid ? 'Paid in Full' : 'Payment Due'}</span>
                 </span>
               </div>
 
-              <div className="flex items-baseline justify-between pt-2">
-                <span className="text-xs text-slate-500">Service Charge</span>
-                <span className="text-lg font-bold text-slate-900">₹{booking.payment_amount}</span>
-              </div>
-
-              {booking.total_paid > 0 && (
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Amount Paid</span>
-                  <span className="text-emerald-600 font-medium">₹{booking.total_paid}</span>
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs text-slate-500">Service Charges</span>
+                  <span className="text-sm font-bold text-slate-900">₹{booking.payment_amount}</span>
                 </div>
-              )}
+
+                {booking.total_paid > 0 && (
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>Total Amount Paid</span>
+                    <span className="text-emerald-700 font-bold text-sm">₹{booking.total_paid}</span>
+                  </div>
+                )}
+
+                {booking.fully_paid && (
+                  <>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>Payment Method</span>
+                      <span className="text-slate-800 font-medium capitalize">
+                        {booking.payments?.[0]?.method ? `${booking.payments[0].method} (Gateway Secure)` : 'Online Gateway'}
+                      </span>
+                    </div>
+
+                    {booking.payments?.[0]?.gateway_reference && (
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>Transaction Ref</span>
+                        <span className="font-mono text-slate-700 text-[11px]">
+                          {booking.payments[0].gateway_reference}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
 
               {!booking.fully_paid && (
                 <button
                   onClick={handleInitiatePayment}
                   disabled={actionLoading}
-                  className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span>Pay ₹{(booking.payment_amount || 0) - (booking.total_paid || 0)}</span>
                 </button>
+              )}
+
+              {/* Get Payment Receipt Section */}
+              {(booking.fully_paid || (booking.total_paid && booking.total_paid > 0)) && (
+                <div className="pt-3 border-t border-slate-100 space-y-3">
+                  <div className="bg-teal-50/60 border border-teal-100 rounded-xl p-3.5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center shrink-0">
+                          <FileCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900">Get Payment Receipt</h4>
+                          <p className="text-[11px] text-slate-500">Official digital receipt for your records</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shrink-0">
+                        Available
+                      </span>
+                    </div>
+
+                    {/* Receipt Action Buttons */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={handleDownloadReceipt}
+                        disabled={downloadingReceipt}
+                        className="w-full py-2 px-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
+                      >
+                        {downloadingReceipt ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-teal-700" />
+                            <span>Generating PDF...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-3.5 h-3.5 text-teal-700" />
+                            <span>Download PDF</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleEmailReceipt}
+                        disabled={emailingReceipt}
+                        className="w-full py-2 px-3 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                      >
+                        {emailingReceipt ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                            <span>Queuing Email...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="w-3.5 h-3.5 text-white" />
+                            <span>Email Receipt</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Feedback Banners */}
+                    {emailSuccessMsg && (
+                      <div className="p-2.5 rounded-lg bg-emerald-100/70 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                        <span>{emailSuccessMsg}</span>
+                      </div>
+                    )}
+
+                    {receiptError && (
+                      <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>{receiptError}</span>
+                      </div>
+                    )}
+
+                    {/* Legal Document Note */}
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      Issued electronically by LocalHelp Technologies Pvt Ltd as a payment facilitation acknowledgement. Not a provider GST tax invoice.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           )}

@@ -274,6 +274,26 @@ export interface Payment {
   created_at: string;
 }
 
+export interface PaymentReceipt {
+  id: number;
+  payment_id: number;
+  booking_id: number;
+  receipt_number: string;
+  status: 'issued' | 'voided';
+  generated_at: string;
+  emailed_at?: string | null;
+  last_emailed_to?: string | null;
+  voided_at?: string | null;
+  void_reason?: string | null;
+  total_amount: number;
+  payment_reference?: string | null;
+  payment_method: string;
+  customer_name?: string | null;
+  service_name?: string | null;
+  receipt_data: Record<string, any>;
+  created_at: string;
+}
+
 export interface ProviderAvailability {
   id: number;
   provider_id: number;

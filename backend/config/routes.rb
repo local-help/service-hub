@@ -43,6 +43,9 @@ Rails.application.routes.draw do
           post :approve_quotation
           post :reject_quotation
         end
+        resource :receipt, only: [:show], controller: 'payment_receipts' do
+          post :request_email
+        end
         resources :payments, only: [:index] do
           collection do
             post :initiate
@@ -122,6 +125,12 @@ Rails.application.routes.draw do
         resources :customers, only: [:index, :show]
         resources :payments, only: [:index] do
           post :record_offline, on: :collection
+        end
+        resources :payment_receipts, only: [:index, :show] do
+          member do
+            get :download
+            post :void
+          end
         end
         resources :activity_logs, only: [:index]
 

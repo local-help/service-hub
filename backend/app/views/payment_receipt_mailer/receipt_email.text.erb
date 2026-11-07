@@ -1,0 +1,19 @@
+<%= @platform_name %> - PAYMENT RECEIPT
+
+Dear <%= @user&.name || 'Valued Customer' %>,
+
+Thank you for your payment through <%= @platform_name %>. Your payment has been received successfully.
+A formal payment receipt PDF is attached to this email.
+
+Receipt Number: <%= @receipt.receipt_number %>
+Booking Reference: <%= @booking.reference_number %>
+Service: <%= @booking.service&.name %>
+Amount Paid: ₹<%= sprintf('%.2f', @receipt.total_amount) %>
+Payment Status: PAID
+
+Notice: This document is an electronic payment receipt confirming receipt of funds through <%= @platform_name %>. It is not a GST tax invoice from the service provider.
+
+Support Contact:
+Email: <%= @support_email %>
+Phone: <%= @support_phone %>
+

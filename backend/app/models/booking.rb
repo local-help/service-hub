@@ -69,6 +69,7 @@ class Booking < ApplicationRecord
   has_many :attachments, class_name: 'RequestAttachment', dependent: :destroy
   has_many :quotations, dependent: :destroy
   has_many :payments, dependent: :restrict_with_error
+  has_many :payment_receipts, dependent: :restrict_with_error
   has_many :communications, dependent: :destroy
   has_many :provider_assignments, -> { order(created_at: :desc) }, dependent: :restrict_with_error
   has_many :assigned_providers, through: :provider_assignments, source: :provider

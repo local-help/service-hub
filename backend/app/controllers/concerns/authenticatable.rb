@@ -1,3 +1,5 @@
+class AuthenticationError < StandardError; end
+
 module Authenticatable
   extend ActiveSupport::Concern
 

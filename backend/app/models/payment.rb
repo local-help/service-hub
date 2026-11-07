@@ -31,6 +31,7 @@ class Payment < ApplicationRecord
 
   belongs_to :booking
   belongs_to :recorder, class_name: 'User', foreign_key: :recorded_by, optional: true
+  has_one :payment_receipt, dependent: :restrict_with_error
 
   METHODS = %w[online offline].freeze
   STATUSES = %w[pending processing paid failed refunded partially_refunded].freeze
