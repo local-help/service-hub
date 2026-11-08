@@ -6,6 +6,7 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
   rescue_from ActionController::ParameterMissing, with: :bad_request
   rescue_from DomainError, with: :unprocessable_domain_error
+  rescue_from 'CommandFailure', with: :unprocessable_command_failure
   rescue_from Dry::Types::ConstraintError, with: :unprocessable_domain_error
   rescue_from AASM::InvalidTransition, with: :unprocessable_domain_error
 
@@ -21,6 +22,10 @@ class ApplicationController < ActionController::API
 
   def unprocessable_domain_error(exception)
     render json: { error: exception.message }, status: :unprocessable_entity
+  end
+
+  def unprocessable_command_failure(exception)
+    render json: { error: exception.message, detail: exception.failure }, status: :unprocessable_entity
   end
 
   def bad_request(exception)
