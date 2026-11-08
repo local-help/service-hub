@@ -35,7 +35,7 @@ import { CustomerSupportButtons } from '../../../components/ui/SupportButtons';
 export default function BookingDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -113,12 +113,14 @@ export default function BookingDetailPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       router.push(`/login?redirect=/bookings/${id}`);
       return;
     }
     fetchBooking();
-  }, [id, user]);
+  }, [id, user, authLoading, router]);
 
   const handleReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +209,7 @@ export default function BookingDetailPage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-4">
         <div className="h-6 w-32 bg-slate-100 rounded-md" />

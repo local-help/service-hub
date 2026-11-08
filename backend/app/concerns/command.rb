@@ -42,7 +42,7 @@ module Command
         ->(failure) {
           raise failure if failure.is_a?(Exception)
 
-          raise CommandFailure, failure.inspect
+          raise CommandFailure, failure
         }
       )
     end

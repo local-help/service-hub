@@ -10,7 +10,7 @@ class EmailService
       return unless booking&.user&.email.present?
 
       deliver_with_fallback do
-        NotificationMailer.booking_confirmed(booking).deliver_now
+        NotificationMailer.booking_confirmed(booking).deliver_later
       end
     rescue StandardError => e
       Rails.logger.error("[EmailService] Failed to send booking confirmation email: #{e.message}")
@@ -20,7 +20,7 @@ class EmailService
       return unless booking&.user&.email.present?
 
       deliver_with_fallback do
-        NotificationMailer.booking_status_updated(booking, old_status, new_status).deliver_now
+        NotificationMailer.booking_status_updated(booking, old_status, new_status).deliver_later
       end
     rescue StandardError => e
       Rails.logger.error("[EmailService] Failed to send booking status update email: #{e.message}")
@@ -30,7 +30,7 @@ class EmailService
       return unless booking&.user&.email.present?
 
       deliver_with_fallback do
-        NotificationMailer.booking_cancelled(booking, reason).deliver_now
+        NotificationMailer.booking_cancelled(booking, reason).deliver_later
       end
     rescue StandardError => e
       Rails.logger.error("[EmailService] Failed to send booking cancellation email: #{e.message}")
@@ -40,7 +40,7 @@ class EmailService
       return unless user&.email.present?
 
       deliver_with_fallback do
-        NotificationMailer.welcome_email(user).deliver_now
+        NotificationMailer.welcome_email(user).deliver_later
       end
     rescue StandardError => e
       Rails.logger.error("[EmailService] Failed to send welcome email: #{e.message}")

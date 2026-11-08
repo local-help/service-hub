@@ -383,14 +383,18 @@ class NotificationService
     def notify_provider_users(provider, type:, title:, body:, metadata: {})
       return unless provider.present?
 
-      provider.users.find_each do |p_user|
-        create_notification(
-          user: p_user,
-          type: type,
-          title: title,
-          body: body,
-          metadata: metadata.merge(provider_id: provider.id)
-        )
+      if Rails.env.test?
+        provider.users.find_each do |p_user|
+          create_notification(
+            user: p_user,
+            type: type,
+            title: title,
+            body: body,
+            metadata: metadata.merge(provider_id: provider.id)
+          )
+        end
+      else
+        NotificationBroadcastJob.perform_later('provider', provider.id, { type: type, title: title, body: body, metadata: metadata })
       end
     rescue StandardError => e
       Rails.logger.error("[NotificationService] Error notifying provider #{provider&.id} users: #{e.message}")
@@ -398,14 +402,18 @@ class NotificationService
 
     # ── HELPER: Notify all active administrators ──────────────────
     def notify_admins(type:, title:, body:, metadata: {})
-      User.admins.status_active.find_each do |admin|
-        create_notification(
-          user: admin,
-          type: type,
-          title: title,
-          body: body,
-          metadata: metadata.reverse_merge(action_url: '/admin')
-        )
+      if Rails.env.test?
+        User.admins.status_active.find_each do |admin|
+          create_notification(
+            user: admin,
+            type: type,
+            title: title,
+            body: body,
+            metadata: metadata.reverse_merge(action_url: '/admin')
+          )
+        end
+      else
+        NotificationBroadcastJob.perform_later('admins', nil, { type: type, title: title, body: body, metadata: metadata })
       end
     rescue StandardError => e
       Rails.logger.error("[NotificationService] Error notifying admins: #{e.message}")

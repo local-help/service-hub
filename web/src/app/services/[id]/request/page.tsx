@@ -28,7 +28,7 @@ function CreateRequestContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const id = params?.id as string;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Query params from Dynamic Service Builder
@@ -89,6 +89,8 @@ function CreateRequestContent() {
   const [createdRequest, setCreatedRequest] = useState<ServiceRequest | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       router.push(`/login?redirect=/services/${id}/request`);
       return;
@@ -111,7 +113,7 @@ function CreateRequestContent() {
       else if (list.length > 0) setSelectedAddressId(list[0].id);
       else setShowNewAddress(true);
     }).catch(console.error);
-  }, [id, user, variantIdParam, router]);
+  }, [id, user, authLoading, variantIdParam, router]);
 
   // Derived financial computations
   const effectivePackageName = packageNameParam || selectedVariant?.name || service?.name || 'Service Package';
@@ -160,7 +162,7 @@ function CreateRequestContent() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = localStorage.getItem('localhelp_token');
+      const token = localStorage.getItem('localhelp_access_token');
       const res = await fetch('/api/v1/uploads', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},

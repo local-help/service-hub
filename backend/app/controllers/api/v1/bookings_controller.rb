@@ -40,16 +40,13 @@ module Api
         booking = Booking.find(params[:id])
         authorize booking
 
-        if booking.status != 'completed'
-          render json: { error: 'Feedback can only be submitted for completed bookings' }, status: :unprocessable_entity
-          return
-        end
-
-        if booking.update(rating: params[:rating], feedback: params[:feedback])
-          render json: booking, serializer: BookingDetailSerializer
-        else
-          render json: { error: booking.errors.full_messages.join(', ') }, status: :unprocessable_entity
-        end
+        booking = Bookings::SubmitFeedback.run!(
+          booking: booking,
+          rating: params[:rating],
+          feedback: params[:feedback],
+          user: current_user
+        )
+        render json: booking, serializer: BookingDetailSerializer
       end
 
       def approve_quotation

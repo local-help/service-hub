@@ -19,7 +19,7 @@ import { useLocation } from '../../contexts/LocationContext';
 import { NotificationBell } from '../notifications/NotificationBell';
 
 export const Navbar: React.FC = () => {
-  const { user, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
+  const { user, loading: authLoading, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
   const { location, setIsModalOpen } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
@@ -164,7 +164,11 @@ export const Navbar: React.FC = () => {
               )
             )}
 
-            {user ? (
+            {authLoading ? (
+              <div className="flex items-center gap-2 pl-2">
+                <div className="w-20 h-7 bg-slate-100 animate-pulse rounded-lg" />
+              </div>
+            ) : user ? (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-100">
                 <NotificationBell />
                 <Link
@@ -368,7 +372,11 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {user ? (
+          {authLoading ? (
+            <div className="pt-3 border-t border-slate-100 flex justify-center py-2">
+              <div className="w-24 h-6 bg-slate-100 animate-pulse rounded" />
+            </div>
+          ) : user ? (
             <div className="pt-3 border-t border-slate-100">
               <button
                 onClick={logout}

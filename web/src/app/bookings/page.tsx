@@ -20,13 +20,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { CustomerSupportButtons } from '../../components/ui/SupportButtons';
 
 export default function BookingsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>('all');
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       router.push('/login?redirect=/bookings');
       return;
@@ -39,7 +41,7 @@ export default function BookingsPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -121,7 +123,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Bookings List */}
-      {loading ? (
+      {loading || authLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((n) => <div key={n} className="h-28 bg-slate-100 animate-pulse rounded-xl" />)}
         </div>

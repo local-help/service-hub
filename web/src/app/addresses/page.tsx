@@ -11,7 +11,7 @@ import { GpsButton } from '../../components/ui/GpsButton';
 import { LocationData } from '../../contexts/LocationContext';
 
 export default function AddressesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,12 +49,14 @@ export default function AddressesPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       router.push('/login?redirect=/addresses');
       return;
     }
     fetchAddresses();
-  }, [user]);
+  }, [user, authLoading, router]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,7 +208,7 @@ export default function AddressesPage() {
         </form>
       )}
 
-      {loading ? (
+      {loading || authLoading ? (
         <div className="space-y-3">
           {[1, 2].map((n) => <div key={n} className="h-20 bg-slate-100 animate-pulse rounded-xl" />)}
         </div>

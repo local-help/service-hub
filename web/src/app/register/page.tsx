@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
-  const { register } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
+  const { user, loading: authLoading, register } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,6 +21,22 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getTargetUrl = (targetUser?: any) => {
+    if (redirectParam && redirectParam.startsWith('/')) {
+      return redirectParam;
+    }
+    const role = targetUser?.role || user?.role;
+    if (role === 'admin' || role === 'super_admin') return '/admin';
+    if (role === 'provider') return '/provider';
+    return '/';
+  };
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(getTargetUrl(user));
+    }
+  }, [user, authLoading, redirectParam, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,14 +56,22 @@ export default function RegisterPage() {
 
     try {
       const defaultName = email.split('@')[0] || 'Customer';
-      await register({ email, password, name: defaultName });
-      router.push('/');
+      const createdUser = await register({ email, password, name: defaultName });
+      router.push(getTargetUrl(createdUser));
     } catch (err: any) {
       setError(err.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
+
+  if (authLoading || user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-white">
+        <div className="w-8 h-8 border-3 border-teal-700 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-white">
@@ -152,17 +178,35 @@ export default function RegisterPage() {
           {/* Google One-Click Registration */}
           <GoogleSignInButton
             mode="signup"
+            onSuccess={(createdUser) => router.push(getTargetUrl(createdUser))}
             onError={(err) => setError(err)}
           />
         </div>
 
         <p className="text-center text-xs text-slate-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-teal-700 font-medium hover:text-teal-800 hover:underline">
+          <Link
+            href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'}
+            className="text-teal-700 font-medium hover:text-teal-800 hover:underline"
+          >
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-white">
+          <div className="w-8 h-8 border-3 border-teal-700 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

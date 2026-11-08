@@ -24,18 +24,12 @@ class BookingPolicy < ApplicationPolicy
   end
 
   def feedback?
-    record_owner? && record.status == 'completed'
+    record_owner?
   end
 
   class Scope < Scope
     def resolve
-      if user.admin_or_super_admin?
-        scope.all
-      elsif user.provider? && user.service_provider.present?
-        scope.for_provider(user.service_provider.id)
-      else
-        scope.where(user_id: user.id)
-      end
+      Bookings::ListBookings.base_scope(user, scope)
     end
   end
 

@@ -21,8 +21,8 @@ module ProviderAssignments
 
       booking = if target.is_a?(Booking)
                   target
-                elsif service_request.respond_to?(:booking)
-                  service_request.booking
+                elsif service_request.present?
+                  service_request.booking || Booking.find_by(service_request_id: service_request.id)
                 else
                   Booking.find_by(id: target)
                 end
@@ -41,19 +41,23 @@ module ProviderAssignments
           )
         end
 
-        if booking.present? && service_request.blank?
+        if booking.present?
           booking.update!(
             provider: provider,
             assigned_at: Time.current,
             assigned_by: assigned_by&.id
           )
-          assignment = booking.provider_assignments.create!(
-            provider: provider,
-            assigned_by: assigned_by,
-            status: 'assigned',
-            assigned_at: Time.current,
-            internal_notes: notes
-          )
+          if assignment.present?
+            assignment.update!(booking: booking)
+          else
+            assignment = booking.provider_assignments.create!(
+              provider: provider,
+              assigned_by: assigned_by,
+              status: 'assigned',
+              assigned_at: Time.current,
+              internal_notes: notes
+            )
+          end
           AdminActivityLog.log!(
             admin: assigned_by,
             action: 'assign_provider',

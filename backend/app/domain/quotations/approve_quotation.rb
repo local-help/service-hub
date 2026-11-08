@@ -27,12 +27,17 @@ module Quotations
             service_variant: sr.service_variant,
             address: sr.address
           )
+          target_booking.provider ||= sr.provider
+          target_booking.assigned_by ||= sr.assigned_by
+          target_booking.assigned_at ||= sr.assigned_at
           target_booking.quotation = resolved_quote
           target_booking.scheduled_at = sr.preferred_at || 1.day.from_now
           target_booking.status = 'confirmed'
           target_booking.total_amount = resolved_quote.amount
           target_booking.description = sr.description.presence || resolved_quote.description.presence || 'Service Booking'
           target_booking.save!
+
+          sr.current_assignment.update!(booking: target_booking) if sr.current_assignment.present? && sr.current_assignment.booking_id.blank?
 
           sr.transition_to!('booking_confirmed', changed_by: user, notes: 'Booking confirmed upon quotation approval') if sr.can_transition_to?('booking_confirmed')
         end

@@ -45,9 +45,31 @@ class ServiceSerializer < ActiveModel::Serializer
   attributes :id, :name, :slug, :description, :short_description, :pricing_type, :booking_type,
              :fixed_price, :image_url, :estimated_duration_minutes,
              :category_id, :subcategory_id, :active, :coming_soon, :position,
-             :supported_vehicle_types, :builder_config, :addons
+             :supported_vehicle_types, :builder_config, :addons,
+             :category, :subcategory
 
   def fixed_price
     object.fixed_price&.to_f
+  end
+
+  def category
+    return nil unless object.category
+
+    {
+      id: object.category.id,
+      name: object.category.name,
+      slug: object.category.slug,
+      coming_soon: object.category.coming_soon
+    }
+  end
+
+  def subcategory
+    return nil unless object.subcategory
+
+    {
+      id: object.subcategory.id,
+      name: object.subcategory.name,
+      slug: object.subcategory.slug
+    }
   end
 end

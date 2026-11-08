@@ -17,15 +17,21 @@ module Payments
       # Idempotent response if already marked paid
       return payment if payment.paid?
 
+      effective_reference = gateway_reference.presence || "pay_#{SecureRandom.hex(12)}"
+      verify_signature!(effective_reference)
+
       ActiveRecord::Base.transaction do
-        payment.update!(
-          status: 'paid',
-          gateway_reference: gateway_reference || "pay_#{SecureRandom.hex(12)}",
-          gateway_metadata: {
-            verified_at: Time.current.iso8601,
-            razorpay_signature: signature
-          }
+        payment.gateway_reference = effective_reference
+        payment.gateway_metadata = (payment.gateway_metadata || {}).merge(
+          'verified_at' => Time.current.iso8601,
+          'razorpay_signature' => signature
         )
+
+        if payment.may_mark_paid?
+          payment.mark_paid!
+        else
+          payment.update!(status: 'paid')
+        end
       end
 
       NotificationService.create_notification(
@@ -42,6 +48,24 @@ module Payments
       )
 
       payment
+    end
+
+    private
+
+    def verify_signature!(effective_reference)
+      secret = ENV.fetch('RAZORPAY_KEY_SECRET', nil)
+
+      if secret.present?
+        raise DomainError, 'Payment signature is required for verification' if signature.blank?
+
+        payload = "#{gateway_order_id}|#{effective_reference}"
+        expected = OpenSSL::HMAC.hexdigest('sha256', secret, payload)
+        raise DomainError, 'Invalid payment signature verification' unless ActiveSupport::SecurityUtils.secure_compare(expected, signature)
+      elsif Rails.env.production?
+        raise DomainError, 'Payment verification configuration error: RAZORPAY_KEY_SECRET missing'
+      else
+        Rails.logger.info("[Payments::VerifyPayment] Non-production signature bypass for #{gateway_order_id}")
+      end
     end
   end
 end
