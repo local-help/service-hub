@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../api/client';
 import { ProviderAssignment } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 interface DashboardData {
   provider: {
@@ -55,6 +56,7 @@ interface DashboardData {
 }
 
 export default function ProviderDashboardPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,9 +86,10 @@ export default function ProviderDashboardPage() {
         method: 'POST',
         body: JSON.stringify({ notes: 'Accepted from dashboard' }),
       });
+      toast.success('Assignment accepted');
       await fetchDashboard();
     } catch (err: any) {
-      alert(err.error || 'Could not accept assignment');
+      toast.error(err.error || 'Could not accept assignment');
     } finally {
       setActionLoadingId(null);
     }

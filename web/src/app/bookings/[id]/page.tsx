@@ -30,12 +30,14 @@ import {
 import { Booking } from '../../../types';
 import { apiRequest, downloadFile } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import { CustomerSupportButtons } from '../../../components/ui/SupportButtons';
 
 export default function BookingDetailPage() {
   const params = useParams();
   const id = params?.id as string;
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -133,9 +135,10 @@ export default function BookingDetailPage() {
         body: JSON.stringify({ scheduled_at: scheduledAt }),
       });
       setShowReschedule(false);
+      toast.success('Booking rescheduled successfully');
       fetchBooking();
     } catch (err: any) {
-      alert(err.error || 'Failed to reschedule');
+      toast.error(err.error || 'Failed to reschedule');
     } finally {
       setActionLoading(false);
     }
@@ -153,9 +156,10 @@ export default function BookingDetailPage() {
         body: JSON.stringify({ reason: finalReason }),
       });
       setShowCancelModal(false);
+      toast.info('Booking has been cancelled');
       fetchBooking();
     } catch (err: any) {
-      alert(err.error || 'Failed to cancel booking');
+      toast.error(err.error || 'Failed to cancel booking');
     } finally {
       setActionLoading(false);
     }
@@ -182,10 +186,10 @@ export default function BookingDetailPage() {
         }),
       });
 
-      alert('Payment successful!');
+      toast.success('Payment verified successfully!');
       fetchBooking();
     } catch (err: any) {
-      alert(err.error || 'Payment failed');
+      toast.error(err.error || 'Payment failed');
     } finally {
       setActionLoading(false);
     }
@@ -200,10 +204,10 @@ export default function BookingDetailPage() {
         body: JSON.stringify({ rating, feedback }),
       });
       setFeedbackSubmitted(true);
-      alert('Thank you for your rating & feedback!');
+      toast.success('Thank you for your rating & feedback!');
       fetchBooking();
     } catch (err: any) {
-      alert(err.error || 'Failed to submit feedback');
+      toast.error(err.error || 'Failed to submit feedback');
     } finally {
       setActionLoading(false);
     }

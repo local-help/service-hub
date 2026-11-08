@@ -20,9 +20,11 @@ import {
 import { Booking } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function AdminBookingsPage() {
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -66,9 +68,10 @@ export default function AdminBookingsPage() {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
+      toast.success('Status updated successfully');
       fetchBookings();
     } catch (err: any) {
-      alert(err.error || 'Failed to update status');
+      toast.error(err.error || 'Failed to update status');
     } finally {
       setActionLoading(false);
     }
@@ -91,10 +94,10 @@ export default function AdminBookingsPage() {
       setSelectedBooking(null);
       setOfflineAmount('');
       setOfflineNotes('');
-      alert('Offline payment recorded successfully');
+      toast.success('Offline payment recorded successfully');
       fetchBookings();
     } catch (err: any) {
-      alert(err.error || 'Failed to record payment');
+      toast.error(err.error || 'Failed to record payment');
     } finally {
       setActionLoading(false);
     }

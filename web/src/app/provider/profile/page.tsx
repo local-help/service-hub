@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../../api/client';
 import { Provider, ProviderUser } from '../../../types';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function ProviderProfilePage() {
+  const { toast } = useToast();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [team, setTeam] = useState<ProviderUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,10 +88,11 @@ export default function ProviderProfilePage() {
         }),
       });
       setSuccess(true);
+      toast.success('Business profile updated successfully');
       await fetchProfile();
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.error || 'Failed to update profile');
+      toast.error(err.error || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -112,9 +115,10 @@ export default function ProviderProfilePage() {
       setInviteName('');
       setInviteEmail('');
       setInvitePhone('');
+      toast.success('Team member added successfully');
       await fetchProfile();
     } catch (err: any) {
-      alert(err.error || 'Failed to add team member');
+      toast.error(err.error || 'Failed to add team member');
     } finally {
       setInviteLoading(false);
     }

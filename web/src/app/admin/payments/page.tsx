@@ -25,9 +25,11 @@ import {
 import { PaymentReceipt } from '../../../types';
 import { apiRequest, downloadFile } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function AdminPaymentsPage() {
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [receipts, setReceipts] = useState<PaymentReceipt[]>([]);
@@ -79,8 +81,9 @@ export default function AdminPaymentsPage() {
         `/admin/payment_receipts/${receipt.id}/download`,
         `LocalHelp_Receipt_${receipt.receipt_number}.pdf`
       );
+      toast.success('Receipt downloaded successfully');
     } catch (err: any) {
-      alert(err.message || 'Failed to download receipt');
+      toast.error(err.message || 'Failed to download receipt');
     } finally {
       setDownloadingId(null);
     }
@@ -95,11 +98,12 @@ export default function AdminPaymentsPage() {
         method: 'POST',
         body: JSON.stringify({ reason: voidReason.trim() || 'Voided by administrative decision' }),
       });
+      toast.info(`Receipt ${voidingReceipt.receipt_number} has been voided`);
       setVoidingReceipt(null);
       setVoidReason('');
       fetchReceipts();
     } catch (err: any) {
-      alert(err.error || 'Failed to void receipt');
+      toast.error(err.error || 'Failed to void receipt');
     } finally {
       setVoidLoading(false);
     }

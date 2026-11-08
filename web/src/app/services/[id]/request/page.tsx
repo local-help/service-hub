@@ -21,6 +21,7 @@ import {
 import { Service, Address, ServiceRequest, ServiceVariant } from '../../../../types';
 import { apiRequest } from '../../../../api/client';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useToast } from '../../../../contexts/ToastContext';
 import { GpsButton } from '../../../../components/ui/GpsButton';
 import { LocationData } from '../../../../contexts/LocationContext';
 
@@ -29,6 +30,7 @@ function CreateRequestContent() {
   const searchParams = useSearchParams();
   const id = params?.id as string;
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   // Query params from Dynamic Service Builder
@@ -137,8 +139,11 @@ function CreateRequestContent() {
       setAddresses([created, ...addresses]);
       setSelectedAddressId(created.id);
       setShowNewAddress(false);
+      toast.success('Address saved successfully');
     } catch (err: any) {
-      setError(err.error || 'Failed to save address');
+      const msg = err.error || 'Failed to save address';
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -148,10 +153,12 @@ function CreateRequestContent() {
 
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file (JPG, PNG, WebP)');
+      toast.error('Please upload an image file (JPG, PNG, WebP)');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
       setError('File size must be under 10MB');
+      toast.error('File size must be under 10MB');
       return;
     }
 
@@ -182,8 +189,11 @@ function CreateRequestContent() {
           file_name: uploadedData.file_name || file.name,
         },
       ]);
+      toast.success('Photo uploaded successfully');
     } catch (err: any) {
-      setError(err.message || 'Failed to upload photo from device');
+      const msg = err.message || 'Failed to upload photo from device';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setUploadingFile(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -233,8 +243,11 @@ function CreateRequestContent() {
       });
 
       setCreatedRequest(response);
+      toast.success('Service request submitted successfully!');
     } catch (err: any) {
-      setError(err.error || 'Failed to submit service request');
+      const msg = err.error || 'Failed to submit service request';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

@@ -4,6 +4,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { SupportProvider } from '../contexts/SupportContext';
 import { LocationProvider } from '../contexts/LocationContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { ToastProvider } from '../contexts/ToastContext';
 import { LocationModal } from '../components/ui/LocationModal';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
@@ -36,10 +37,12 @@ export default function RootLayout({
           <NotificationProvider>
             <SupportProvider>
               <LocationProvider>
-                <Navbar />
-                <LocationModal />
-                <main className="flex-1">{children}</main>
-                <Footer />
+                <ToastProvider>
+                  <Navbar />
+                  <LocationModal />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </ToastProvider>
               </LocationProvider>
             </SupportProvider>
           </NotificationProvider>

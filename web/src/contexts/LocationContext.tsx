@@ -75,14 +75,21 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const reverseGeocode = async (lat: number, lon: number): Promise<LocationData> => {
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
-        {
-          headers: {
-            'Accept-Language': 'en-IN,en;q=0.9',
-          },
-        }
-      );
+      // First try our Next.js geocode proxy route which handles caching and User-Agent compliance
+      let res = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
+      
+      // Fallback to direct Nominatim if the local API route is unreachable
+      if (!res.ok) {
+        res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+          {
+            headers: {
+              'Accept-Language': 'en-IN,en;q=0.9',
+            },
+          }
+        );
+      }
+
       if (res.ok) {
         const data = await res.json();
         const addr = data.address || {};

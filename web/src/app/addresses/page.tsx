@@ -7,11 +7,13 @@ import { MapPin, Plus, Trash2, ArrowLeft, X } from 'lucide-react';
 import { Address } from '../../types';
 import { apiRequest } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { GpsButton } from '../../components/ui/GpsButton';
 import { LocationData } from '../../contexts/LocationContext';
 
 export default function AddressesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +80,10 @@ export default function AddressesPage() {
         longitude: null,
         is_default: false,
       });
+      toast.success('Address saved successfully');
       fetchAddresses();
     } catch (err: any) {
-      alert(err.error || 'Failed to save address');
+      toast.error(err.error || 'Failed to save address');
     } finally {
       setSubmitting(false);
     }
@@ -90,9 +93,10 @@ export default function AddressesPage() {
     if (!confirm('Delete this address?')) return;
     try {
       await apiRequest(`/addresses/${id}`, { method: 'DELETE' });
+      toast.info('Address removed');
       fetchAddresses();
     } catch (err: any) {
-      alert(err.error || 'Failed to delete address');
+      toast.error(err.error || 'Failed to delete address');
     }
   };
 

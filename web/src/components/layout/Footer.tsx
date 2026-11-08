@@ -76,11 +76,11 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-xs font-medium text-slate-900 mb-3">Services</h4>
             <ul className="space-y-2 text-xs text-slate-400">
-              <li><Link href="/categories/1" className="hover:text-slate-600 transition">Car Detailing</Link></li>
-              <li><Link href="/categories/2" className="hover:text-slate-600 transition">Home Cleaning</Link></li>
-              <li><Link href="/categories/3" className="hover:text-slate-600 transition">Plumbing</Link></li>
-              <li><Link href="/categories/4" className="hover:text-slate-600 transition">Electrical</Link></li>
-              <li><Link href="/categories/5" className="hover:text-slate-600 transition">AC & Appliance</Link></li>
+              <li><Link href="/services/car-detailing" className="hover:text-slate-600 transition">Car Detailing</Link></li>
+              <li><Link href="/categories/vehicle-services" className="hover:text-slate-600 transition">Vehicle Services</Link></li>
+              <li><Link href="/categories/home-services" className="hover:text-slate-600 transition">Home Services</Link></li>
+              <li><Link href="/services/ac-repair-servicing" className="hover:text-slate-600 transition">AC & Appliance Repair</Link></li>
+              <li><Link href="/categories/computer-services" className="hover:text-slate-600 transition">Computer Services</Link></li>
             </ul>
           </div>
 

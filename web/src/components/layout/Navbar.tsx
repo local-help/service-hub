@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
@@ -12,7 +12,10 @@ import {
   Briefcase,
   Store,
   ArrowUpRight,
-  Bell
+  Bell,
+  Calendar,
+  User,
+  ChevronDown
 } from 'lucide-react';
 import { useAuth, ViewMode } from '../../contexts/AuthContext';
 import { useLocation } from '../../contexts/LocationContext';
@@ -22,8 +25,39 @@ export const Navbar: React.FC = () => {
   const { user, loading: authLoading, isAdmin, isProvider, viewMode, setViewMode, logout } = useAuth();
   const { location, setIsModalOpen } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Close dropdown on outside click or Escape key
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [profileMenuOpen]);
+
+  // Close profile dropdown on navigation
+  useEffect(() => {
+    setProfileMenuOpen(false);
+  }, [pathname]);
 
   const showAdminView = Boolean(user && isAdmin && (viewMode === 'admin' || pathname?.startsWith('/admin')));
   const showProviderView = Boolean(user && isProvider && viewMode === 'provider' && !pathname?.startsWith('/admin'));
@@ -96,17 +130,7 @@ export const Navbar: React.FC = () => {
                 <Link href="/provider/availability" className={linkClass('/provider/availability')}>Availability</Link>
                 <Link href="/provider/profile" className={linkClass('/provider/profile')}>Profile</Link>
               </>
-            ) : (
-              <>
-                {user && (
-                  <>
-                    <Link href="/bookings" className={linkClass('/bookings')}>Bookings</Link>
-                    <Link href="/addresses" className={linkClass('/addresses')}>Addresses</Link>
-                    <Link href="/profile" className={linkClass('/profile')}>Profile</Link>
-                  </>
-                )}
-              </>
-            )}
+            ) : null}
           </nav>
 
           {/* Right side actions */}
@@ -171,31 +195,158 @@ export const Navbar: React.FC = () => {
             ) : user ? (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-100">
                 <NotificationBell />
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-teal-50/50 transition text-slate-700 hover:text-teal-800 group"
-                  title="View & Edit Profile"
-                >
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.name}
-                      className="w-6 h-6 rounded-full object-cover border border-teal-200"
+
+                {/* Profile Dropdown */}
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition cursor-pointer text-slate-700 hover:text-teal-800 ${
+                      profileMenuOpen ? 'bg-teal-50/70 text-teal-800 ring-1 ring-teal-200' : 'hover:bg-teal-50/50'
+                    }`}
+                    aria-expanded={profileMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name}
+                        className="w-6 h-6 rounded-full object-cover border border-teal-200"
+                      />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-semibold flex items-center justify-center">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    )}
+                    <span className="text-sm font-medium max-w-[120px] truncate">{user.name}</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                        profileMenuOpen ? 'rotate-180 text-teal-700' : ''
+                      }`}
                     />
-                  ) : (
-                    <span className="w-6 h-6 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-semibold flex items-center justify-center group-hover:bg-teal-100 transition">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </span>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-60 bg-white rounded-xl shadow-lg border border-slate-200/90 py-1.5 z-50 text-slate-800 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+                      {/* User Header */}
+                      <div className="px-3.5 py-2.5 bg-slate-50/60">
+                        <div className="flex items-center gap-2.5">
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={user.name}
+                              className="w-9 h-9 rounded-full object-cover border border-teal-200 shrink-0"
+                            />
+                          ) : (
+                            <span className="w-9 h-9 rounded-full bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold flex items-center justify-center shrink-0">
+                              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{user.phone || user.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dropdown Navigation Links */}
+                      <div className="py-1">
+                        <Link
+                          href="/bookings"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition group ${
+                            isActive('/bookings')
+                              ? 'bg-teal-50 text-teal-800 font-semibold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <Calendar className={`w-4 h-4 ${isActive('/bookings') ? 'text-teal-700' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                          <div className="flex-1">
+                            <span>Bookings</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/addresses"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition group ${
+                            isActive('/addresses')
+                              ? 'bg-teal-50 text-teal-800 font-semibold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <MapPin className={`w-4 h-4 ${isActive('/addresses') ? 'text-teal-700' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                          <div className="flex-1">
+                            <span>Addresses</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/profile"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition group ${
+                            isActive('/profile')
+                              ? 'bg-teal-50 text-teal-800 font-semibold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <User className={`w-4 h-4 ${isActive('/profile') ? 'text-teal-700' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                          <div className="flex-1">
+                            <span>Profile</span>
+                          </div>
+                        </Link>
+                      </div>
+
+                      {/* Role switcher inside dropdown */}
+                      {(isAdmin || isProvider) && (
+                        <div className="py-1">
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProfileMenuOpen(false);
+                                handleModeSwitch(viewMode === 'admin' ? 'customer' : 'admin');
+                              }}
+                              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer text-left"
+                            >
+                              <ShieldCheck className="w-4 h-4 text-slate-400" />
+                              <span>{viewMode === 'admin' ? 'Customer View' : 'Admin Operations'}</span>
+                            </button>
+                          )}
+                          {isProvider && !isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProfileMenuOpen(false);
+                                handleModeSwitch(viewMode === 'provider' ? 'customer' : 'provider');
+                              }}
+                              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer text-left"
+                            >
+                              <Briefcase className="w-4 h-4 text-slate-400" />
+                              <span>{viewMode === 'provider' ? 'Customer View' : 'Provider Portal'}</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Sign Out */}
+                      <div className="py-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer text-left"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-500" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  <span className="text-sm font-medium">{user.name}</span>
-                </Link>
-                <button
-                  onClick={logout}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition cursor-pointer"
-                  title="Logout"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-1.5">
@@ -357,15 +508,30 @@ export const Navbar: React.FC = () => {
                 >Home</Link>
                 {user && (
                   <>
-                    <Link href="/bookings" onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
-                    >Bookings</Link>
-                    <Link href="/addresses" onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
-                    >Addresses</Link>
-                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50 font-medium"
-                    >Profile</Link>
+                    <Link
+                      href="/bookings"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
+                    >
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <span>Bookings</span>
+                    </Link>
+                    <Link
+                      href="/addresses"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50"
+                    >
+                      <MapPin className="w-4 h-4 text-slate-400" />
+                      <span>Addresses</span>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50 font-medium"
+                    >
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span>Profile</span>
+                    </Link>
                   </>
                 )}
               </>

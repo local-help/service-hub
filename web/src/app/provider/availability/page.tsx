@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../../api/client';
 import { ProviderAvailability } from '../../../types';
+import { useToast } from '../../../contexts/ToastContext';
 
 const DAYS_OF_WEEK = [
   { id: 'monday', label: 'Monday' },
@@ -25,6 +26,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function ProviderAvailabilityPage() {
+  const { toast } = useToast();
   const [availability, setAvailability] = useState<ProviderAvailability | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,10 +92,11 @@ export default function ProviderAvailabilityPage() {
         }),
       });
       setSuccess(true);
+      toast.success('Operating schedule and availability saved successfully');
       await fetchAvailability();
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.error || 'Failed to save availability');
+      toast.error(err.error || 'Failed to save availability');
     } finally {
       setSaving(false);
     }

@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../../api/client';
 import { ProviderServiceItem } from '../../../types';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function ProviderServicesPage() {
+  const { toast } = useToast();
   const [services, setServices] = useState<ProviderServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +49,10 @@ export default function ProviderServicesPage() {
         method: 'PATCH',
         body: JSON.stringify({ active: !service.active }),
       });
+      toast.success(`Service status ${!service.active ? 'activated' : 'deactivated'}`);
       await fetchServices();
     } catch (err: any) {
-      alert(err.error || 'Failed to update service status');
+      toast.error(err.error || 'Failed to update service status');
     } finally {
       setSavingId(null);
     }
@@ -92,9 +95,10 @@ export default function ProviderServicesPage() {
         }),
       });
       setEditingId(null);
+      toast.success('Custom pricing saved');
       await fetchServices();
     } catch (err: any) {
-      alert(err.error || 'Failed to update custom pricing');
+      toast.error(err.error || 'Failed to update custom pricing');
     } finally {
       setSavingId(null);
     }

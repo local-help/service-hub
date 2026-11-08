@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Crosshair, 
   X, 
@@ -37,6 +37,38 @@ export const LocationModal: React.FC = () => {
   const [customAddress, setCustomAddress] = useState(location.address_line);
   const [customLandmark, setCustomLandmark] = useState(location.landmark || '');
   const [customPincode, setCustomPincode] = useState(location.postal_code || '211001');
+  const modalContentRef = useRef<HTMLDivElement>(null);
+
+  // Sync state whenever modal opens or location updates
+  useEffect(() => {
+    if (isModalOpen) {
+      setCustomAddress(location.address_line || '');
+      setCustomLandmark(location.landmark || '');
+      setCustomPincode(location.postal_code || '211001');
+    }
+  }, [isModalOpen, location]);
+
+  // Lock background scroll when modal is open
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isModalOpen]);
+
+  // Handle ESC key to dismiss modal
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, setIsModalOpen]);
 
   if (!isModalOpen) return null;
 
@@ -82,16 +114,29 @@ export const LocationModal: React.FC = () => {
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-lg space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200">
+    <div 
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 transition-opacity animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsModalOpen(false);
+      }}
+    >
+      <div 
+        ref={modalContentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="location-modal-title"
+        className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">Select Doorstep Location</h3>
+            <h3 id="location-modal-title" className="text-base font-semibold text-slate-900">Select Doorstep Location</h3>
             <p className="text-xs text-slate-500">Prayagraj (Allahabad) coverage</p>
           </div>
           <button
+            type="button"
             onClick={() => setIsModalOpen(false)}
+            aria-label="Close location dialog"
             className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition"
           >
             <X className="w-4 h-4" />

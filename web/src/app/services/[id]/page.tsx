@@ -204,7 +204,7 @@ export default function DynamicServiceBuilderPage() {
   const isComingSoon = service.coming_soon || service.category?.coming_soon;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20">
+    <div className="min-h-screen bg-slate-50/50 pb-28 lg:pb-16">
       {/* Top Breadcrumb & Header */}
       <div className="bg-white border-b border-slate-200/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
@@ -557,6 +557,37 @@ export default function DynamicServiceBuilderPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Action Bar */}
+      {!isComingSoon && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3.5 px-4 shadow-lg flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total</span>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">Fixed</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-black text-slate-900">
+                ₹{totalGuaranteedAmount.toLocaleString('en-IN')}
+              </span>
+              {activePackage?.name && (
+                <span className="text-xs text-slate-500 truncate max-w-[130px]">
+                  • {activePackage.name}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleProceedToBooking}
+            className="py-2.5 px-5 bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <span>Continue</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>

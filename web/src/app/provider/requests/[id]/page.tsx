@@ -19,10 +19,12 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../../../../api/client';
 import { ProviderAssignment } from '../../../../types';
+import { useToast } from '../../../../contexts/ToastContext';
 
 export default function ProviderAssignmentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const assignmentId = params.id as string;
 
   const [assignment, setAssignment] = useState<ProviderAssignment | null>(null);
@@ -62,9 +64,10 @@ export default function ProviderAssignmentDetailPage() {
         body: JSON.stringify({ notes: actionNotes }),
       });
       setActionNotes('');
+      toast.success('Assignment accepted successfully');
       await fetchAssignment();
     } catch (err: any) {
-      alert(err.error || 'Failed to accept assignment');
+      toast.error(err.error || 'Failed to accept assignment');
     } finally {
       setActionLoading(false);
     }
@@ -73,7 +76,7 @@ export default function ProviderAssignmentDetailPage() {
   const handleReject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectReason.trim()) {
-      alert('Rejection reason is required');
+      toast.error('Rejection reason is required');
       return;
     }
 
@@ -86,9 +89,10 @@ export default function ProviderAssignmentDetailPage() {
       setShowRejectModal(false);
       setRejectReason('');
       setActionNotes('');
+      toast.info('Assignment rejected');
       await fetchAssignment();
     } catch (err: any) {
-      alert(err.error || 'Failed to reject assignment');
+      toast.error(err.error || 'Failed to reject assignment');
     } finally {
       setActionLoading(false);
     }
@@ -102,9 +106,10 @@ export default function ProviderAssignmentDetailPage() {
         body: JSON.stringify({ status: 'in_progress', notes: actionNotes || 'Service started on site' }),
       });
       setActionNotes('');
+      toast.success('Service marked as in progress');
       await fetchAssignment();
     } catch (err: any) {
-      alert(err.error || 'Failed to update progress');
+      toast.error(err.error || 'Failed to update progress');
     } finally {
       setActionLoading(false);
     }
@@ -118,9 +123,10 @@ export default function ProviderAssignmentDetailPage() {
         body: JSON.stringify({ status: 'completed', notes: actionNotes || 'Job completed successfully' }),
       });
       setActionNotes('');
+      toast.success('Job completed successfully');
       await fetchAssignment();
     } catch (err: any) {
-      alert(err.error || 'Failed to complete job');
+      toast.error(err.error || 'Failed to complete job');
     } finally {
       setActionLoading(false);
     }

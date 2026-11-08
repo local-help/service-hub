@@ -26,6 +26,7 @@ import { User, PlatformSetting } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSupport } from '../../../contexts/SupportContext';
+import { useToast } from '../../../contexts/ToastContext';
 
 interface ActivityLog {
   id: number;
@@ -40,6 +41,7 @@ interface ActivityLog {
 export default function AdminSettingsPage() {
   const { user, isSuperAdmin, isAdmin } = useAuth();
   const { refreshSupport } = useSupport();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [settings, setSettings] = useState<PlatformSetting[]>([]);
@@ -139,10 +141,11 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ value: val })
       });
       setSaveSuccessMessage(`Setting "${key}" updated successfully!`);
+      toast.success(`Setting "${key}" updated successfully!`);
       await refreshSupport();
       setTimeout(() => setSaveSuccessMessage(''), 3000);
     } catch (err: any) {
-      alert(err.error || `Failed to update ${key}`);
+      toast.error(err.error || `Failed to update ${key}`);
     } finally {
       setSavingKeys(prev => ({ ...prev, [key]: false }));
     }
@@ -192,9 +195,10 @@ export default function AdminSettingsPage() {
         method: 'PATCH',
         body: JSON.stringify({ status: nextStatus })
       });
+      toast.success(`User status changed to ${nextStatus}`);
       fetchAll();
     } catch (err: any) {
-      alert(err.error || 'Failed to update user status');
+      toast.error(err.error || 'Failed to update user status');
     }
   };
 

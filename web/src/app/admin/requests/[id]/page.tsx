@@ -30,11 +30,13 @@ import {
 import { ServiceRequest, Provider, Communication } from '../../../../types';
 import { apiRequest } from '../../../../api/client';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useToast } from '../../../../contexts/ToastContext';
 
 export default function AdminRequestDetailPage() {
   const params = useParams();
   const id = params?.id as string;
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [request, setRequest] = useState<ServiceRequest | null>(null);
@@ -101,9 +103,10 @@ export default function AdminRequestDetailPage() {
         body: JSON.stringify({ provider_id: selectedProviderId, notes: assignNotes }),
       });
       setAssignNotes('');
+      toast.success('Specialist provider assigned successfully');
       fetchRequest();
     } catch (err: any) {
-      alert(err.error || 'Failed to assign provider');
+      toast.error(err.error || 'Failed to assign provider');
     } finally {
       setActionLoading(false);
     }
@@ -119,9 +122,10 @@ export default function AdminRequestDetailPage() {
         body: JSON.stringify({ total_amount: parseFloat(customPrice) }),
       });
       setShowPriceEdit(false);
+      toast.success('Booking price updated successfully');
       fetchRequest();
     } catch (err: any) {
-      alert(err.error || 'Failed to update booking price');
+      toast.error(err.error || 'Failed to update booking price');
     } finally {
       setActionLoading(false);
     }
@@ -144,9 +148,10 @@ export default function AdminRequestDetailPage() {
       setShowCommModal(false);
       setCommSummary('');
       setCommOutcome('');
+      toast.success('Communication logged successfully');
       fetchRequest();
     } catch (err: any) {
-      alert(err.error || 'Failed to record communication');
+      toast.error(err.error || 'Failed to record communication');
     } finally {
       setActionLoading(false);
     }
@@ -161,9 +166,10 @@ export default function AdminRequestDetailPage() {
       });
       setSaveNoteSuccess(true);
       setTimeout(() => setSaveNoteSuccess(false), 3000);
+      toast.success('Admin notes saved successfully');
       fetchRequest();
     } catch (err: any) {
-      alert(err.error || 'Failed to update notes');
+      toast.error(err.error || 'Failed to update notes');
     } finally {
       setActionLoading(false);
     }

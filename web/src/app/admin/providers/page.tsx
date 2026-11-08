@@ -27,9 +27,11 @@ import {
 import { Provider, Service } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 
 export default function AdminProvidersPage() {
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -233,9 +235,10 @@ export default function AdminProvidersPage() {
   const handleVerifyProvider = async (p: Provider) => {
     try {
       await apiRequest(`/admin/providers/${p.id}/verify`, { method: 'POST' });
+      toast.success(`Provider "${p.name}" verified successfully`);
       fetchProviders();
     } catch (err: any) {
-      alert(err.error || 'Failed to verify provider');
+      toast.error(err.error || 'Failed to verify provider');
     }
   };
 
@@ -248,18 +251,20 @@ export default function AdminProvidersPage() {
         method: 'POST',
         body: JSON.stringify({ reason }),
       });
+      toast.info(`Provider "${p.name}" suspended`);
       fetchProviders();
     } catch (err: any) {
-      alert(err.error || 'Failed to suspend provider');
+      toast.error(err.error || 'Failed to suspend provider');
     }
   };
 
   const handleActivateProvider = async (p: Provider) => {
     try {
       await apiRequest(`/admin/providers/${p.id}/activate`, { method: 'POST' });
+      toast.success(`Provider "${p.name}" activated`);
       fetchProviders();
     } catch (err: any) {
-      alert(err.error || 'Failed to activate provider');
+      toast.error(err.error || 'Failed to activate provider');
     }
   };
 

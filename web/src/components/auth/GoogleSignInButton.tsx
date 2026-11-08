@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, X, User as UserIcon, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { User } from '../../types';
 
 declare global {
@@ -69,6 +70,7 @@ export default function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const router = useRouter();
   const { loginWithGoogle } = useAuth();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
@@ -105,7 +107,7 @@ export default function GoogleSignInButton({
       if (onError) {
         onError(errorMsg);
       } else {
-        alert(errorMsg);
+        toast.error(errorMsg);
       }
     } finally {
       setLoading(false);
