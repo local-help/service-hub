@@ -18,14 +18,16 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: localhelp_production
-    username: <%= ENV["DB_USERNAME"] %>
-    password: <%= ENV["DB_PASSWORD"] %>
+    database: <%= ENV.fetch("DB_NAME") { "localhelp_production" } %>
+    username: <%= ENV.fetch("DB_USERNAME") { "localhelp" } %>
+    password: <%= ENV.fetch("DB_PASSWORD") { "localhelp_dev" } %>
+    host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DB_PORT") { 5432 } %>
   cache:
     <<: *primary_production
-    database: localhelp_production_cache
+    database: <%= ENV.fetch("DB_CACHE_NAME") { "localhelp_production_cache" } %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: localhelp_production_queue
+    database: <%= ENV.fetch("DB_QUEUE_NAME") { "localhelp_production_queue" } %>
     migrations_paths: db/queue_migrate

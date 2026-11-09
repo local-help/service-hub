@@ -7,9 +7,10 @@ import {
   TextInput, 
   StyleSheet, 
   Alert,
-  ActivityIndicator 
+  ActivityIndicator,
+  Linking,
 } from 'react-native';
-import { User, Phone, Mail, MapPin, Plus, LogOut, CheckCircle, Shield, Edit3, Trash2 } from 'lucide-react-native';
+import { User, Phone, Mail, MapPin, Plus, LogOut, CheckCircle, Shield, Edit3, Trash2, ArrowRight, Briefcase } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { Address } from '../types';
 import { apiRequest } from '../api/client';
@@ -33,7 +34,7 @@ const PRAYAGRAJ_LOCALITIES = [
 ];
 
 export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
-  const { user, logout, refreshProfile } = useAuth();
+  const { user, logout, refreshProfile, isAdmin, setViewMode } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   
   // Edit Profile State
@@ -164,6 +165,34 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Admin Workspace Switcher */}
+        {isAdmin && (
+          <View style={styles.adminCard}>
+            <View style={styles.adminBadgeRow}>
+              <View style={styles.adminPill}>
+                <Shield size={12} color="#ffffff" />
+                <Text style={styles.adminPillText}>ADMIN OPERATIONS</Text>
+              </View>
+              <Text style={styles.adminRoleText}>
+                {user?.role === 'super_admin' ? 'Super Admin' : 'Staff Admin'}
+              </Text>
+            </View>
+            <Text style={styles.adminCardTitle}>LocalHelp Admin Console</Text>
+            <Text style={styles.adminCardDesc}>
+              Switch to the Admin Workspace to manage the Prayagraj dispatch queue, assign specialists, approve providers, and review real-time booking revenue.
+            </Text>
+            <TouchableOpacity
+              style={styles.adminSwitchBtn}
+              onPress={() => setViewMode('admin')}
+              activeOpacity={0.85}
+            >
+              <Shield size={16} color="#ffffff" />
+              <Text style={styles.adminSwitchBtnText}>Open Admin Workspace</Text>
+              <ArrowRight size={16} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* User Profile Card */}
         <View style={styles.card}>
           <View style={styles.avatarWrap}>
@@ -373,6 +402,27 @@ export const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
           )}
         </View>
 
+        {/* Partner with LocalHelp Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Briefcase size={16} color={colors.primary} />
+              <Text style={styles.cardTitle}>Partner With LocalHelp</Text>
+            </View>
+          </View>
+          <Text style={styles.partnerCardDesc}>
+            Are you a skilled technician or home service professional in Prayagraj? We offer fixed tariffs, zero customer bargaining, and guaranteed weekly payouts.
+          </Text>
+          <TouchableOpacity
+            style={styles.partnerContactBtn}
+            onPress={() => Linking.openURL('tel:+919999900001')}
+            activeOpacity={0.8}
+          >
+            <Phone size={14} color={colors.primary} />
+            <Text style={styles.partnerContactBtnText}>Contact Operations Team to Join</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Support Banner */}
         <SupportBanner compact />
 
@@ -408,6 +458,71 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  adminCard: {
+    backgroundColor: '#0f172a',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  adminBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  adminPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  adminPillText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  adminRoleText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  adminCardTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#f8fafc',
+    marginBottom: 6,
+  },
+  adminCardDesc: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  adminSwitchBtn: {
+    backgroundColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  adminSwitchBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
   },
   card: {
     backgroundColor: '#ffffff',
@@ -655,6 +770,28 @@ const styles = StyleSheet.create({
   logoutBtnText: {
     color: colors.danger,
     fontSize: 14,
+    fontWeight: '700',
+  },
+  partnerCardDesc: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  partnerContactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  partnerContactBtnText: {
+    color: colors.primary,
+    fontSize: 12,
     fontWeight: '700',
   },
 });

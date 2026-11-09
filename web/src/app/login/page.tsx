@@ -268,6 +268,48 @@ function LoginForm() {
             </form>
           )}
 
+          {/* Quick Demo Credentials */}
+          <div className="pt-3 border-t border-slate-100">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">
+              One-Click Demo Credentials
+            </span>
+            <div className="grid grid-cols-3 gap-1.5 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setTab('password');
+                  setEmail('admin@localhelp.in');
+                  setPassword('Admin@123456');
+                }}
+                className="px-2 py-1.5 border border-slate-200 hover:border-teal-700 hover:bg-teal-50 text-slate-700 hover:text-teal-900 rounded-lg text-center font-medium transition cursor-pointer"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab('password');
+                  setEmail('apex_provider@localhelp.in');
+                  setPassword('Provider@123456');
+                }}
+                className="px-2 py-1.5 border border-slate-200 hover:border-teal-700 hover:bg-teal-50 text-slate-700 hover:text-teal-900 rounded-lg text-center font-medium transition cursor-pointer"
+              >
+                Provider
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab('password');
+                  setEmail('customer@example.com');
+                  setPassword('Customer@123456');
+                }}
+                className="px-2 py-1.5 border border-slate-200 hover:border-teal-700 hover:bg-teal-50 text-slate-700 hover:text-teal-900 rounded-lg text-center font-medium transition cursor-pointer"
+              >
+                Customer
+              </button>
+            </div>
+          </div>
+
           {/* Divider */}
           <div className="relative flex items-center justify-center pt-1">
             <div className="border-t border-slate-200 w-full" />

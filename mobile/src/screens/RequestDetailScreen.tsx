@@ -157,7 +157,7 @@ export const RequestDetailScreen: React.FC<Props> = ({
 
   const quote = request.quotation;
   const canActOnQuote = quote && request.status === 'quotation_sent';
-  const canCancel = ['submitted', 'pending_review', 'provider_contacted', 'quotation_sent'].includes(request.status);
+  const canCancel = ['submitted', 'pending_review', 'contacting_provider', 'quotation_sent', 'quotation_rejected'].includes(request.status);
   const isConfirmed = ['customer_approved', 'booking_confirmed'].includes(request.status) || request.booking != null;
 
   return (

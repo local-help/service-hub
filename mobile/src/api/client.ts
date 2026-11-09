@@ -1,10 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const ENV_URL = process.env.EXPO_PUBLIC_API_URL;
-const DEFAULT_PORT = '4000';
-const DEFAULT_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-export let API_BASE = ENV_URL || `http://${DEFAULT_HOST}:${DEFAULT_PORT}/api/v1`;
+const getBaseUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // Automatically detect developer Mac's Wi-Fi IP from the active Metro bundler connection
+  const hostUri = Constants.expoConfig?.hostUri;
+  const metroHost = hostUri ? hostUri.split(':')[0] : null;
+
+  if (metroHost && metroHost !== 'localhost' && metroHost !== '127.0.0.1') {
+    return `http://${metroHost}:3000/api/v1`;
+  }
+
+  const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  return `http://${defaultHost}:3000/api/v1`;
+};
+
+export let API_BASE = getBaseUrl();
 
 export const setApiBase = (url: string) => {
   API_BASE = url;

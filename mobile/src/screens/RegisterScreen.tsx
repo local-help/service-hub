@@ -12,16 +12,17 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { User, Mail, Phone, Lock, Eye, EyeOff, Sparkles, ShieldCheck } from 'lucide-react-native';
+import { User, Mail, Phone, Lock, Eye, EyeOff, Sparkles, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
 interface Props {
   onSuccess: () => void;
   onGoToLogin: () => void;
+  onCancel?: () => void;
 }
 
-export const RegisterScreen: React.FC<Props> = ({ onSuccess, onGoToLogin }) => {
+export const RegisterScreen: React.FC<Props> = ({ onSuccess, onGoToLogin, onCancel }) => {
   const { register } = useAuth();
 
   const [name, setName] = useState('');
@@ -74,6 +75,14 @@ export const RegisterScreen: React.FC<Props> = ({ onSuccess, onGoToLogin }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
+      {onCancel && (
+        <View style={styles.topCancelBar}>
+          <TouchableOpacity onPress={onCancel} style={styles.topCancelBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <ArrowLeft size={20} color={colors.textPrimary} />
+            <Text style={styles.topCancelText}>Browse as Guest</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Image
@@ -195,9 +204,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  topCancelBar: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 12 : 16,
+    paddingBottom: 8,
+    backgroundColor: '#ffffff',
+  },
+  topCancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  topCancelText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   scroll: {
     padding: 24,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   header: {

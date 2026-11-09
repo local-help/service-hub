@@ -8,6 +8,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG BACKEND_URL=http://backend:3000
+ENV BACKEND_URL=$BACKEND_URL
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -15,6 +17,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3001
+ARG BACKEND_URL=http://backend:3000
+ENV BACKEND_URL=$BACKEND_URL
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules

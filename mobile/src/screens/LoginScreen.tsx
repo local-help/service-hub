@@ -12,16 +12,17 @@ import {
   ScrollView,
   Image 
 } from 'react-native';
-import { Phone, Lock, Sparkles, CheckCircle2, Mail, ShieldCheck } from 'lucide-react-native';
+import { Phone, Lock, Sparkles, CheckCircle2, Mail, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
 interface Props {
   onSuccess: () => void;
   onGoToRegister: () => void;
+  onCancel?: () => void;
 }
 
-export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
+export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister, onCancel }) => {
   const { sendOtp, verifyOtp, loginWithPassword } = useAuth();
 
   const [mode, setMode] = useState<'otp' | 'password'>('password');
@@ -32,7 +33,7 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
 
   // Password fields (Default to customer demo)
   const [loginEmail, setLoginEmail] = useState('customer@example.com');
-  const [loginPass, setLoginPass] = useState('password123');
+  const [loginPass, setLoginPass] = useState('Customer@123456');
 
   const [loading, setLoading] = useState(false);
 
@@ -97,6 +98,14 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
+      {onCancel && (
+        <View style={styles.topCancelBar}>
+          <TouchableOpacity onPress={onCancel} style={styles.topCancelBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <ArrowLeft size={20} color={colors.textPrimary} />
+            <Text style={styles.topCancelText}>Browse as Guest</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Image
@@ -240,19 +249,19 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister }) => {
           <View style={styles.demoRow}>
             <TouchableOpacity
               style={styles.demoBtn}
-              onPress={() => setDemoAccount('customer@example.com', 'password123')}
+              onPress={() => setDemoAccount('customer@example.com', 'Customer@123456')}
             >
               <Text style={styles.demoBtnText}>Customer</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.demoBtn}
-              onPress={() => setDemoAccount('provider@example.com', 'password123')}
+              onPress={() => setDemoAccount('apex_provider@localhelp.in', 'Provider@123456')}
             >
               <Text style={styles.demoBtnText}>Provider</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.demoBtn}
-              onPress={() => setDemoAccount('admin@example.com', 'password123')}
+              onPress={() => setDemoAccount('admin@localhelp.in', 'Admin@123456')}
             >
               <Text style={styles.demoBtnText}>Admin</Text>
             </TouchableOpacity>
@@ -276,9 +285,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  topCancelBar: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 12 : 16,
+    paddingBottom: 8,
+    backgroundColor: '#ffffff',
+  },
+  topCancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  topCancelText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   scroll: {
     padding: 24,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   header: {

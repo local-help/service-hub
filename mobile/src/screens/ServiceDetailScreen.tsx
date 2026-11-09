@@ -1,30 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   StyleSheet,
-  ActivityIndicator 
+  ActivityIndicator,
+  SafeAreaView
 } from 'react-native';
 import { 
   ArrowLeft, 
   Clock, 
   ShieldCheck, 
   CheckCircle2, 
-  ChevronRight, 
   Car, 
-  Moon, 
-  AlertTriangle 
+  Truck, 
+  Check, 
+  ArrowRight,
+  AlertTriangle,
+  Sparkles,
+  Wrench
 } from 'lucide-react-native';
-import { Service, ServiceVariant } from '../types';
+import { Service, ServiceVariant, BuilderPackage, ServiceAddon } from '../types';
 import { apiRequest } from '../api/client';
-import { SupportBanner } from '../components/SupportBanner';
 import { colors } from '../theme/colors';
 
 export interface BookingOptions {
   selectedVariant?: ServiceVariant | null;
   selectedVehicle?: string | null;
+  packageName?: string | null;
+  packagePrice?: number | null;
+  stepKey?: string | null;
+  selectedAddons?: string[];
+  addonsTotal?: number;
   driverHours?: number | null;
   pickupDrop?: boolean;
   totalPrice?: number | null;
@@ -40,121 +48,123 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
   const [fullService, setFullService] = useState<Service>(service);
   const [loading, setLoading] = useState(false);
 
-  // User selections
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('hatchback');
+  // Dynamic step selections
+  const [selectedStep, setSelectedStep] = useState<string>('hatchback_sedan');
+  const [selectedPackageId, setSelectedPackageId] = useState<string>('standard');
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
-  const [pickupDrop, setPickupDrop] = useState(false);
-
-  // Time-based driver controls
-  const [driverHours, setDriverHours] = useState<number>(8);
-  const [extendsPastNight, setExtendsPastNight] = useState<boolean>(false);
-  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
-  const [calcLoading, setCalcLoading] = useState<boolean>(false);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // Fetch detailed service (with full variants)
     setLoading(true);
-    apiRequest<Service>(`/services/${service.id}`)
+    apiRequest<Service>(`/services/${service.slug || service.id}`)
       .then((data) => {
         setFullService(data);
-        if (data.variants && data.variants.length > 0) {
+        if (data.builder_config?.steps && data.builder_config.steps.length > 0) {
+          const firstStep = data.builder_config.steps[0];
+          const defaultOpt = firstStep.default_value || firstStep.options[0]?.id || 'hatchback_sedan';
+          setSelectedStep(defaultOpt);
+        } else if (data.supported_vehicle_types && data.supported_vehicle_types.length > 0) {
+          setSelectedStep(data.supported_vehicle_types[0]);
+        }
+
+        if (data.builder_config?.packages && data.builder_config.packages.length > 0) {
+          setSelectedPackageId(data.builder_config.packages[0].id);
+        } else if (data.variants && data.variants.length > 0) {
           setSelectedVariantId(data.variants[0].id);
         }
-        if (data.supported_vehicle_types && data.supported_vehicle_types.length > 0) {
-          setSelectedVehicle(data.supported_vehicle_types[0]);
-        }
       })
-      .catch((err) => console.error(err))
+      .catch((err) => console.error('Failed to load full service details', err))
       .finally(() => setLoading(false));
-  }, [service.id]);
-
-  // Dynamic calculation for time-based services
-  useEffect(() => {
-    if (!fullService || fullService.booking_type !== 'time_based') return;
-    setCalcLoading(true);
-    const nightHrs = extendsPastNight ? Math.max(driverHours - 8, 2) : 0;
-
-    apiRequest<any>(`/services/${fullService.id}/calculate_price`, {
-      method: 'POST',
-      body: JSON.stringify({
-        variant_id: selectedVariantId,
-        hours: driverHours,
-        extends_past_night: extendsPastNight,
-        night_hours: nightHrs,
-      }),
-    })
-      .then((res) => {
-        if (res && res.total_price) {
-          setCalculatedPrice(res.total_price);
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setCalcLoading(false));
-  }, [fullService, selectedVariantId, driverHours, extendsPastNight]);
+  }, [service.slug, service.id]);
 
   const isComingSoon = fullService.coming_soon || fullService.category?.coming_soon;
-  const bType = fullService.booking_type || fullService.pricing_type;
-  const hasVariants = fullService.variants && fullService.variants.length > 0;
+  const builderConfig = fullService.builder_config;
+  const packagesList: BuilderPackage[] = builderConfig?.packages || [];
+  const addonsList: ServiceAddon[] = fullService.addons || [];
+  const primaryStep = builderConfig?.steps?.[0];
 
-  // Filter variants by vehicle type
-  const matchingVariants = hasVariants
-    ? fullService.variants!.filter((v) => {
-        const vTypes = (v.variant_attributes || {})['vehicle_types'];
-        if (!vTypes || vTypes.length === 0) return true;
-        if (selectedVehicle === 'hatchback' || selectedVehicle === 'sedan') {
-          return vTypes.includes('hatchback') || vTypes.includes('sedan');
-        }
-        return vTypes.includes(selectedVehicle);
-      })
-    : [];
+  // Active package calculation
+  const activePackage = packagesList.find((p) => p.id === selectedPackageId) || packagesList[0];
+  const activeVariant = fullService.variants?.find((v) => v.id === selectedVariantId) || fullService.variants?.[0];
 
-  const displayVariants = matchingVariants.length > 0 ? matchingVariants : (fullService.variants || []);
-  const selectedVariant = fullService.variants?.find((v) => v.id === selectedVariantId);
+  const packagePrice = useMemo(() => {
+    if (activePackage) {
+      const priceMap = activePackage.prices || {};
+      return priceMap[selectedStep] || priceMap['default'] || Object.values(priceMap)[0] || 0;
+    }
+    if (activeVariant?.primary_price) {
+      return activeVariant.primary_price;
+    }
+    return fullService.fixed_price || fullService.base_price || 399;
+  }, [activePackage, selectedStep, activeVariant, fullService]);
 
-  // Compute final price
-  const finalPrice = bType === 'time_based'
-    ? (calculatedPrice || 800)
-    : (selectedVariant?.primary_price || fullService.fixed_price || fullService.base_price || 299);
+  const activePackageName = activePackage?.name || activeVariant?.name || fullService.name;
+
+  const addonsTotal = useMemo(() => {
+    return addonsList
+      .filter((a) => selectedAddonIds.includes(a.id))
+      .reduce((sum, a) => sum + (a.price || 0), 0);
+  }, [addonsList, selectedAddonIds]);
+
+  const platformFee = builderConfig?.platform_fee || 25;
+  const calculatedTotal = packagePrice + addonsTotal + platformFee;
+
+  const toggleAddon = (id: string) => {
+    setSelectedAddonIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const handleProceed = () => {
     if (isComingSoon) return;
     onRequestBooking({
-      selectedVariant: selectedVariant || null,
-      selectedVehicle: fullService.supported_vehicle_types && fullService.supported_vehicle_types.length > 0 ? selectedVehicle : null,
-      driverHours: bType === 'time_based' ? driverHours : null,
-      pickupDrop,
-      totalPrice: finalPrice,
+      selectedVariant: activeVariant || null,
+      selectedVehicle: selectedStep,
+      packageName: activePackageName,
+      packagePrice,
+      stepKey: selectedStep,
+      selectedAddons: selectedAddonIds,
+      addonsTotal,
+      totalPrice: calculatedTotal,
     });
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={22} color={colors.textPrimary} />
+        <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <ArrowLeft size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Service Details</Text>
-        <View style={{ width: 32 }} />
+        <Text style={styles.topTitle} numberOfLines={1}>{fullService.name}</Text>
+        <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header Card */}
-        <View style={styles.headerCard}>
-          <Text style={styles.serviceName}>{fullService.name}</Text>
-          <Text style={styles.categoryBadge}>{fullService.category_name || fullService.category?.name || 'Local Service'}</Text>
-          
-          <Text style={styles.descText}>
-            {fullService.description || fullService.short_description || 'Professional home service coordinated by LocalHelp expert care team.'}
-          </Text>
-
-          {fullService.estimated_duration_minutes && (
-            <View style={styles.durationRow}>
-              <Clock size={16} color={colors.textMuted} />
-              <Text style={styles.durationText}>
-                Estimated completion: ~{fullService.estimated_duration_minutes} minutes
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Header Hero Card */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroBadgeRow}>
+            <View style={styles.catBadge}>
+              <Text style={styles.catBadgeText}>
+                {fullService.category?.name || fullService.category_name || 'Doorstep Service'}
               </Text>
             </View>
-          )}
+            {fullService.estimated_duration_minutes && (
+              <View style={styles.durationPill}>
+                <Clock size={12} color={colors.textMuted} />
+                <Text style={styles.durationPillText}>~{fullService.estimated_duration_minutes} mins</Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.serviceTitle}>{fullService.name}</Text>
+          <Text style={styles.serviceDescription}>
+            {fullService.description || fullService.short_description || 'Certified doorstep assistance with verified specialists, upfront pricing, and guaranteed dispatch.'}
+          </Text>
+
+          <View style={styles.verifiedStrip}>
+            <ShieldCheck size={16} color={colors.primary} />
+            <Text style={styles.verifiedStripText}>LocalHelp Certified Dispatch Guarantee</Text>
+          </View>
         </View>
 
         {/* Coming Soon Notice */}
@@ -164,181 +174,233 @@ export const ServiceDetailScreen: React.FC<Props> = ({ service, onBack, onReques
             <View style={{ flex: 1 }}>
               <Text style={styles.comingSoonTitle}>Launching Soon in Prayagraj</Text>
               <Text style={styles.comingSoonDesc}>
-                We are onboarding verified providers. Online bookings will open shortly.
+                We are onboarding verified specialist providers for this category. Bookings will open shortly.
               </Text>
             </View>
           </View>
         )}
 
-        {/* Vehicle Type Selector */}
-        {!isComingSoon && fullService.supported_vehicle_types && fullService.supported_vehicle_types.length > 0 && (
-          <View style={styles.card}>
-            <View style={styles.sectionHeaderRow}>
-              <Car size={16} color={colors.textMuted} />
-              <Text style={styles.cardTitle}>Select Vehicle Type</Text>
-            </View>
-            <View style={styles.vehicleGrid}>
-              {fullService.supported_vehicle_types.map((vt) => (
-                <TouchableOpacity
-                  key={vt}
-                  style={[styles.vehicleBtn, selectedVehicle === vt && styles.vehicleBtnActive]}
-                  onPress={() => setSelectedVehicle(vt)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.vehicleBtnText, selectedVehicle === vt && styles.vehicleBtnTextActive]}>
-                    {vt === 'suv_muv'
-                      ? 'SUV / MUV'
-                      : vt === 'bike_scooter'
-                      ? 'Bike / Scooter'
-                      : vt.charAt(0).toUpperCase() + vt.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
+        {!isComingSoon && (
+          <>
+            {/* Step 1: Vehicle / Parameter Selection */}
+            {primaryStep && primaryStep.options.length > 0 && (
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeaderRow}>
+                  <View style={styles.stepCircle}><Text style={styles.stepNum}>1</Text></View>
+                  <View>
+                    <Text style={styles.sectionTitle}>{primaryStep.title || 'Select Parameter'}</Text>
+                    {primaryStep.subtitle && <Text style={styles.sectionSubtitle}>{primaryStep.subtitle}</Text>}
+                  </View>
+                </View>
 
-        {/* Service Package / Variant Selection */}
-        {!isComingSoon && displayVariants.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Choose Package</Text>
-            <View style={styles.variantsList}>
-              {displayVariants.map((variant) => {
-                const isSelected = selectedVariantId === variant.id;
-                const price = variant.primary_price;
-
-                return (
-                  <TouchableOpacity
-                    key={variant.id}
-                    style={[styles.variantItem, isSelected && styles.variantItemActive]}
-                    onPress={() => setSelectedVariantId(variant.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.radioWrap}>
-                      <View style={[styles.radioCircle, isSelected && styles.radioCircleActive]}>
-                        {isSelected && <View style={styles.radioDot} />}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.variantName}>{variant.name}</Text>
-                        {variant.description && (
-                          <Text style={styles.variantDesc}>{variant.description}</Text>
+                <View style={styles.stepOptionsGrid}>
+                  {primaryStep.options.map((opt) => {
+                    const isSelected = selectedStep === opt.id;
+                    const isSuv = opt.id.includes('suv');
+                    return (
+                      <TouchableOpacity
+                        key={opt.id}
+                        style={[styles.stepOptionCard, isSelected && styles.stepOptionCardActive]}
+                        onPress={() => setSelectedStep(opt.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.stepIconWrap, isSelected && styles.stepIconWrapActive]}>
+                          {isSuv ? (
+                            <Truck size={18} color={isSelected ? '#FFFFFF' : colors.primary} />
+                          ) : (
+                            <Car size={18} color={isSelected ? '#FFFFFF' : colors.primary} />
+                          )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.stepOptionLabel, isSelected && styles.stepOptionLabelActive]}>
+                            {opt.label}
+                          </Text>
+                          {opt.subtext && (
+                            <Text style={styles.stepOptionSub} numberOfLines={1}>{opt.subtext}</Text>
+                          )}
+                        </View>
+                        {isSelected && (
+                          <View style={styles.checkCircle}>
+                            <Check size={11} color="#FFFFFF" />
+                          </View>
                         )}
-                      </View>
-                    </View>
-                    {price && (
-                      <Text style={styles.variantPrice}>₹{price}</Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Optional Pickup & Drop */}
-            {fullService.slug === 'car-wash' && (
-              <TouchableOpacity
-                style={styles.addonRow}
-                onPress={() => setPickupDrop(!pickupDrop)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, pickupDrop && styles.checkboxActive]}>
-                  {pickupDrop && <CheckCircle2 size={16} color="#ffffff" />}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.addonTitle}>Doorstep Pickup & Return Delivery</Text>
-                  <Text style={styles.addonSub}>Technician drives car to center and returns cleaned</Text>
-                </View>
-              </TouchableOpacity>
+              </View>
             )}
-          </View>
-        )}
 
-        {/* Time-Based Service Duration Controls */}
-        {!isComingSoon && bType === 'time_based' && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Duty Shift Duration</Text>
-            <View style={styles.vehicleGrid}>
-              {[4, 8, 10, 12].map((hrs) => (
-                <TouchableOpacity
-                  key={hrs}
-                  style={[styles.vehicleBtn, driverHours === hrs && styles.vehicleBtnActive]}
-                  onPress={() => setDriverHours(hrs)}
-                >
-                  <Text style={[styles.vehicleBtnText, driverHours === hrs && styles.vehicleBtnTextActive]}>
-                    {hrs} Hours
+            {/* Step 2: Package Selection */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.stepCircle}><Text style={styles.stepNum}>2</Text></View>
+                <View>
+                  <Text style={styles.sectionTitle}>Select Package</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Pricing automatically tailored for your selection
                   </Text>
-                </TouchableOpacity>
-              ))}
+                </View>
+              </View>
+
+              <View style={styles.packagesList}>
+                {packagesList.length > 0 ? (
+                  packagesList.map((pkg) => {
+                    const isSelected = selectedPackageId === pkg.id;
+                    const priceMap = pkg.prices || {};
+                    const price = priceMap[selectedStep] || priceMap['default'] || Object.values(priceMap)[0] || 0;
+
+                    return (
+                      <TouchableOpacity
+                        key={pkg.id}
+                        style={[styles.packageCard, isSelected && styles.packageCardActive]}
+                        onPress={() => setSelectedPackageId(pkg.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.packageCardTop}>
+                          <View style={{ flex: 1 }}>
+                            <View style={styles.pkgTitleRow}>
+                              <Text style={[styles.pkgName, isSelected && styles.pkgNameActive]}>{pkg.name}</Text>
+                              {pkg.badge && (
+                                <View style={styles.pkgBadge}>
+                                  <Text style={styles.pkgBadgeText}>{pkg.badge}</Text>
+                                </View>
+                              )}
+                            </View>
+                            {pkg.short_description && (
+                              <Text style={styles.pkgDesc}>{pkg.short_description}</Text>
+                            )}
+                          </View>
+                          <View style={styles.pkgPriceWrap}>
+                            <Text style={styles.pkgPriceLabel}>Fixed Price</Text>
+                            <Text style={styles.pkgPriceVal}>₹{price}</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.pkgFooter}>
+                          <View style={[styles.selectRadio, isSelected && styles.selectRadioActive]}>
+                            {isSelected && <View style={styles.selectRadioDot} />}
+                          </View>
+                          <Text style={[styles.selectText, isSelected && styles.selectTextActive]}>
+                            {isSelected ? 'Package Selected' : 'Tap to Select'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  (fullService.variants || []).map((v) => {
+                    const isSelected = selectedVariantId === v.id;
+                    return (
+                      <TouchableOpacity
+                        key={v.id}
+                        style={[styles.packageCard, isSelected && styles.packageCardActive]}
+                        onPress={() => setSelectedVariantId(v.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.packageCardTop}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.pkgName, isSelected && styles.pkgNameActive]}>{v.name}</Text>
+                            {v.description && <Text style={styles.pkgDesc}>{v.description}</Text>}
+                          </View>
+                          <View style={styles.pkgPriceWrap}>
+                            <Text style={styles.pkgPriceLabel}>Fixed Price</Text>
+                            <Text style={styles.pkgPriceVal}>₹{v.primary_price || fullService.fixed_price || 399}</Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.addonRow, { marginTop: 12 }]}
-              onPress={() => setExtendsPastNight(!extendsPastNight)}
-              activeOpacity={0.7}
-            >
-              <Moon size={18} color={colors.textMuted} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.addonTitle}>Duty Extends Past 10:00 PM</Text>
-                <Text style={styles.addonSub}>Late night duty includes fixed driver night allowance</Text>
+            {/* Step 3: Optional Add-ons */}
+            {addonsList.length > 0 && (
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeaderRow}>
+                  <View style={styles.stepCircle}><Text style={styles.stepNum}>3</Text></View>
+                  <View>
+                    <Text style={styles.sectionTitle}>Optional Add-ons</Text>
+                    <Text style={styles.sectionSubtitle}>Add extra treatments to your doorstep service</Text>
+                  </View>
+                </View>
+
+                <View style={styles.addonsList}>
+                  {addonsList.map((addon) => {
+                    const isChecked = selectedAddonIds.includes(addon.id);
+                    return (
+                      <TouchableOpacity
+                        key={addon.id}
+                        style={[styles.addonItem, isChecked && styles.addonItemActive]}
+                        onPress={() => toggleAddon(addon.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.checkbox, isChecked && styles.checkboxActive]}>
+                          {isChecked && <Check size={12} color="#FFFFFF" />}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <View style={styles.addonTitleRow}>
+                            <Text style={styles.addonName}>{addon.name}</Text>
+                            <Text style={styles.addonPrice}>+₹{addon.price}</Text>
+                          </View>
+                          {addon.description && (
+                            <Text style={styles.addonDesc}>{addon.description}</Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
-              <View style={[styles.checkbox, extendsPastNight && styles.checkboxActive]}>
-                {extendsPastNight && <CheckCircle2 size={16} color="#ffffff" />}
+            )}
+
+            {/* Trust & Guarantee Box */}
+            <View style={styles.guaranteeBox}>
+              <View style={styles.guaranteeRow}>
+                <CheckCircle2 size={16} color={colors.primary} />
+                <Text style={styles.guaranteeText}>30-Day Doorstep Service Guarantee</Text>
               </View>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.guaranteeRow}>
+                <ShieldCheck size={16} color={colors.primary} />
+                <Text style={styles.guaranteeText}>Pre-vetted Technicians with Background Check</Text>
+              </View>
+              <View style={styles.guaranteeRow}>
+                <Clock size={16} color={colors.primary} />
+                <Text style={styles.guaranteeText}>Transparent Pricing with Zero Hidden Charges</Text>
+              </View>
+            </View>
+          </>
         )}
-
-        {/* How It Works */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>How LocalHelp Coordination Works</Text>
-          <View style={styles.stepRow}>
-            <View style={styles.stepNum}><Text style={styles.stepNumText}>1</Text></View>
-            <Text style={styles.stepText}>Select package and doorstep schedule</Text>
-          </View>
-          <View style={styles.stepRow}>
-            <View style={styles.stepNum}><Text style={styles.stepNumText}>2</Text></View>
-            <Text style={styles.stepText}>Verified local professional is assigned & arrives with tools</Text>
-          </View>
-          <View style={styles.stepRow}>
-            <View style={styles.stepNum}><Text style={styles.stepNumText}>3</Text></View>
-            <Text style={styles.stepText}>Inspect work & pay safely upon completion</Text>
-          </View>
-        </View>
-
-        <SupportBanner serviceName={fullService.name} compact />
-        <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Sticky Bottom Bar */}
-      <View style={styles.bottomBar}>
-        <View style={styles.priceCol}>
-          <Text style={styles.priceLabel}>Estimated Rate</Text>
-          {calcLoading ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Text style={styles.priceValue}>
-              {isComingSoon ? 'Unavailable' : `₹${finalPrice}`}
-            </Text>
-          )}
-        </View>
+      {/* Sticky Bottom Conversion Bar (Matching Web Fix) */}
+      {!isComingSoon && (
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomBarLeft}>
+            <Text style={styles.bottomBarPackage} numberOfLines={1}>{activePackageName}</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.bottomBarTotal}>₹{calculatedTotal.toLocaleString('en-IN')}</Text>
+              <Text style={styles.bottomBarSub}>total</Text>
+            </View>
+          </View>
 
-        <TouchableOpacity
-          style={[styles.bookButton, isComingSoon && { backgroundColor: colors.textLight }]}
-          onPress={handleProceed}
-          disabled={isComingSoon}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.bookButtonText}>
-            {isComingSoon ? 'Coming Soon' : 'Proceed to Booking'}
-          </Text>
-          {!isComingSoon && <ChevronRight size={18} color="#ffffff" />}
-        </TouchableOpacity>
-      </View>
-    </View>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleProceed}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.continueButtonText}>Continue</Text>
+            <ArrowRight size={15} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.background,
   },
@@ -347,73 +409,363 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 12,
-    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   backButton: {
-    padding: 6,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.ivory,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   topTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.textPrimary,
   },
   content: {
-    padding: 16,
+    flex: 1,
   },
-  headerCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+  scrollContent: {
+    padding: 16,
+    gap: 16,
+    paddingBottom: 24,
+  },
+  heroCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
     padding: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 14,
   },
-  serviceName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.textPrimary,
-  },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.primaryLight,
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '700',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 6,
-    marginBottom: 12,
-  },
-  descText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  durationRow: {
+  heroBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 12,
+    marginBottom: 10,
   },
-  durationText: {
-    fontSize: 12,
+  catBadge: {
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+  },
+  catBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.primary,
+    textTransform: 'uppercase',
+  },
+  durationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  durationPillText: {
+    fontSize: 11,
     color: colors.textMuted,
+    fontWeight: '500',
+  },
+  serviceTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: 6,
+  },
+  serviceDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  verifiedStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  verifiedStripText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  sectionCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  stepCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNum: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  sectionSubtitle: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  stepOptionsGrid: {
+    gap: 8,
+  },
+  stepOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    borderRadius: 14,
+    gap: 10,
+  },
+  stepOptionCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  stepIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.ivory,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepIconWrapActive: {
+    backgroundColor: colors.primary,
+  },
+  stepOptionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  stepOptionLabelActive: {
+    color: colors.primaryDark,
+    fontWeight: '700',
+  },
+  stepOptionSub: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  checkCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  packagesList: {
+    gap: 10,
+  },
+  packageCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+  },
+  packageCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  packageCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  pkgTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pkgName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  pkgNameActive: {
+    color: colors.primaryDark,
+  },
+  pkgBadge: {
+    backgroundColor: colors.warningLight,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.warningBorder,
+  },
+  pkgBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.warningText,
+  },
+  pkgDesc: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginTop: 3,
+  },
+  pkgPriceWrap: {
+    alignItems: 'flex-end',
+  },
+  pkgPriceLabel: {
+    fontSize: 9,
+    color: colors.textMuted,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  pkgPriceVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  pkgFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    paddingTop: 8,
+    gap: 8,
+  },
+  selectRadio: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectRadioActive: {
+    borderColor: colors.primary,
+  },
+  selectRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  selectText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  selectTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  addonsList: {
+    gap: 8,
+  },
+  addonItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
+  },
+  addonItemActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  addonTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addonName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  addonPrice: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primaryDark,
+  },
+  addonDesc: {
+    fontSize: 11,
+    color: colors.textMuted,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  guaranteeBox: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 10,
+  },
+  guaranteeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  guaranteeText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
   comingSoonBox: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'flex-start',
     backgroundColor: colors.warningLight,
     borderWidth: 1,
     borderColor: colors.warningBorder,
-    borderRadius: 14,
     padding: 14,
-    marginBottom: 14,
-    alignItems: 'flex-start',
+    borderRadius: 14,
+    gap: 10,
   },
   comingSoonTitle: {
     fontSize: 13,
@@ -421,205 +773,61 @@ const styles = StyleSheet.create({
     color: colors.warningText,
   },
   comingSoonDesc: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.warningText,
-    marginTop: 2,
     lineHeight: 16,
+    marginTop: 2,
   },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 14,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 10,
-  },
-  vehicleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  vehicleBtn: {
-    flex: 1,
-    minWidth: '45%',
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-  },
-  vehicleBtnActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  vehicleBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  vehicleBtnTextActive: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  variantsList: {
-    gap: 8,
-  },
-  variantItem: {
+  bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#ffffff',
-  },
-  variantItemActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  radioWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-    paddingRight: 10,
-  },
-  radioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: colors.textLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioCircleActive: {
-    borderColor: colors.primary,
-  },
-  radioDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: colors.primary,
-  },
-  variantName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  variantDesc: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  variantPrice: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  addonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSubtle,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: colors.textLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  addonTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  addonSub: {
-    fontSize: 10,
-    color: colors.textMuted,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
-  },
-  stepNum: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNumText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  stepText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  bottomBar: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.card,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 8,
   },
-  priceCol: {
+  bottomBarLeft: {
     flex: 1,
   },
-  priceLabel: {
+  bottomBarPackage: {
     fontSize: 11,
+    fontWeight: '700',
     color: colors.textMuted,
+    textTransform: 'uppercase',
   },
-  priceValue: {
-    fontSize: 20,
-    fontWeight: '800',
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  bottomBarTotal: {
+    fontSize: 18,
+    fontWeight: '900',
     color: colors.textPrimary,
   },
-  bookButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  bottomBarSub: {
+    fontSize: 11,
+    color: colors.textLight,
+  },
+  continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
     gap: 6,
   },
-  bookButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
+  continueButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

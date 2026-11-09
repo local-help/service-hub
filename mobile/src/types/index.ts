@@ -49,6 +49,46 @@ export interface ServiceVariant {
   primary_price: number | null;
 }
 
+export interface ServiceAddon {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  icon?: string;
+}
+
+export interface BuilderStepOption {
+  id: string;
+  label: string;
+  subtext?: string;
+  icon?: string;
+}
+
+export interface BuilderStep {
+  id: string;
+  type: 'segmented_control' | 'radio' | 'select';
+  title: string;
+  subtitle?: string;
+  required?: boolean;
+  default_value?: string;
+  options: BuilderStepOption[];
+}
+
+export interface BuilderPackage {
+  id: string;
+  name: string;
+  short_description?: string;
+  badge?: string;
+  prices: Record<string, number>;
+}
+
+export interface BuilderConfig {
+  steps?: BuilderStep[];
+  packages?: BuilderPackage[];
+  platform_fee?: number;
+  guarantee_badge?: string;
+}
+
 export interface Service {
   id: number;
   category_id: number;
@@ -70,6 +110,8 @@ export interface Service {
   category?: Category;
   subcategory?: Subcategory;
   variants?: ServiceVariant[];
+  builder_config?: BuilderConfig;
+  addons?: ServiceAddon[];
 }
 
 export interface Address {
@@ -104,6 +146,8 @@ export interface Provider {
   email?: string | null;
   status?: string;
   verified?: boolean;
+  verification_status?: 'pending' | 'verified' | 'rejected';
+  operational_status?: 'active' | 'inactive' | 'suspended';
   rating?: number | null;
   jobs_completed?: number;
 }
@@ -121,12 +165,15 @@ export interface ProviderAssignment {
 export type RequestStatus = 
   | 'submitted'
   | 'pending_review'
+  | 'contacting_provider'
   | 'provider_contacted'
   | 'quotation_created'
   | 'quotation_sent'
   | 'customer_approved'
   | 'customer_rejected'
   | 'booking_confirmed'
+  | 'in_progress'
+  | 'completed'
   | 'cancelled';
 
 export interface ServiceRequest {
@@ -150,6 +197,34 @@ export interface ServiceRequest {
   booking_status?: string | null;
   request_attachments?: Attachment[];
   created_at: string;
+  // Admin-specific flat fields
+  customer_name?: string;
+  customer_phone?: string;
+  service_name?: string;
+  service_category?: string;
+  provider_name?: string;
+  has_quotation?: boolean;
+  quotation_amount?: number | null;
+  has_booking?: boolean;
+}
+
+export interface AdminDashboardData {
+  metrics: {
+    total_requests: number;
+    pending_review: number;
+    contacting_provider: number;
+    awaiting_quotation: number;
+    quotation_sent: number;
+    quotation_approved: number;
+    confirmed_bookings: number;
+    in_progress_bookings: number;
+    completed_bookings: number;
+    cancelled_bookings: number;
+    total_revenue: number;
+    active_providers: number;
+    total_customers: number;
+  };
+  recent_requests: ServiceRequest[];
 }
 
 export interface Quotation {

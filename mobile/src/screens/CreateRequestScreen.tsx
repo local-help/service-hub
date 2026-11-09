@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -9,7 +9,8 @@ import {
   Image, 
   Alert,
   ActivityIndicator,
-  Platform 
+  Platform,
+  SafeAreaView
 } from 'react-native';
 import { 
   ArrowLeft, 
@@ -20,7 +21,10 @@ import {
   Clock, 
   Plus, 
   X, 
-  Car 
+  ShieldCheck,
+  Info,
+  Car,
+  FileText
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Service, Address, ServiceRequest, Attachment } from '../types';
@@ -69,8 +73,12 @@ export const CreateRequestScreen: React.FC<Props> = ({
 
   // Form fields
   const [description, setDescription] = useState('');
-  const [preferredDate, setPreferredDate] = useState('');
-  const [preferredSlot, setPreferredSlot] = useState('morning'); // 'morning' | 'afternoon' | 'evening'
+  const [preferredDate, setPreferredDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [preferredSlot, setPreferredSlot] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   
   // Attachments
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -78,6 +86,18 @@ export const CreateRequestScreen: React.FC<Props> = ({
 
   const [submitting, setSubmitting] = useState(false);
   const [createdRequest, setCreatedRequest] = useState<ServiceRequest | null>(null);
+
+  // Derived financial & package details
+  const effectivePackageName = options?.packageName || options?.selectedVariant?.name || service.name;
+  const effectivePackagePrice = options?.packagePrice ?? (options?.selectedVariant?.primary_price || service.fixed_price || 499);
+  const platformFee = service.builder_config?.platform_fee || 25;
+  const addonsTotal = options?.addonsTotal || 0;
+  const effectiveTotal = options?.totalPrice ?? (effectivePackagePrice + addonsTotal + platformFee);
+
+  const selectedAddonsList = useMemo(() => {
+    if (!options?.selectedAddons || !service.addons) return [];
+    return service.addons.filter((a) => options.selectedAddons?.includes(a.id));
+  }, [options?.selectedAddons, service.addons]);
 
   useEffect(() => {
     // Load addresses
@@ -91,11 +111,6 @@ export const CreateRequestScreen: React.FC<Props> = ({
         else setShowNewAddress(true);
       })
       .catch(console.error);
-
-    // Default preferred date to tomorrow
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    setPreferredDate(tomorrow.toISOString().split('T')[0]);
   }, []);
 
   const pickImage = async () => {
@@ -179,10 +194,6 @@ export const CreateRequestScreen: React.FC<Props> = ({
       Alert.alert('Address Required', 'Please select or enter a doorstep service address.');
       return;
     }
-    if (!description.trim()) {
-      Alert.alert('Description Required', 'Please briefly describe your service requirements.');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -210,7 +221,15 @@ export const CreateRequestScreen: React.FC<Props> = ({
       const timeString = preferredSlot === 'morning' ? '10:00:00' : preferredSlot === 'afternoon' ? '14:00:00' : '18:00:00';
       const preferredAt = preferredDate ? `${preferredDate}T${timeString}` : new Date().toISOString();
 
-      const selectedOptions: Record<string, any> = {};
+      const finalDescription = description.trim() || 
+        `${effectivePackageName} (${options?.stepKey || options?.selectedVehicle || 'Standard'}) booking for ${user?.name || 'Customer'}`;
+
+      const selectedOptions: Record<string, any> = {
+        package_name: effectivePackageName,
+        step_key: options?.stepKey || options?.selectedVehicle || null,
+        addons: selectedAddonsList.map((a) => a.name),
+        total_amount: effectiveTotal,
+      };
       if (options?.pickupDrop) selectedOptions['pickup_and_drop'] = true;
 
       const res = await apiRequest<{ service_request: ServiceRequest } | ServiceRequest>('/service_requests', {
@@ -219,11 +238,12 @@ export const CreateRequestScreen: React.FC<Props> = ({
           service_request: {
             service_id: service.id,
             service_variant_id: options?.selectedVariant?.id || null,
-            vehicle_type: options?.selectedVehicle || null,
+            vehicle_type: options?.selectedVehicle || options?.stepKey || null,
             duration_hours: options?.driverHours || null,
+            total_amount: effectiveTotal,
             selected_options: selectedOptions,
             address_id: finalAddressId,
-            description: description.trim(),
+            description: finalDescription,
             preferred_at: preferredAt,
             preferred_date: preferredDate || null,
             preferred_time_slot: preferredSlot,
@@ -249,299 +269,396 @@ export const CreateRequestScreen: React.FC<Props> = ({
     const isConfirmed = createdRequest.status === 'booking_confirmed' || createdRequest.booking_status === 'confirmed';
 
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.successCard}>
-          <View style={styles.successIconWrap}>
-            <CheckCircle2 size={44} color={colors.success} />
-          </View>
-          <Text style={styles.successTitle}>
-            {isConfirmed ? 'Booking Confirmed!' : 'Service Request Submitted!'}
-          </Text>
-          <Text style={styles.successSubtitle}>
-            {isConfirmed
-              ? 'A verified local professional has been assigned. You will receive real-time schedule updates.'
-              : 'Our central care team has received your request and is matching it with a verified provider.'}
-          </Text>
-
-          <View style={styles.refBox}>
-            <Text style={styles.refLabel}>Booking Reference</Text>
-            <Text style={styles.refNumber}>{createdRequest.reference_number}</Text>
-          </View>
-
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryItem}>
-              • Service: <Text style={styles.bold}>{service.name}</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.successScroll} showsVerticalScrollIndicator={false}>
+          <View style={styles.successCard}>
+            <View style={styles.successIconWrap}>
+              <CheckCircle2 size={40} color={colors.successText} />
+            </View>
+            <Text style={styles.successTitle}>
+              {isConfirmed ? 'Booking Confirmed!' : 'Service Request Submitted!'}
             </Text>
-            {options?.selectedVariant && (
-              <Text style={styles.summaryItem}>
-                • Package: <Text style={styles.bold}>{options.selectedVariant.name}</Text>
-              </Text>
-            )}
-            <Text style={styles.summaryItem}>
-              • Status: <Text style={styles.bold}>{createdRequest.status.replace('_', ' ').toUpperCase()}</Text>
+            <Text style={styles.successSubtitle}>
+              {isConfirmed
+                ? 'A verified local technician has been assigned. You will receive real-time schedule updates.'
+                : 'Our operations team has received your request and is matching it with a verified local professional.'}
             </Text>
-            {options?.totalPrice && (
-              <Text style={styles.summaryItem}>
-                • Amount: <Text style={styles.bold}>₹{options.totalPrice}</Text> (Payable after work completion)
-              </Text>
-            )}
+
+            <View style={styles.refBox}>
+              <Text style={styles.refLabel}>Booking Reference Number</Text>
+              <Text style={styles.refNumber}>{createdRequest.reference_number}</Text>
+              <View style={styles.refDivider} />
+              <View style={styles.refTotalRow}>
+                <Text style={styles.refTotalLabel}>Guaranteed Total:</Text>
+                <Text style={styles.refTotalAmount}>₹{effectiveTotal.toLocaleString('en-IN')}</Text>
+              </View>
+            </View>
+
+            <View style={styles.summaryBox}>
+              <View style={styles.summaryHeaderRow}>
+                <Text style={styles.summaryBoxTitle}>ORDER DETAILS</Text>
+              </View>
+              <View style={styles.summaryItemRow}>
+                <Text style={styles.summaryItemKey}>Service</Text>
+                <Text style={styles.summaryItemVal}>{service.name}</Text>
+              </View>
+              <View style={styles.summaryItemRow}>
+                <Text style={styles.summaryItemKey}>Package</Text>
+                <Text style={styles.summaryItemVal}>{effectivePackageName}</Text>
+              </View>
+              {options?.selectedVehicle && (
+                <View style={styles.summaryItemRow}>
+                  <Text style={styles.summaryItemKey}>Vehicle / Option</Text>
+                  <Text style={styles.summaryItemVal}>{options.selectedVehicle.replace('_', ' ').toUpperCase()}</Text>
+                </View>
+              )}
+              <View style={styles.summaryItemRow}>
+                <Text style={styles.summaryItemKey}>Payment</Text>
+                <Text style={[styles.summaryItemVal, { color: colors.primary }]}>Payable after work completion</Text>
+              </View>
+            </View>
+
+            <SupportBanner referenceNumber={createdRequest.reference_number} serviceName={service.name} />
+
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={() => onComplete(createdRequest)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.doneButtonText}>Manage Booking</Text>
+            </TouchableOpacity>
           </View>
-
-          <SupportBanner referenceNumber={createdRequest.reference_number} serviceName={service.name} />
-
-          <TouchableOpacity
-            style={styles.doneButton}
-            onPress={() => onComplete(createdRequest)}
-          >
-            <Text style={styles.doneButtonText}>View My Bookings & Requests</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <ArrowLeft size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.topTitle}>Book {service.name}</Text>
-        <View style={{ width: 32 }} />
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Top Header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <ArrowLeft size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.topTitleWrap}>
+            <Text style={styles.topTitle}>Review & Schedule</Text>
+            <Text style={styles.topSub}>Doorstep dispatch with guaranteed fixed pricing</Text>
+          </View>
+          <View style={{ width: 36 }} />
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Service Package Summary Banner */}
-        <View style={styles.serviceBanner}>
-          <View style={styles.bannerHeader}>
-            <Text style={styles.serviceBannerName}>{service.name}</Text>
-            {options?.totalPrice && (
-              <Text style={styles.serviceBannerPrice}>₹{options.totalPrice}</Text>
+        <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* 1. Review Summary Card (Matching Web Order Summary) */}
+          <View style={styles.summaryCard}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <ShieldCheck size={16} color={colors.primary} />
+                <Text style={styles.cardHeaderTitle}>ORDER SUMMARY</Text>
+              </View>
+              <View style={styles.guaranteePill}>
+                <Text style={styles.guaranteePillText}>Fixed Tariff Guarantee</Text>
+              </View>
+            </View>
+
+            <View style={styles.orderBreakdown}>
+              <View style={styles.breakdownRow}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.packageTitle}>{effectivePackageName}</Text>
+                  {options?.selectedVehicle && (
+                    <Text style={styles.packageOptionSub}>
+                      Option: {options.selectedVehicle.replace('_', ' ').toUpperCase()}
+                    </Text>
+                  )}
+                </View>
+                <Text style={styles.packagePriceText}>₹{effectivePackagePrice.toLocaleString('en-IN')}</Text>
+              </View>
+
+              {/* Add-ons list */}
+              {selectedAddonsList.length > 0 && (
+                <View style={styles.addonsList}>
+                  <Text style={styles.addonsHeader}>Selected Add-ons:</Text>
+                  {selectedAddonsList.map((addon) => (
+                    <View key={addon.id} style={styles.addonRow}>
+                      <Text style={styles.addonName}>+ {addon.name}</Text>
+                      <Text style={styles.addonPrice}>₹{addon.price}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Platform Fee */}
+              <View style={styles.feeRow}>
+                <View style={styles.feeLabelWrap}>
+                  <Text style={styles.feeLabel}>Platform Fee</Text>
+                  <Info size={12} color={colors.textMuted} />
+                </View>
+                <Text style={styles.feeValue}>₹{platformFee}</Text>
+              </View>
+
+              {/* Estimated Total */}
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>ESTIMATED TOTAL</Text>
+                <Text style={styles.totalValue}>₹{effectiveTotal.toLocaleString('en-IN')}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* 2. Doorstep Address */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <MapPin size={16} color={colors.primary} />
+                <Text style={styles.cardHeaderTitle}>DOORSTEP ADDRESS</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowNewAddress(!showNewAddress)}
+                style={styles.headerActionBtn}
+              >
+                {showNewAddress ? <X size={14} color={colors.primary} /> : <Plus size={14} color={colors.primary} />}
+                <Text style={styles.headerActionText}>{showNewAddress ? 'Cancel' : 'Add new'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {!showNewAddress && addresses.length > 0 ? (
+              <View style={styles.addressList}>
+                {addresses.map((a) => {
+                  const isSelected = selectedAddressId === a.id;
+                  return (
+                    <TouchableOpacity
+                      key={a.id}
+                      style={[styles.addressItem, isSelected && styles.addressItemSelected]}
+                      onPress={() => setSelectedAddressId(a.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.radioDot, isSelected && styles.radioDotActive]}>
+                        {isSelected && <View style={styles.radioInner} />}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.addressLabelRow}>
+                          <Text style={styles.addressLabelText}>{a.label || 'Home'}</Text>
+                          {a.is_default && (
+                            <View style={styles.defaultPill}>
+                              <Text style={styles.defaultPillText}>Default</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={styles.addressLine}>{a.address_line}</Text>
+                        <Text style={styles.addressSub}>
+                          {a.landmark ? `${a.landmark}, ` : ''}{a.city} - {a.postal_code}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.newAddressBox}>
+                <Text style={styles.localityHeader}>Quick Locality Selection (Prayagraj):</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.locScroll}>
+                  {PRAYAGRAJ_LOCALITIES.map((loc) => (
+                    <TouchableOpacity
+                      key={loc.name}
+                      style={[
+                        styles.locChip,
+                        newLandmark === loc.name && styles.locChipActive,
+                      ]}
+                      onPress={() => {
+                        setNewLandmark(loc.name);
+                        setNewPincode(loc.pin);
+                        if (!newAddressLine) {
+                          setNewAddressLine(`${loc.name}, Prayagraj`);
+                        }
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.locChipText,
+                          newLandmark === loc.name && styles.locChipTextActive,
+                        ]}
+                      >
+                        📍 {loc.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <TextInput
+                  placeholder="Flat / House #, Street Name *"
+                  placeholderTextColor={colors.textLight}
+                  value={newAddressLine}
+                  onChangeText={setNewAddressLine}
+                  style={styles.input}
+                />
+                <TextInput
+                  placeholder="Landmark (Optional)"
+                  placeholderTextColor={colors.textLight}
+                  value={newLandmark}
+                  onChangeText={setNewLandmark}
+                  style={styles.input}
+                />
+                <View style={styles.inputRow}>
+                  <TextInput
+                    value={newCity}
+                    onChangeText={setNewCity}
+                    style={[styles.input, { flex: 1 }]}
+                  />
+                  <TextInput
+                    placeholder="PIN"
+                    placeholderTextColor={colors.textLight}
+                    value={newPincode}
+                    onChangeText={setNewPincode}
+                    style={[styles.input, { width: 95 }]}
+                  />
+                </View>
+
+                {addresses.length > 0 && (
+                  <TouchableOpacity onPress={() => setShowNewAddress(false)} style={styles.cancelAddressBtn}>
+                    <Text style={styles.cancelText}>← Choose from saved addresses</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
           </View>
-          {options?.selectedVariant && (
-            <Text style={styles.selectedVariantText}>
-              Package: {options.selectedVariant.name}
-            </Text>
-          )}
-          {options?.selectedVehicle && (
-            <Text style={styles.selectedOptionText}>
-              🚗 Vehicle: {options.selectedVehicle.toUpperCase()}
-            </Text>
-          )}
-          {options?.driverHours && (
-            <Text style={styles.selectedOptionText}>
-              ⏱ Shift: {options.driverHours} Hours
-            </Text>
-          )}
-        </View>
 
-        {/* Step 1: Address Selection */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <MapPin size={16} color={colors.primary} />
-            <Text style={styles.sectionLabel}>Doorstep Address</Text>
-          </View>
-
-          {!showNewAddress && addresses.length > 0 ? (
-            <View style={styles.addressList}>
-              {addresses.map((a) => (
-                <TouchableOpacity
-                  key={a.id}
-                  style={[styles.addressItem, selectedAddressId === a.id && styles.addressItemSelected]}
-                  onPress={() => setSelectedAddressId(a.id)}
-                  activeOpacity={0.7}
-                >
-                  <MapPin size={16} color={selectedAddressId === a.id ? colors.primary : colors.textMuted} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.addressLine}>{a.label ? `[${a.label}] ` : ''}{a.address_line}</Text>
-                    <Text style={styles.addressSub}>{a.city} - {a.postal_code}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                style={styles.addAddressLink}
-                onPress={() => setShowNewAddress(true)}
-              >
-                <Plus size={16} color={colors.primary} />
-                <Text style={styles.addAddressLinkText}>Add New Address</Text>
-              </TouchableOpacity>
+          {/* 3. Preferred Schedule */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Calendar size={16} color={colors.primary} />
+                <Text style={styles.cardHeaderTitle}>PREFERRED SCHEDULE</Text>
+              </View>
             </View>
-          ) : (
-            <View style={styles.newAddressBox}>
-              <Text style={styles.localityHeader}>Quick Locality Selection (Prayagraj):</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-                {PRAYAGRAJ_LOCALITIES.map((loc) => (
+
+            <Text style={styles.inputLabel}>Date (YYYY-MM-DD)</Text>
+            <TextInput
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textLight}
+              value={preferredDate}
+              onChangeText={setPreferredDate}
+              style={styles.input}
+            />
+
+            <Text style={[styles.inputLabel, { marginTop: 8 }]}>Preferred Time Window</Text>
+            <View style={styles.slotsRow}>
+              {[
+                { id: 'morning', label: 'Morning', time: '9 AM - 12 PM' },
+                { id: 'afternoon', label: 'Afternoon', time: '1 PM - 4 PM' },
+                { id: 'evening', label: 'Evening', time: '5 PM - 8 PM' },
+              ].map((slot) => {
+                const isActive = preferredSlot === slot.id;
+                return (
                   <TouchableOpacity
-                    key={loc.name}
-                    style={[
-                      styles.locChip,
-                      newLandmark === loc.name && styles.locChipActive,
-                    ]}
-                    onPress={() => {
-                      setNewLandmark(loc.name);
-                      setNewPincode(loc.pin);
-                      if (!newAddressLine) {
-                        setNewAddressLine(`${loc.name}, Prayagraj`);
-                      }
-                    }}
+                    key={slot.id}
+                    style={[styles.slotButton, isActive && styles.slotButtonActive]}
+                    onPress={() => setPreferredSlot(slot.id as any)}
+                    activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.locChipText,
-                        newLandmark === loc.name && styles.locChipTextActive,
-                      ]}
-                    >
-                      📍 {loc.name}
+                    <Text style={[styles.slotLabel, isActive && styles.slotLabelActive]}>
+                      {slot.label}
+                    </Text>
+                    <Text style={[styles.slotTime, isActive && styles.slotTimeActive]}>
+                      {slot.time}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <TextInput
-                placeholder="Flat / House #, Street Name *"
-                placeholderTextColor={colors.textLight}
-                value={newAddressLine}
-                onChangeText={setNewAddressLine}
-                style={styles.input}
-              />
-              <TextInput
-                placeholder="Landmark (Optional)"
-                placeholderTextColor={colors.textLight}
-                value={newLandmark}
-                onChangeText={setNewLandmark}
-                style={styles.input}
-              />
-              <View style={styles.row}>
-                <TextInput
-                  value={newCity}
-                  onChangeText={setNewCity}
-                  style={[styles.input, { flex: 1 }]}
-                />
-                <TextInput
-                  placeholder="PIN"
-                  value={newPincode}
-                  onChangeText={setNewPincode}
-                  style={[styles.input, { width: 90 }]}
-                />
-              </View>
-
-              {addresses.length > 0 && (
-                <TouchableOpacity onPress={() => setShowNewAddress(false)}>
-                  <Text style={styles.cancelText}>Select from saved addresses</Text>
-                </TouchableOpacity>
-              )}
+                );
+              })}
             </View>
-          )}
-        </View>
-
-        {/* Step 2: Preferred Schedule */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Calendar size={16} color={colors.primary} />
-            <Text style={styles.sectionLabel}>Preferred Schedule</Text>
           </View>
 
-          <Text style={styles.inputLabel}>Date (YYYY-MM-DD) *</Text>
-          <TextInput
-            placeholder="2026-11-07"
-            placeholderTextColor={colors.textLight}
-            value={preferredDate}
-            onChangeText={setPreferredDate}
-            style={styles.input}
-          />
-
-          <Text style={[styles.inputLabel, { marginTop: 10 }]}>Time Window *</Text>
-          <View style={styles.slotsRow}>
-            {[
-              { id: 'morning', label: 'Morning\n9 AM - 12 PM' },
-              { id: 'afternoon', label: 'Afternoon\n1 PM - 4 PM' },
-              { id: 'evening', label: 'Evening\n5 PM - 8 PM' },
-            ].map((slot) => (
-              <TouchableOpacity
-                key={slot.id}
-                style={[styles.slotButton, preferredSlot === slot.id && styles.slotButtonActive]}
-                onPress={() => setPreferredSlot(slot.id)}
-              >
-                <Text style={[styles.slotText, preferredSlot === slot.id && styles.slotTextActive]}>
-                  {slot.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Step 3: Requirements Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Requirement Details *</Text>
-          <TextInput
-            multiline
-            numberOfLines={3}
-            placeholder="e.g. Tap leaking under the kitchen sink, parking in basement, electricity available..."
-            placeholderTextColor={colors.textLight}
-            value={description}
-            onChangeText={setDescription}
-            style={[styles.input, styles.textArea]}
-          />
-        </View>
-
-        {/* Step 4: Attach Photos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Attach Photos (Optional)</Text>
-          <View style={styles.photoRow}>
-            {attachments.map((att, idx) => (
-              <View key={idx} style={styles.thumbWrapper}>
-                <Image source={{ uri: att.file_url }} style={styles.thumbnail} />
-                <TouchableOpacity
-                  style={styles.removePhotoBtn}
-                  onPress={() => removeAttachment(idx)}
-                >
-                  <X size={12} color="#ffffff" />
-                </TouchableOpacity>
+          {/* 4. Special Instructions (Optional) */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <FileText size={16} color={colors.primary} />
+                <Text style={styles.cardHeaderTitle}>SPECIAL INSTRUCTIONS (OPTIONAL)</Text>
               </View>
-            ))}
+            </View>
 
-            <TouchableOpacity
-              style={styles.photoUpload}
-              onPress={pickImage}
-              disabled={uploadingImage}
-            >
-              {uploadingImage ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <>
-                  <Camera size={20} color={colors.textMuted} />
-                  <Text style={styles.uploadText}>Add Photo</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <TextInput
+              multiline
+              numberOfLines={3}
+              placeholder="e.g. Landmark near Hanuman temple, parking in basement, please bring extra cord..."
+              placeholderTextColor={colors.textLight}
+              value={description}
+              onChangeText={setDescription}
+              style={[styles.input, styles.textArea]}
+            />
           </View>
-        </View>
 
-        <View style={{ height: 20 }} />
-      </ScrollView>
+          {/* 5. Photos (Optional) */}
+          <View style={styles.card}>
+            <Text style={styles.cardHeaderTitle}>ATTACH PHOTOS (OPTIONAL)</Text>
+            <View style={styles.photoRow}>
+              {attachments.map((att, idx) => (
+                <View key={idx} style={styles.thumbWrapper}>
+                  <Image source={{ uri: att.file_url }} style={styles.thumbnail} />
+                  <TouchableOpacity
+                    style={styles.removePhotoBtn}
+                    onPress={() => removeAttachment(idx)}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <X size={10} color="#ffffff" />
+                  </TouchableOpacity>
+                </View>
+              ))}
 
-      {/* Sticky Bottom Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={[styles.submitButton, submitting && { opacity: 0.7 }]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.submitButtonText}>
-              {options?.totalPrice ? `Confirm Booking • ₹${options.totalPrice}` : 'Submit Booking Request'}
+              <TouchableOpacity
+                style={styles.photoUpload}
+                onPress={pickImage}
+                disabled={uploadingImage}
+                activeOpacity={0.7}
+              >
+                {uploadingImage ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <Camera size={18} color={colors.textMuted} />
+                    <Text style={styles.uploadText}>Add Photo</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Trust strip */}
+          <View style={styles.trustStrip}>
+            <ShieldCheck size={14} color={colors.primary} />
+            <Text style={styles.trustStripText}>
+              Doorstep service guarantee • Cash or UPI after service completion
             </Text>
-          )}
-        </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 24 }} />
+        </ScrollView>
+
+        {/* Sticky Bottom Bar */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={[styles.submitButton, submitting && { opacity: 0.7 }]}
+            onPress={handleSubmit}
+            disabled={submitting}
+            activeOpacity={0.8}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.submitButtonText}>
+                Confirm & Schedule Booking • ₹{effectiveTotal.toLocaleString('en-IN')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -551,7 +668,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'ios' ? 8 : 14,
     paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
@@ -560,102 +677,188 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 6,
   },
+  topTitleWrap: {
+    flex: 1,
+    marginLeft: 8,
+  },
   topTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  content: {
-    padding: 16,
-  },
-  serviceBanner: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 14,
-  },
-  bannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  serviceBannerName: {
     fontSize: 16,
     fontWeight: '800',
     color: colors.textPrimary,
   },
-  serviceBannerPrice: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: colors.primary,
-  },
-  selectedVariantText: {
-    fontSize: 12,
-    color: colors.primaryDark,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  selectedOptionText: {
-    fontSize: 12,
+  topSub: {
+    fontSize: 11,
     color: colors.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
-  section: {
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    gap: 12,
+  },
+
+  // Summary Card
+  summaryCard: {
     backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 14,
   },
-  sectionHeaderRow: {
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cardHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 8,
   },
-  sectionLabel: {
+  cardHeaderTitle: {
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
-  inputLabel: {
+  guaranteePill: {
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+  },
+  guaranteePillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.successText,
+  },
+  orderBreakdown: {
+    gap: 10,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  packageTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  packageOptionSub: {
     fontSize: 11,
     color: colors.textMuted,
-    marginBottom: 4,
+    marginTop: 2,
+    fontWeight: '500',
   },
-  input: {
-    backgroundColor: colors.background,
+  packagePriceText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  addonsList: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    gap: 4,
+  },
+  addonsHeader: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+    marginBottom: 2,
+  },
+  addonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  addonName: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  addonPrice: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  feeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+  },
+  feeLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  feeLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  feeValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 2,
+    borderTopColor: colors.textPrimary,
+    marginTop: 4,
+  },
+  totalLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    letterSpacing: 0.5,
+  },
+  totalValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: colors.textPrimary,
+  },
+
+  // Standard Card
+  card: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.textPrimary,
-    marginBottom: 8,
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  row: {
+  headerActionBtn: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    gap: 4,
   },
+  headerActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+
+  // Address
   addressList: {
     gap: 8,
   },
   addressItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: '#ffffff',
@@ -664,35 +867,68 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primaryLight,
   },
-  addressLine: {
+  radioDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  radioDotActive: {
+    borderColor: colors.primary,
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+  },
+  addressLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  addressLabelText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.textPrimary,
+  },
+  defaultPill: {
+    backgroundColor: colors.borderSubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  defaultPillText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  addressLine: {
+    fontSize: 12,
+    color: colors.textPrimary,
+    marginTop: 2,
+    lineHeight: 16,
   },
   addressSub: {
     fontSize: 11,
     color: colors.textMuted,
     marginTop: 2,
   },
-  addAddressLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-  },
-  addAddressLinkText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '700',
-  },
   newAddressBox: {
-    gap: 4,
+    gap: 6,
   },
   localityHeader: {
     fontSize: 11,
-    color: colors.textMuted,
     fontWeight: '600',
-    marginBottom: 6,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  locScroll: {
+    marginBottom: 8,
   },
   locChip: {
     paddingHorizontal: 10,
@@ -715,20 +951,46 @@ const styles = StyleSheet.create({
   locChipTextActive: {
     color: '#ffffff',
   },
+  input: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cancelAddressBtn: {
+    paddingVertical: 6,
+  },
   cancelText: {
     fontSize: 12,
     color: colors.primary,
-    textDecorationLine: 'underline',
-    marginTop: 4,
+    fontWeight: '600',
+  },
+
+  // Preferred Schedule
+  inputLabel: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   slotsRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 4,
   },
   slotButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -738,30 +1000,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  slotText: {
+  slotLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  slotTextActive: {
-    color: '#ffffff',
     fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  slotLabelActive: {
+    color: '#ffffff',
+  },
+  slotTime: {
+    fontSize: 9,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  slotTimeActive: {
+    color: '#ffffff',
+    opacity: 0.9,
+  },
+
+  // Notes & Photos
+  textArea: {
+    height: 70,
+    textAlignVertical: 'top',
   },
   photoRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 6,
+    marginTop: 8,
   },
   thumbWrapper: {
     position: 'relative',
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
   },
   thumbnail: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: 8,
   },
   removePhotoBtn: {
@@ -776,8 +1051,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   photoUpload: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
@@ -792,6 +1067,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
+
+  // Trust Strip
+  trustStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  trustStripText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+
+  // Bottom Bar
   bottomBar: {
     backgroundColor: '#ffffff',
     padding: 16,
@@ -801,44 +1092,49 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
   },
   submitButtonText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+  },
+
+  // Success Screen
+  successScroll: {
+    padding: 16,
   },
   successCard: {
     backgroundColor: '#ffffff',
-    margin: 16,
     padding: 24,
     borderRadius: 20,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    gap: 12,
   },
   successIconWrap: {
     width: 64,
     height: 64,
     borderRadius: 32,
     backgroundColor: colors.successLight,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 4,
   },
   successTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
     color: colors.textPrimary,
     textAlign: 'center',
   },
   successSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textMuted,
     textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
     lineHeight: 18,
   },
   refBox: {
@@ -846,13 +1142,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primaryBorder,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 14,
+    marginVertical: 4,
   },
   refLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: colors.primaryDark,
     textTransform: 'uppercase',
@@ -861,9 +1157,30 @@ const styles = StyleSheet.create({
   refNumber: {
     fontSize: 22,
     fontWeight: '900',
-    color: colors.primary,
+    color: colors.textPrimary,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     marginTop: 4,
+  },
+  refDivider: {
+    height: 1,
+    backgroundColor: colors.primaryBorder,
+    width: '100%',
+    marginVertical: 10,
+  },
+  refTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignItems: 'center',
+  },
+  refTotalLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  refTotalAmount: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.textPrimary,
   },
   summaryBox: {
     backgroundColor: colors.background,
@@ -871,14 +1188,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: '100%',
     gap: 6,
-    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  summaryItem: {
+  summaryHeaderRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 6,
+    marginBottom: 2,
+  },
+  summaryBoxTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  summaryItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryItemKey: {
     fontSize: 12,
-    color: colors.textSecondary,
-    lineHeight: 18,
+    color: colors.textMuted,
   },
-  bold: {
+  summaryItemVal: {
+    fontSize: 12,
     fontWeight: '700',
     color: colors.textPrimary,
   },
@@ -888,7 +1223,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   doneButtonText: {
     color: '#ffffff',

@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U localhelp"]
+      test: ["CMD-SHELL", "pg_isready -U localhelp -d localhelp_development"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,6 +30,13 @@ services:
         condition: service_healthy
     environment:
       RAILS_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: localhelp
+      DB_PASSWORD: localhelp_dev
+      DB_NAME: localhelp_development
+      DB_CACHE_NAME: localhelp_development_cache
+      DB_QUEUE_NAME: localhelp_development_queue
       DATABASE_URL: postgresql://localhelp:localhelp_dev@db:5432/localhelp_development
       PORT: 3000
       SECRET_KEY_BASE: 09a63ec59a42be4e2d3dfae9743a4115160fa47ee6bfbe9fe0b3d63bdf9bf0907e5e3ffc1ab80ab4417ba119cff75df5b61031d7ec00a8864cefaadcb6018335

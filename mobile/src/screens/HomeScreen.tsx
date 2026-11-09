@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -7,13 +7,43 @@ import {
   TextInput, 
   StyleSheet, 
   ActivityIndicator,
-  RefreshControl 
+  RefreshControl,
+  Modal,
+  FlatList
 } from 'react-native';
-import { Search, Sparkles, Wrench, ShieldCheck, Clock, ChevronRight, Bell, MapPin } from 'lucide-react-native';
+import { 
+  Search, 
+  Sparkles, 
+  Wrench, 
+  ShieldCheck, 
+  Clock, 
+  ChevronRight, 
+  Bell, 
+  MapPin, 
+  Car, 
+  Laptop, 
+  Zap, 
+  ArrowRight, 
+  CheckCircle2, 
+  X,
+  Check
+} from 'lucide-react-native';
 import { Category, Service } from '../types';
 import { apiRequest } from '../api/client';
 import { SupportBanner } from '../components/SupportBanner';
 import { colors } from '../theme/colors';
+
+const PRAYAGRAJ_LOCALITIES = [
+  'Civil Lines',
+  'Katra',
+  'Tagore Town',
+  'Ashok Nagar',
+  'Georgetown',
+  'Mumfordganj',
+  'Naini',
+  'Jhunsi',
+  'Dhoomanganj'
+];
 
 interface Props {
   onSelectCategory: (cat: Category) => void;
@@ -29,25 +59,29 @@ export const HomeScreen: React.FC<Props> = ({
   unreadNotifications = 0 
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredServices, setFeaturedServices] = useState<Service[]>([]);
+  const [allServices, setAllServices] = useState<Service[]>([]);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('all');
+  const [selectedLocality, setSelectedLocality] = useState<string>('Civil Lines');
+  const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const loadData = async () => {
     try {
       const [catsRes, svcsRes] = await Promise.all([
-        apiRequest<{ categories: Category[] } | Category[]>('/categories'),
-        apiRequest<{ services: Service[] } | Service[]>('/services')
+        apiRequest<Category[]>('/categories'),
+        apiRequest<{ services: Service[] } | Service[]>('/services?per_page=100')
       ]);
 
       const catList = Array.isArray(catsRes) ? catsRes : (catsRes as any).categories || [];
       const svcList: Service[] = Array.isArray(svcsRes) ? svcsRes : (svcsRes as any).services || [];
 
       setCategories(catList);
-      setFeaturedServices(svcList);
+      setAllServices(svcList);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load home data', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,215 +97,429 @@ export const HomeScreen: React.FC<Props> = ({
     loadData();
   };
 
-  const filteredServices = searchQuery.trim()
-    ? featuredServices.filter(s => 
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (s.short_description && s.short_description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (s.category_name && s.category_name.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : featuredServices.slice(0, 8);
+  const getCategoryIcon = (slug?: string) => {
+    const size = 15;
+    if (slug === 'vehicle-services') return <Car size={size} color={colors.primary} />;
+    if (slug === 'home-services') return <Sparkles size={size} color={colors.primary} />;
+    if (slug === 'computer-services') return <Laptop size={size} color={colors.primary} />;
+    if (slug === 'emergency-assistance') return <Zap size={size} color={colors.primary} />;
+    return <Wrench size={size} color={colors.primary} />;
+  };
 
-  const filteredCategories = searchQuery.trim()
-    ? categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : categories;
+  // Autocomplete search results
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return allServices.filter((s) => {
+      const catName = s.category?.name || categories.find((c) => c.id === s.category_id)?.name;
+      return (
+        s.name.toLowerCase().includes(q) ||
+        (s.short_description && s.short_description.toLowerCase().includes(q)) ||
+        (catName && catName.toLowerCase().includes(q))
+      );
+    }).slice(0, 5);
+  }, [searchQuery, allServices, categories]);
+
+  // Selected Category Object
+  const selectedCategoryObj = useMemo(() => {
+    if (selectedCategorySlug === 'all') return null;
+    return categories.find((c) => c.slug === selectedCategorySlug || c.id.toString() === selectedCategorySlug);
+  }, [selectedCategorySlug, categories]);
+
+  // Services displayed according to category filter
+  const displayedServices = useMemo(() => {
+    if (selectedCategorySlug === 'all' || !selectedCategoryObj) {
+      // Return top priority services
+      const priority = ['car-wash', 'car-detailing', 'ac-repair-servicing', 'deep-cleaning', 'electrical-repair', 'plumbing-repair', 'laptop-repair'];
+      const curated: Service[] = [];
+      priority.forEach((slug) => {
+        const found = allServices.find((s) => s.slug === slug);
+        if (found) curated.push(found);
+      });
+      allServices.forEach((s) => {
+        if (!curated.some((c) => c.id === s.id) && curated.length < 12) {
+          curated.push(s);
+        }
+      });
+      return curated;
+    }
+
+    return allServices.filter((s) => 
+      s.category_id === selectedCategoryObj.id || 
+      s.category?.slug === selectedCategoryObj.slug ||
+      s.category?.id === selectedCategoryObj.id
+    );
+  }, [selectedCategorySlug, selectedCategoryObj, allServices]);
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading local services...</Text>
+        <Text style={styles.loadingText}>Loading Prayagraj services...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header Banner */}
-      <View style={styles.header}>
-        <View style={styles.topRow}>
-          <View style={styles.cityPill}>
-            <MapPin size={12} color="#ffffff" />
-            <Text style={styles.cityPillText}>Prayagraj (Allahabad)</Text>
-          </View>
-          {onOpenNotifications && (
-            <TouchableOpacity onPress={onOpenNotifications} style={styles.bellBtn} activeOpacity={0.8}>
-              <Bell size={20} color="#ffffff" />
-              {unreadNotifications > 0 && (
-                <View style={styles.badgeWrap}>
-                  <Text style={styles.badgeText}>
-                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <Text style={styles.heroTitle}>Local Services, Coordinated with Care</Text>
-        <Text style={styles.heroSubtitle}>
-          Verified technicians, upfront transparent pricing, and instant doorstep service booking.
-        </Text>
-
-        {/* Search Input */}
-        <View style={styles.searchBar}>
-          <Search size={18} color={colors.textLight} />
-          <TextInput
-            placeholder="Search car wash, electrician, driver, repairs..."
-            placeholderTextColor={colors.textLight}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
-          />
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        {/* Support Banner */}
-        <SupportBanner compact />
-
-        {/* Categories Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Browse Categories</Text>
-        </View>
-
-        <View style={styles.categoriesGrid}>
-          {filteredCategories.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              style={styles.categoryCard}
-              onPress={() => onSelectCategory(cat)}
-              activeOpacity={0.7}
+    <View style={styles.wrapper}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Top Header & Doorstep Location */}
+        <View style={styles.header}>
+          <View style={styles.topRow}>
+            <TouchableOpacity 
+              style={styles.locationPill}
+              onPress={() => setShowLocationModal(true)}
+              activeOpacity={0.8}
             >
-              <View style={styles.categoryIconWrap}>
-                <Wrench size={20} color={colors.primary} />
+              <View style={styles.pinCircle}>
+                <MapPin size={13} color="#FFFFFF" />
               </View>
-              <Text style={styles.categoryName} numberOfLines={2}>{cat.name}</Text>
-              <Text style={styles.categoryCount}>
-                {cat.coming_soon ? 'Coming Soon' : `${cat.services_count || 'Explore'} services`}
-              </Text>
+              <View>
+                <Text style={styles.locationSub}>Doorstep Location</Text>
+                <Text style={styles.locationMain}>Prayagraj • {selectedLocality}</Text>
+              </View>
+              <ChevronRight size={14} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
-          ))}
-        </View>
 
-        {/* Popular Services Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {searchQuery.trim() ? `Search Results (${filteredServices.length})` : 'Popular Services'}
+            {onOpenNotifications && (
+              <TouchableOpacity onPress={onOpenNotifications} style={styles.bellBtn} activeOpacity={0.8}>
+                <Bell size={20} color="#ffffff" />
+                {unreadNotifications > 0 && (
+                  <View style={styles.badgeWrap}>
+                    <Text style={styles.badgeText}>
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Hero Headline */}
+          <Text style={styles.heroTitle}>Doorstep Services, Guaranteed Quality</Text>
+          <Text style={styles.heroSubtitle}>
+            Verified local specialists, guaranteed pricing, and instant dispatch.
           </Text>
+
+          {/* Search Input */}
+          <View style={styles.searchBar}>
+            <Search size={18} color={colors.textLight} />
+            <TextInput
+              placeholder="Search car wash, electrician, AC repair, driver..."
+              placeholderTextColor={colors.textLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => setIsSearchFocused(true)}
+              style={styles.searchInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <X size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        <View style={styles.servicesList}>
-          {filteredServices.map((svc) => {
-            const isComingSoon = svc.coming_soon;
-            const price = svc.fixed_price || svc.base_price;
-
-            return (
+        {/* Autocomplete Search Dropdown */}
+        {isSearchFocused && searchResults.length > 0 && (
+          <View style={styles.autocompleteCard}>
+            <View style={styles.autocompleteHeader}>
+              <Text style={styles.autocompleteHeaderText}>Matching Services ({searchResults.length})</Text>
+            </View>
+            {searchResults.map((svc) => (
               <TouchableOpacity
                 key={svc.id}
-                style={styles.serviceCard}
-                onPress={() => onSelectService(svc)}
-                activeOpacity={0.7}
+                style={styles.autocompleteRow}
+                onPress={() => {
+                  setSearchQuery('');
+                  setIsSearchFocused(false);
+                  onSelectService(svc);
+                }}
               >
-                <View style={styles.serviceInfo}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.serviceName}>{svc.name}</Text>
-                    {isComingSoon && (
-                      <View style={styles.comingSoonBadge}>
-                        <Text style={styles.comingSoonText}>Coming Soon</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.autocompleteName}>{svc.name}</Text>
+                  <Text style={styles.autocompleteMeta}>
+                    {svc.category?.name || 'Local Service'} {svc.estimated_duration_minutes ? `• ~${svc.estimated_duration_minutes}m` : ''}
+                  </Text>
+                </View>
+                <Text style={styles.autocompletePrice}>
+                  {svc.fixed_price ? `₹${svc.fixed_price}` : 'Configurable'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Flat Category Pills Carousel (Matching Web) */}
+        <View style={styles.categoryPillsSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+            <TouchableOpacity
+              onPress={() => setSelectedCategorySlug('all')}
+              style={[styles.categoryPill, selectedCategorySlug === 'all' && styles.categoryPillActive]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.categoryPillText, selectedCategorySlug === 'all' && styles.categoryPillTextActive]}>
+                All Top Services
+              </Text>
+            </TouchableOpacity>
+
+            {categories.map((cat) => {
+              const isSelected = selectedCategorySlug === cat.slug || selectedCategorySlug === cat.id.toString();
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  onPress={() => setSelectedCategorySlug(cat.slug || cat.id.toString())}
+                  style={[styles.categoryPill, isSelected && styles.categoryPillActive]}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.pillIcon}>{getCategoryIcon(cat.slug)}</View>
+                  <Text style={[styles.categoryPillText, isSelected && styles.categoryPillTextActive]}>
+                    {cat.name}
+                  </Text>
+                  {cat.services_count !== undefined && (
+                    <View style={[styles.pillCountBadge, isSelected && styles.pillCountBadgeActive]}>
+                      <Text style={[styles.pillCountText, isSelected && styles.pillCountTextActive]}>
+                        {cat.services_count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.content}>
+          {/* Section Header */}
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionHeaderTitle}>
+                {selectedCategorySlug === 'all' || !selectedCategoryObj
+                  ? 'Popular Doorstep Services'
+                  : selectedCategoryObj.name}
+              </Text>
+              <Text style={styles.sectionHeaderSub}>
+                1-click configuration, guaranteed pricing, and verified dispatch
+              </Text>
+            </View>
+            {selectedCategorySlug !== 'all' && (
+              <TouchableOpacity onPress={() => setSelectedCategorySlug('all')}>
+                <Text style={styles.resetFilterText}>View All</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Service Cards Grid */}
+          <View style={styles.servicesGrid}>
+            {displayedServices.map((svc) => {
+              const isComingSoon = svc.coming_soon;
+              const catName = svc.category?.name || categories.find((c) => c.id === svc.category_id)?.name || 'Local Service';
+
+              return (
+                <TouchableOpacity
+                  key={svc.id}
+                  style={styles.serviceCard}
+                  onPress={() => onSelectService(svc)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText} numberOfLines={1}>{catName}</Text>
+                    </View>
+                    {svc.estimated_duration_minutes && (
+                      <View style={styles.durationPill}>
+                        <Clock size={11} color={colors.textLight} />
+                        <Text style={styles.durationText}>{svc.estimated_duration_minutes}m</Text>
                       </View>
                     )}
                   </View>
+
+                  <Text style={styles.serviceName}>{svc.name}</Text>
                   <Text style={styles.serviceDesc} numberOfLines={2}>
-                    {svc.short_description || svc.description || 'Reliable local home service'}
+                    {svc.short_description || svc.description || 'Verified doorstep technical assistance with guaranteed quality.'}
                   </Text>
-                  <View style={styles.badgeRow}>
-                    <View style={[styles.pricingBadge, isComingSoon ? styles.soonBadge : styles.fixedBadge]}>
-                      <Text style={[styles.pricingBadgeText, isComingSoon ? styles.soonBadgeText : styles.fixedBadgeText]}>
-                        {isComingSoon
-                          ? 'Launching Soon'
-                          : price
-                          ? `₹${price}`
-                          : svc.booking_type === 'time_based'
-                          ? 'From ₹800'
-                          : 'Fixed Price'}
+
+                  <View style={styles.cardFooter}>
+                    <View>
+                      <Text style={styles.priceLabel}>Fixed from</Text>
+                      <Text style={styles.priceValue}>
+                        {svc.fixed_price ? `₹${svc.fixed_price}` : '₹299'}
                       </Text>
                     </View>
-                    {svc.estimated_duration_minutes && (
-                      <Text style={styles.durationText}>
-                        ⏱ {svc.estimated_duration_minutes} mins
-                      </Text>
-                    )}
-                    {svc.supported_vehicle_types && svc.supported_vehicle_types.length > 0 && (
-                      <Text style={styles.vehicleTag}>
-                        🚗 {svc.supported_vehicle_types.length} vehicle types
-                      </Text>
+
+                    {isComingSoon ? (
+                      <View style={styles.comingSoonBadge}>
+                        <Text style={styles.comingSoonText}>Coming Soon</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.bookButton}>
+                        <Text style={styles.bookButtonText}>Book</Text>
+                        <ArrowRight size={13} color="#FFFFFF" />
+                      </View>
                     )}
                   </View>
-                </View>
-                <ChevronRight size={18} color={colors.textLight} />
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Support Banner */}
+          <SupportBanner compact />
+
+          {/* Guarantee Highlights (Matching Web) */}
+          <View style={styles.trustCard}>
+            <View style={styles.trustItem}>
+              <View style={styles.trustIconWrap}>
+                <CheckCircle2 size={16} color={colors.primary} />
+              </View>
+              <View style={styles.trustTextWrap}>
+                <Text style={styles.trustTitle}>Verified Specialists</Text>
+                <Text style={styles.trustDesc}>Background verified technicians dispatched with photo ID.</Text>
+              </View>
+            </View>
+
+            <View style={styles.trustItem}>
+              <View style={styles.trustIconWrap}>
+                <ShieldCheck size={16} color={colors.primary} />
+              </View>
+              <View style={styles.trustTextWrap}>
+                <Text style={styles.trustTitle}>Guaranteed Pricing</Text>
+                <Text style={styles.trustDesc}>Upfront transparent estimates without hidden charges.</Text>
+              </View>
+            </View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+
+      {/* Location Picker Modal */}
+      <Modal
+        visible={showLocationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLocationModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLocationModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Select Doorstep Location</Text>
+                <Text style={styles.modalSub}>Coverage across Prayagraj (Allahabad)</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowLocationModal(false)} style={styles.closeBtn}>
+                <X size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={PRAYAGRAJ_LOCALITIES}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => {
+                const isSelected = selectedLocality === item;
+                return (
+                  <TouchableOpacity
+                    style={[styles.localityRow, isSelected && styles.localityRowSelected]}
+                    onPress={() => {
+                      setSelectedLocality(item);
+                      setShowLocationModal(false);
+                    }}
+                  >
+                    <View style={styles.localityLeft}>
+                      <MapPin size={16} color={isSelected ? colors.primary : colors.textLight} />
+                      <Text style={[styles.localityText, isSelected && styles.localityTextSelected]}>
+                        {item}
+                      </Text>
+                    </View>
+                    {isSelected && <Check size={16} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
     backgroundColor: colors.background,
   },
+  container: {
+    flex: 1,
+  },
   center: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
     backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
-    color: colors.textMuted,
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
   header: {
     backgroundColor: colors.primaryDark,
-    paddingHorizontal: 20,
-    paddingTop: 48,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 22,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 14,
   },
-  cityPill: {
+  locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    gap: 8,
   },
-  cityPillText: {
-    color: '#ffffff',
-    fontSize: 12,
+  pinCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.primaryAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationSub: {
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.75)',
     fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  locationMain: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   bellBtn: {
-    position: 'relative',
-    padding: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badgeWrap: {
     position: 'absolute',
@@ -283,181 +531,374 @@ const styles = StyleSheet.create({
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: 3,
   },
   badgeText: {
     color: '#ffffff',
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   heroTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
-    color: '#ffffff',
-    lineHeight: 28,
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+    marginBottom: 4,
   },
   heroSubtitle: {
-    fontSize: 13,
-    color: '#D1FAE5',
-    marginTop: 6,
-    lineHeight: 18,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 17,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 46,
-    marginTop: 16,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textPrimary,
+    padding: 0,
+  },
+  autocompleteCard: {
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    marginTop: -8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    zIndex: 10,
+  },
+  autocompleteHeader: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.ivory,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  autocompleteHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  autocompleteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  autocompleteName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  autocompleteMeta: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  autocompletePrice: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  categoryPillsSection: {
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  categoryScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    gap: 6,
+  },
+  categoryPillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  pillIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  categoryPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  pillCountBadge: {
+    backgroundColor: colors.ivory,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  pillCountBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  pillCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.textMuted,
+  },
+  pillCountTextActive: {
+    color: '#FFFFFF',
   },
   content: {
     padding: 16,
+    gap: 16,
   },
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 16,
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 4,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+  sectionHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.textPrimary,
+    letterSpacing: -0.2,
   },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  sectionHeaderSub: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  resetFilterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  servicesGrid: {
     gap: 12,
   },
-  categoryCard: {
-    width: '48%',
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
+  serviceCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  categoryIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: colors.primaryLight,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+  categoryBadge: {
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
   },
-  categoryName: {
-    fontSize: 14,
+  categoryBadgeText: {
+    fontSize: 10,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: colors.primary,
+    textTransform: 'uppercase',
   },
-  categoryCount: {
+  durationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  durationText: {
     fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 3,
-  },
-  servicesList: {
-    gap: 10,
-    paddingBottom: 24,
-  },
-  serviceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  serviceInfo: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    color: colors.textLight,
+    fontWeight: '500',
   },
   serviceName: {
     fontSize: 15,
     fontWeight: '700',
     color: colors.textPrimary,
-  },
-  comingSoonBadge: {
-    backgroundColor: colors.warningLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.warningBorder,
-  },
-  comingSoonText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.warningText,
+    marginBottom: 4,
   },
   serviceDesc: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 3,
-    lineHeight: 16,
+    lineHeight: 17,
+    marginBottom: 12,
   },
-  badgeRow: {
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    paddingTop: 10,
+  },
+  priceLabel: {
+    fontSize: 10,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  priceValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  bookButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
   },
-  pricingBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  pricingBadgeText: {
-    fontSize: 11,
+  bookButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '700',
   },
-  fixedBadge: {
-    backgroundColor: colors.primaryLight,
+  comingSoonBadge: {
+    backgroundColor: colors.warningLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.primaryBorder,
+    borderColor: colors.warningBorder,
   },
-  fixedBadgeText: {
+  comingSoonText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.warningText,
+  },
+  trustCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 12,
+  },
+  trustItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  trustIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  trustTextWrap: {
+    flex: 1,
+  },
+  trustTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  trustDesc: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginTop: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+    maxHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 12,
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  modalSub: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  localityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  localityRowSelected: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: 10,
+  },
+  localityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  localityText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  localityTextSelected: {
     color: colors.primary,
-    fontSize: 11,
     fontWeight: '700',
-  },
-  soonBadge: {
-    backgroundColor: colors.borderSubtle,
-  },
-  soonBadgeText: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  durationText: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  vehicleTag: {
-    fontSize: 11,
-    color: colors.textMuted,
   },
 });

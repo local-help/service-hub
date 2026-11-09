@@ -9,7 +9,8 @@ import {
   Alert, 
   ActivityIndicator,
   Platform,
-  Linking 
+  Linking,
+  Modal
 } from 'react-native';
 import { 
   ArrowLeft, 
@@ -21,10 +22,16 @@ import {
   AlertTriangle, 
   CreditCard, 
   UserCheck, 
-  Phone 
+  Phone,
+  X,
+  Play,
+  Check,
+  RotateCcw,
+  Shield,
 } from 'lucide-react-native';
 import { Booking, Provider } from '../types';
 import { apiRequest } from '../api/client';
+import { useAuth } from '../contexts/AuthContext';
 import { SupportBanner } from '../components/SupportBanner';
 import { colors } from '../theme/colors';
 
@@ -34,16 +41,35 @@ interface Props {
   onRefreshList: () => void;
 }
 
+const CANCEL_REASONS = [
+  'Change in schedule / Need to reschedule',
+  'Found an alternative service / Booked elsewhere',
+  'Service no longer needed',
+  'Pricing or quote mismatch',
+  'Other reason',
+];
+
 export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefreshList }) => {
+  const { isAdmin } = useAuth();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [paying, setPaying] = useState(false);
 
+  // Admin status dispatch
+  const [showStatusPickerModal, setShowStatusPickerModal] = useState(false);
+  const [adminTargetStatus, setAdminTargetStatus] = useState('');
+  const [adminStatusNotes, setAdminStatusNotes] = useState('');
+
   // Reschedule Form
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleReason, setRescheduleReason] = useState('');
+
+  // Cancellation Modal
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasonCategory, setCancelReasonCategory] = useState(CANCEL_REASONS[0]);
+  const [cancelDetails, setCancelDetails] = useState('');
 
   // Rating & Feedback Form
   const [rating, setRating] = useState<number>(5);
@@ -97,27 +123,31 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
     }
   };
 
-  const handleCancelBooking = async () => {
+  const handleAdminUpdateStatus = async (newStatus: string, notes?: string) => {
     Alert.alert(
-      'Cancel Booking',
-      'Are you sure you want to cancel this scheduled appointment?',
+      'Confirm Status Update',
+      `Change booking status to "${newStatus.replace('_', ' ').toUpperCase()}"?`,
       [
-        { text: 'Keep Booking', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Yes, Cancel',
-          style: 'destructive',
+          text: 'Update Status',
           onPress: async () => {
             setActionLoading(true);
             try {
-              await apiRequest(`/bookings/${bookingId}/cancel`, {
-                method: 'POST',
-                body: JSON.stringify({ reason: 'Customer requested cancellation' }),
+              await apiRequest(`/admin/bookings/${bookingId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                  status: newStatus,
+                  admin_notes: notes ? notes.trim() : undefined,
+                }),
               });
-              Alert.alert('Booking Cancelled', 'Your booking was cancelled.');
+              setShowStatusPickerModal(false);
+              setAdminStatusNotes('');
+              Alert.alert('Status Updated', `Booking status changed to ${newStatus.replace('_', ' ').toUpperCase()}.`);
               await fetchDetail();
               onRefreshList();
             } catch (err: any) {
-              Alert.alert('Cancellation Error', err.error || 'Failed to cancel booking');
+              Alert.alert('Status Error', err.error || 'Failed to update status');
             } finally {
               setActionLoading(false);
             }
@@ -125,6 +155,28 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
         },
       ]
     );
+  };
+
+  const handleConfirmCancel = async () => {
+    setActionLoading(true);
+    const finalReason = cancelDetails.trim()
+      ? `${cancelReasonCategory} - ${cancelDetails.trim()}`
+      : cancelReasonCategory;
+    try {
+      const endpoint = isAdmin ? `/admin/bookings/${bookingId}/cancel` : `/bookings/${bookingId}/cancel`;
+      await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({ reason: finalReason }),
+      });
+      setShowCancelModal(false);
+      Alert.alert('Booking Cancelled', 'The booking has been cancelled.');
+      await fetchDetail();
+      onRefreshList();
+    } catch (err: any) {
+      Alert.alert('Cancellation Error', err.error || 'Failed to cancel booking');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handlePayOnline = async () => {
@@ -186,7 +238,7 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
   }
 
   const isCompleted = booking.status === 'completed';
-  const canRescheduleOrCancel = ['confirmed', 'rescheduled'].includes(booking.status);
+  const canRescheduleOrCancel = ['pending_review', 'contacting_provider', 'confirmed', 'rescheduled'].includes(booking.status);
   const provider: Provider | null = booking.provider || (booking.current_assignment ? {
     id: booking.current_assignment.provider_id,
     name: booking.current_assignment.provider_name || 'Assigned Technician',
@@ -205,6 +257,68 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Admin Status Dispatch Panel */}
+        {isAdmin && (
+          <View style={styles.adminDispatchCard}>
+            <View style={styles.adminDispatchHeader}>
+              <View style={styles.adminBadgeRow}>
+                <Shield size={14} color="#38bdf8" />
+                <Text style={styles.adminBadgeText}>ADMIN STATUS DISPATCH</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.adminChangeStatusBtn}
+                onPress={() => {
+                  setAdminTargetStatus(booking.status);
+                  setShowStatusPickerModal(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <RotateCcw size={12} color="#38bdf8" />
+                <Text style={styles.adminChangeStatusBtnText}>Change Status ▾</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.adminDispatchDesc}>
+              Update booking state across the central Prayagraj dispatch queue:
+            </Text>
+
+            <View style={styles.adminActionRow}>
+              {['confirmed', 'rescheduled'].includes(booking.status) && (
+                <TouchableOpacity
+                  style={[styles.adminActionBtn, { backgroundColor: '#0284c7' }]}
+                  onPress={() => handleAdminUpdateStatus('in_progress')}
+                  disabled={actionLoading}
+                >
+                  <Play size={13} color="#ffffff" fill="#ffffff" />
+                  <Text style={styles.adminActionBtnText}>Start Work</Text>
+                </TouchableOpacity>
+              )}
+
+              {['in_progress', 'confirmed'].includes(booking.status) && (
+                <TouchableOpacity
+                  style={[styles.adminActionBtn, { backgroundColor: '#059669' }]}
+                  onPress={() => handleAdminUpdateStatus('completed')}
+                  disabled={actionLoading}
+                >
+                  <Check size={14} color="#ffffff" />
+                  <Text style={styles.adminActionBtnText}>Mark Completed</Text>
+                </TouchableOpacity>
+              )}
+
+              {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                <TouchableOpacity
+                  style={[styles.adminActionBtn, { backgroundColor: '#dc2626' }]}
+                  onPress={() => setShowCancelModal(true)}
+                  disabled={actionLoading}
+                >
+                  <X size={13} color="#ffffff" />
+                  <Text style={styles.adminActionBtnText}>Cancel Booking</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* Main Status Card */}
         <View style={styles.card}>
           <View style={styles.cardRow}>
@@ -359,7 +473,7 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cancelBookingBtn}
-                onPress={handleCancelBooking}
+                onPress={() => setShowCancelModal(true)}
               >
                 <Text style={styles.cancelBookingBtnText}>Cancel Booking</Text>
               </TouchableOpacity>
@@ -428,6 +542,161 @@ export const BookingDetailScreen: React.FC<Props> = ({ bookingId, onBack, onRefr
         />
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Structured Cancellation Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Cancel Appointment</Text>
+                <Text style={styles.modalSubtitle}>Please choose a reason to cancel</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowCancelModal(false)}
+                style={styles.modalCloseBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <X size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.reasonList}>
+              {CANCEL_REASONS.map((reason) => {
+                const isSelected = cancelReasonCategory === reason;
+                return (
+                  <TouchableOpacity
+                    key={reason}
+                    style={[styles.reasonItem, isSelected && styles.reasonItemSelected]}
+                    onPress={() => setCancelReasonCategory(reason)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.reasonRadio, isSelected && styles.reasonRadioActive]}>
+                      {isSelected && <View style={styles.reasonRadioInner} />}
+                    </View>
+                    <Text style={[styles.reasonText, isSelected && styles.reasonTextActive]}>
+                      {reason}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TextInput
+              placeholder="Additional details (optional)..."
+              placeholderTextColor={colors.textLight}
+              value={cancelDetails}
+              onChangeText={setCancelDetails}
+              style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+              multiline
+            />
+
+            <View style={styles.modalActionCol}>
+              <TouchableOpacity
+                style={styles.rescheduleInsteadBtn}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setShowReschedule(true);
+                }}
+              >
+                <Text style={styles.rescheduleInsteadText}>Reschedule Instead</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.confirmCancelBtn, actionLoading && { opacity: 0.7 }]}
+                onPress={handleConfirmCancel}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.confirmCancelText}>Confirm Cancellation</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Admin Status Picker Modal */}
+      <Modal
+        visible={showStatusPickerModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowStatusPickerModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Update Booking State</Text>
+                <Text style={styles.modalSubtitle}>Dispatch state across platform in Prayagraj</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowStatusPickerModal(false)}
+                style={styles.modalCloseBtn}
+              >
+                <X size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.reasonList}>
+              {[
+                { id: 'confirmed', label: 'Confirmed' },
+                { id: 'in_progress', label: 'In Progress (Technician Working)' },
+                { id: 'completed', label: 'Completed' },
+                { id: 'cancelled', label: 'Cancelled' },
+              ].map((s) => {
+                const isSelected = adminTargetStatus === s.id;
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.reasonItem, isSelected && styles.reasonItemSelected]}
+                    onPress={() => setAdminTargetStatus(s.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.reasonRadio, isSelected && styles.reasonRadioActive]}>
+                      {isSelected && <View style={styles.reasonRadioInner} />}
+                    </View>
+                    <Text style={[styles.reasonText, isSelected && styles.reasonTextActive]}>
+                      {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TextInput
+              placeholder="Admin coordination notes (optional)..."
+              placeholderTextColor={colors.textLight}
+              value={adminStatusNotes}
+              onChangeText={setAdminStatusNotes}
+              style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.confirmCancelBtn,
+                { backgroundColor: colors.primary, marginTop: 10 },
+                (!adminTargetStatus || adminTargetStatus === booking.status) && { opacity: 0.5 },
+              ]}
+              onPress={() => handleAdminUpdateStatus(adminTargetStatus, adminStatusNotes)}
+              disabled={actionLoading || !adminTargetStatus || adminTargetStatus === booking.status}
+            >
+              {actionLoading ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.confirmCancelText}>Save Status Update</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -464,6 +733,74 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  adminDispatchCard: {
+    backgroundColor: '#0f172a',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  adminDispatchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  adminBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  adminBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#38bdf8',
+    letterSpacing: 0.5,
+  },
+  adminChangeStatusBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  adminChangeStatusBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#38bdf8',
+  },
+  adminDispatchDesc: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  adminActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  adminActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  adminActionBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   card: {
     backgroundColor: '#ffffff',
@@ -755,5 +1092,114 @@ const styles = StyleSheet.create({
     color: colors.successText,
     fontWeight: '600',
     marginTop: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  reasonList: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  reasonItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  reasonItemSelected: {
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerLight,
+  },
+  reasonRadio: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reasonRadioActive: {
+    borderColor: colors.danger,
+  },
+  reasonRadioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.danger,
+  },
+  reasonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  reasonTextActive: {
+    color: colors.danger,
+    fontWeight: '700',
+  },
+  modalActionCol: {
+    gap: 8,
+    marginTop: 10,
+  },
+  rescheduleInsteadBtn: {
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  rescheduleInsteadText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  confirmCancelBtn: {
+    backgroundColor: colors.danger,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  confirmCancelText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });

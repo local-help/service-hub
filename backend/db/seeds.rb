@@ -772,7 +772,7 @@ catalogue_data.each do |cat_data|
       variants_data = svc_data.delete(:variants) || []
       service = subcategory.services.find_or_initialize_by(slug: svc_data[:slug])
       service.assign_attributes(svc_data.merge(category: category))
-      service.save!
+      service.save(validate: false)
 
       variants_data.each_with_index do |v_data, v_idx|
         pricing_conditions = v_data.delete(:pricing_conditions)
@@ -797,6 +797,8 @@ catalogue_data.each do |cat_data|
           pricing.save!
         end
       end
+
+      service.save! if variants_data.present?
     end
   end
 end

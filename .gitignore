@@ -13,6 +13,8 @@ backend/.bundle
 !/.env.example
 backend/.env*
 !backend/.env*.erb
+mobile/.env*
+!mobile/.env.example
 .idea
 .agents
 .claude
