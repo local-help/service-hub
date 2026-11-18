@@ -20,26 +20,13 @@ test:
   database: localhelp_test
 
 production:
-  primary: &primary_production
-    <<: *default
-    <% if ENV["DATABASE_URL"] %>
-    url: <%= ENV["DATABASE_URL"] %>
-    <% else %>
-    database: <%= ENV.fetch("DB_NAME") { "localhelp_production" } %>
-    username: <%= ENV.fetch("DB_USERNAME") { "localhelp" } %>
-    password: <%= ENV.fetch("DB_PASSWORD") { "localhelp_dev" } %>
-    host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
-    port: <%= ENV.fetch("DB_PORT") { 5432 } %>
-    <% end %>
-  cache:
-    <<: *primary_production
-    <% unless ENV["DATABASE_URL"] %>
-    database: <%= ENV.fetch("DB_CACHE_NAME") { "localhelp_production_cache" } %>
-    <% end %>
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    <% unless ENV["DATABASE_URL"] %>
-    database: <%= ENV.fetch("DB_QUEUE_NAME") { "localhelp_production_queue" } %>
-    <% end %>
-    migrations_paths: db/queue_migrate
+  <<: *default
+  <% if ENV["DATABASE_URL"] %>
+  url: <%= ENV["DATABASE_URL"] %>
+  <% else %>
+  database: <%= ENV.fetch("DB_NAME") { "localhelp_production" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "localhelp" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "localhelp_dev" } %>
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DB_PORT") { 5432 } %>
+  <% end %>
