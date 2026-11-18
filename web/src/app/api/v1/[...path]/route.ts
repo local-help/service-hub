@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:3000' : 'http://localhost:3000');
+function getBackendUrl(): string {
+  const envUrl = process.env.BACKEND_URL;
+  if (!envUrl) {
+    return process.env.NODE_ENV === 'production' ? 'http://backend:3000' : 'http://localhost:3000';
+  }
+
+  if (envUrl.startsWith('http://') || envUrl.startsWith('https://')) {
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+    const port = envUrl.includes(':') ? '' : ':3000';
+    return `http://${envUrl.replace(/^https?:\/\//, '')}${port}`;
+  }
+
+  if (envUrl.includes('.onrender.com') || process.env.RENDER === 'true' || !envUrl.includes('.')) {
+    const cleanHost = envUrl.replace(/^https?:\/\//, '').replace(/\.onrender\.com$/, '').replace(/:[0-9]+$/, '');
+    return `https://${cleanHost}.onrender.com`;
+  }
+
+  return `http://${envUrl.replace(/\/+$/, '')}`;
+}
+
+const BACKEND_URL = getBackendUrl();
 
 async function handler(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const resolvedParams = await params;

@@ -15,14 +15,19 @@ const getBackendUrl = () => {
     return envUrl.replace(/\/+$/, '');
   }
 
-  // If hostname ends with onrender.com, use https://
-  if (envUrl.includes('.onrender.com')) {
-    return `https://${envUrl.replace(/\/+$/, '')}`;
+  // Local development hostnames
+  if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+    const port = envUrl.includes(':') ? '' : ':3000';
+    return `http://${envUrl.replace(/^https?:\/\//, '')}${port}`;
   }
 
-  // For Render private internal hostnames (e.g. localhelp-backend-sgbc)
-  const port = envUrl.includes(':') ? '' : ':10000';
-  return `http://${envUrl.replace(/\/+$/, '')}${port}`;
+  // For Render deployments (Render free tier does not support private networking; must use public HTTPS)
+  if (envUrl.includes('.onrender.com') || process.env.RENDER === 'true' || !envUrl.includes('.')) {
+    const cleanHost = envUrl.replace(/^https?:\/\//, '').replace(/\.onrender\.com$/, '').replace(/:[0-9]+$/, '');
+    return `https://${cleanHost}.onrender.com`;
+  }
+
+  return `http://${envUrl.replace(/\/+$/, '')}`;
 };
 
 const BACKEND_URL = getBackendUrl();
