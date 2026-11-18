@@ -167,3 +167,4 @@ class CreateSolidQueueTables < ActiveRecord::Migration[8.0]
     foreign_keys(from_table).none? { |fk| fk.to_table == to_table }
   end
 end
+
