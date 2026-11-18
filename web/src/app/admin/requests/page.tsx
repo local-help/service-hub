@@ -207,13 +207,13 @@ function AdminRequestsContent() {
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
-                      <div className="font-bold text-slate-900">{req.customer_name}</div>
-                      <div className="text-[11px] text-slate-500 font-mono">{req.customer_phone}</div>
+                      <div className="font-bold text-slate-900">{req.customer_name || 'Customer'}</div>
+                      <div className="text-[11px] text-slate-500 font-mono">{req.customer_phone || 'No phone'}</div>
                     </td>
                     <td className="py-3.5 px-5">
-                      <div className="font-semibold text-slate-900">{req.service_name}</div>
+                      <div className="font-semibold text-slate-900">{req.service_name || 'Service'}</div>
                       <div className="text-[11px] text-slate-400 capitalize">
-                        {req.pricing_type?.replace('_', ' ') || 'Service'}
+                        {req.pricing_type?.replace(/_/g, ' ') || 'Service'}
                       </div>
                     </td>
                     <td className="py-3.5 px-5">
@@ -244,7 +244,7 @@ function AdminRequestsContent() {
                           req.status === 'contacting_provider' ? 'bg-sky-500' :
                           req.status === 'booking_confirmed' ? 'bg-emerald-500' : 'bg-slate-400'
                         }`} />
-                        {req.status === 'contacting_provider' ? 'Specialist Assigned' : req.status.replace(/_/g, ' ')}
+                        {req.status === 'contacting_provider' ? 'Specialist Assigned' : (req.status || 'pending').replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
@@ -286,14 +286,14 @@ function AdminRequestsContent() {
                       ? 'bg-sky-50 text-sky-700 border border-sky-200'
                       : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
-                    {req.status === 'contacting_provider' ? 'Specialist Assigned' : req.status.replace(/_/g, ' ')}
+                    {req.status === 'contacting_provider' ? 'Specialist Assigned' : (req.status || 'pending').replace(/_/g, ' ')}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">{req.service_name}</h3>
+                  <h3 className="text-sm font-bold text-slate-900">{req.service_name || 'Service'}</h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Customer: <span className="font-semibold text-slate-800">{req.customer_name}</span> ({req.customer_phone})
+                    Customer: <span className="font-semibold text-slate-800">{req.customer_name || 'Customer'}</span> ({req.customer_phone || 'No phone'})
                   </p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Specialist: <span className="font-semibold text-slate-800">{req.provider_name || 'Needs Match'}</span>

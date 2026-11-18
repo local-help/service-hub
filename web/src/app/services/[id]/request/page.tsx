@@ -169,19 +169,11 @@ function CreateRequestContent() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = localStorage.getItem('localhelp_access_token');
-      const res = await fetch('/api/v1/uploads', {
+      const uploadedData = await apiRequest<{ file_url: string; file_name?: string }>('/uploads', {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to upload photo');
-      }
-
-      const uploadedData = await res.json();
       setAttachments((prev) => [
         ...prev,
         {
@@ -191,7 +183,7 @@ function CreateRequestContent() {
       ]);
       toast.success('Photo uploaded successfully');
     } catch (err: any) {
-      const msg = err.message || 'Failed to upload photo from device';
+      const msg = err.error || err.message || 'Failed to upload photo from device';
       setError(msg);
       toast.error(msg);
     } finally {

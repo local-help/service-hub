@@ -194,6 +194,7 @@ export interface ServiceRequest {
   current_assignment?: ProviderAssignment | null;
   quotation?: Quotation | null;
   booking?: Booking | null;
+  booking_id?: number | null;
   booking_status?: string | null;
   request_attachments?: Attachment[];
   created_at: string;
@@ -205,6 +206,7 @@ export interface ServiceRequest {
   provider_name?: string;
   has_quotation?: boolean;
   quotation_amount?: number | null;
+  quotation_status?: string | null;
   has_booking?: boolean;
 }
 
@@ -268,6 +270,7 @@ export interface Booking {
   fully_paid: boolean;
   service?: Service;
   service_name?: string;
+  provider_name?: string;
   service_variant?: ServiceVariant | null;
   address?: Address;
   provider?: Provider | null;

@@ -226,9 +226,9 @@ export default function AdminRequestDetailPage() {
     );
   }
 
-  const rawPhone = request.user?.phone || '';
+  const rawPhone = request.customer_phone || request.user?.phone || '';
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
-  const intlPhone = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone.replace(/^0+/, '')}`;
+  const intlPhone = cleanPhone.length >= 10 ? (cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone.replace(/^0+/, '')}`) : '';
   const effectivePrice = request.booking?.total_amount || request.service?.fixed_price || 0;
 
   return (
@@ -245,7 +245,7 @@ export default function AdminRequestDetailPage() {
           </Link>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {request.service?.name}
+              {request.service?.name || request.service_name || 'Service'}
             </h1>
             <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
               {request.reference_number}

@@ -10,7 +10,7 @@ interface SupportContextType {
   refreshSupport: () => Promise<void>;
   getCallUrl: () => string;
   getWhatsAppUrl: (referenceNumber?: string, serviceName?: string) => string;
-  getAdminWhatsAppUrl: (customerPhone: string, referenceNumber: string, customMessage?: string) => string;
+  getAdminWhatsAppUrl: (customerPhone?: string | null, referenceNumber?: string, customMessage?: string) => string;
 }
 
 const defaultSupport: SupportInfo = {
@@ -49,7 +49,7 @@ export const SupportProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchSupportInfo();
   }, []);
 
-  const cleanPhone = (phone: string) => phone.replace(/[^\d]/g, '');
+  const cleanPhone = (phone?: string | null) => (phone ? String(phone).replace(/[^\d]/g, '') : '');
 
   const getCallUrl = () => `tel:${supportInfo.phone}`;
 
@@ -68,10 +68,10 @@ export const SupportProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return `https://wa.me/${rawNumber}?text=${encodeURIComponent(message)}`;
   };
 
-  const getAdminWhatsAppUrl = (customerPhone: string, referenceNumber: string, customMessage?: string) => {
+  const getAdminWhatsAppUrl = (customerPhone?: string | null, referenceNumber?: string, customMessage?: string) => {
     const rawNumber = cleanPhone(customerPhone);
-    const message = customMessage || `Hi, this is ${supportInfo.platform_name} customer support. We are contacting you regarding your service request ${referenceNumber}.`;
-    return `https://wa.me/${rawNumber}?text=${encodeURIComponent(message)}`;
+    const message = customMessage || `Hi, this is ${supportInfo.platform_name} customer support. We are contacting you regarding your service request ${referenceNumber || ''}.`;
+    return rawNumber ? `https://wa.me/${rawNumber}?text=${encodeURIComponent(message)}` : '#';
   };
 
   return (

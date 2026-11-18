@@ -147,11 +147,14 @@ export interface Service {
 }
 
 export type RequestStatus =
+  | 'submitted'
   | 'pending_review'
   | 'contacting_provider'
   | 'quotation_sent'
   | 'quotation_approved'
   | 'quotation_rejected'
+  | 'customer_approved'
+  | 'customer_rejected'
   | 'booking_confirmed'
   | 'in_progress'
   | 'completed'
@@ -177,6 +180,7 @@ export interface ServiceRequest {
   quotation_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | 'expired' | null;
   quotation_amount?: number | null;
   has_booking: boolean;
+  booking_id?: number | null;
   booking_status?: string | null;
   created_at: string;
   assigned_by?: number | null;

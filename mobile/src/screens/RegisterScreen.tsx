@@ -15,6 +15,7 @@ import {
 import { User, Mail, Phone, Lock, Eye, EyeOff, Sparkles, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 
 interface Props {
   onSuccess: () => void;
@@ -186,6 +187,19 @@ export const RegisterScreen: React.FC<Props> = ({ onSuccess, onGoToLogin, onCanc
               <Text style={styles.primaryBtnText}>Create Account</Text>
             )}
           </TouchableOpacity>
+
+          {/* Social / Google Sign-Up */}
+          <View style={styles.socialSection}>
+            <View style={styles.orDividerRow}>
+              <View style={styles.orLine} />
+              <Text style={styles.orText}>OR JOIN WITH</Text>
+              <View style={styles.orLine} />
+            </View>
+            <GoogleSignInButton
+              mode="signup"
+              onSuccess={() => onSuccess()}
+            />
+          </View>
         </View>
 
         <View style={styles.footerRow}>
@@ -305,6 +319,27 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
+  },
+  socialSection: {
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  orDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  orText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.textLight,
+    letterSpacing: 0.8,
   },
   footerRow: {
     flexDirection: 'row',

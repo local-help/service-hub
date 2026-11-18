@@ -38,7 +38,7 @@ export const SupportProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .finally(() => setLoading(false));
   }, []);
 
-  const cleanPhone = (phone: string) => phone.replace(/[^\d]/g, '');
+  const cleanPhone = (phone?: string | null) => (phone ? phone.replace(/[^\d]/g, '') : '');
 
   const callSupport = async () => {
     const url = `tel:${supportInfo.phone}`;

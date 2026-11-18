@@ -12,12 +12,25 @@ module Auth
 
     def call
       id_token = @params[:id_token]
+      code = @params[:code]
       payload = nil
 
+      # 1. If authorization code is provided, exchange it for tokens with Google
+      if code.present? && ENV['GOOGLE_CLIENT_SECRET'].present?
+        redirect_uri = @params[:redirect_uri] || @request&.base_url || 'http://localhost:3000'
+        token_res = exchange_code_for_tokens(code, redirect_uri)
+        if token_res && token_res['id_token'].present?
+          id_token = token_res['id_token']
+        elsif token_res && token_res['error'].present?
+          error_desc = token_res['error_description'] || token_res['error']
+          return failure("Google OAuth error: #{error_desc}")
+        end
+      end
+
+      # 2. Verify Google ID token
       if id_token.present?
         payload = verify_google_id_token(id_token)
-      elsif Rails.env.local?
-        # In development / test, allow simulated sign in if direct profile passed
+      elsif allow_simulated_auth?
         payload = simulated_dev_payload
       end
 
@@ -74,8 +87,34 @@ module Auth
 
     private
 
+    def exchange_code_for_tokens(code, redirect_uri)
+      uri = URI('https://oauth2.googleapis.com/token')
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.open_timeout = 8
+      http.read_timeout = 8
+
+      client_id = ENV['GOOGLE_CLIENT_ID'] || ENV['NEXT_PUBLIC_GOOGLE_CLIENT_ID']
+      client_secret = ENV['GOOGLE_CLIENT_SECRET']
+
+      req = Net::HTTP::Post.new(uri.request_uri)
+      req.set_form_data({
+        'code' => code,
+        'client_id' => client_id,
+        'client_secret' => client_secret,
+        'redirect_uri' => redirect_uri,
+        'grant_type' => 'authorization_code'
+      })
+
+      res = http.request(req)
+      JSON.parse(res.body)
+    rescue StandardError => e
+      Rails.logger.error("[GoogleAuthService] Code exchange network error: #{e.message}")
+      nil
+    end
+
     def verify_google_id_token(id_token)
-      # 1. First attempt verification with Google tokeninfo endpoint
+      # 1. Primary verification: Official Google tokeninfo endpoint
       begin
         uri = URI("https://oauth2.googleapis.com/tokeninfo?id_token=#{CGI.escape(id_token)}")
         http = Net::HTTP.new(uri.host, uri.port)
@@ -87,9 +126,18 @@ module Auth
         if res.is_a?(Net::HTTPSuccess)
           data = JSON.parse(res.body)
 
-          # Verify client id if configured
-          google_client_id = ENV['GOOGLE_CLIENT_ID'] || ENV.fetch('NEXT_PUBLIC_GOOGLE_CLIENT_ID', nil)
-          return { error: 'Google ID token audience mismatch' } if google_client_id.present? && data['aud'] != google_client_id
+          # Verify client id audience if configured
+          allowed_client_ids = [
+            ENV['GOOGLE_CLIENT_ID'],
+            ENV['GOOGLE_CLIENT_IDS']&.split(','),
+            ENV['NEXT_PUBLIC_GOOGLE_CLIENT_ID'],
+            ENV['EXPO_PUBLIC_GOOGLE_CLIENT_ID']
+          ].flatten.compact.map(&:strip).reject(&:blank?)
+
+          if allowed_client_ids.present? && !allowed_client_ids.include?(data['aud'])
+            Rails.logger.warn("[GoogleAuthService] Token audience #{data['aud']} mismatch with allowed client IDs: #{allowed_client_ids}")
+            return { error: 'Google ID token audience mismatch' }
+          end
 
           return {
             google_uid: data['sub'],
@@ -98,13 +146,15 @@ module Auth
             avatar_url: data['picture'],
             email_verified: [true, 'true'].include?(data['email_verified'])
           }
+        else
+          Rails.logger.warn("[GoogleAuthService] Google tokeninfo returned HTTP #{res.code}: #{res.body}")
         end
       rescue StandardError => e
         Rails.logger.warn("[GoogleAuthService] Google tokeninfo network check failed: #{e.message}")
       end
 
-      # 2. In development or test, allow decoding valid unverified JWT structure
-      if Rails.env.local?
+      # 2. In dev/test with unconfigured Google client ID, allow simulated fallback
+      if allow_simulated_auth?
         begin
           decoded = JWT.decode(id_token, nil, false).first
           if decoded && decoded['email'].present?
@@ -120,11 +170,14 @@ module Auth
           Rails.logger.warn("[GoogleAuthService] JWT decode fallback failed: #{e.message}")
         end
 
-        # Check if direct profile was provided
         return simulated_dev_payload if @params[:email].present?
       end
 
       { error: 'Invalid Google token' }
+    end
+
+    def allow_simulated_auth?
+      ENV['ALLOW_DEV_GOOGLE_AUTH'] == 'true'
     end
 
     def simulated_dev_payload

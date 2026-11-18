@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
-  FlatList
+  FlatList,
+  Platform
 } from 'react-native';
 import { 
   Search, 
@@ -26,10 +27,12 @@ import {
   ArrowRight, 
   CheckCircle2, 
   X,
-  Check
+  Check,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react-native';
 import { Category, Service } from '../types';
-import { apiRequest } from '../api/client';
+import { apiRequest, API_BASE } from '../api/client';
 import { SupportBanner } from '../components/SupportBanner';
 import { colors } from '../theme/colors';
 
@@ -67,8 +70,10 @@ export const HomeScreen: React.FC<Props> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadData = async () => {
+    setLoadError(null);
     try {
       const [catsRes, svcsRes] = await Promise.all([
         apiRequest<Category[]>('/categories'),
@@ -80,8 +85,9 @@ export const HomeScreen: React.FC<Props> = ({
 
       setCategories(catList);
       setAllServices(svcList);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load home data', err);
+      setLoadError(err?.error || err?.message || 'Could not connect to server');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -151,11 +157,35 @@ export const HomeScreen: React.FC<Props> = ({
     );
   }, [selectedCategorySlug, selectedCategoryObj, allServices]);
 
-  if (loading) {
+  if (loading && categories.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading Prayagraj services...</Text>
+      </View>
+    );
+  }
+
+  if (loadError && categories.length === 0) {
+    return (
+      <View style={styles.center}>
+        <View style={styles.errorIconWrap}>
+          <AlertCircle size={36} color="#DC2626" />
+        </View>
+        <Text style={styles.errorTitle}>Connection Problem</Text>
+        <Text style={styles.errorSubtitle}>{loadError}</Text>
+        <Text style={styles.errorHostText}>Target Host: {API_BASE}</Text>
+        <TouchableOpacity
+          style={styles.retryBtn}
+          onPress={() => {
+            setLoading(true);
+            loadData();
+          }}
+          activeOpacity={0.8}
+        >
+          <RefreshCw size={16} color="#FFFFFF" />
+          <Text style={styles.retryBtnText}>Retry Connection</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -899,6 +929,54 @@ const styles = StyleSheet.create({
   },
   localityTextSelected: {
     color: colors.primary,
+    fontWeight: '700',
+  },
+  errorIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  errorHostText: {
+    fontSize: 11,
+    color: colors.textLight,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginBottom: 20,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '700',
   },
 });

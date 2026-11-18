@@ -61,7 +61,12 @@ class BookingSerializer < ActiveModel::Serializer
              :customer_name, :customer_phone,
              :provider_id, :provider_name,
              :has_quotation, :quotation_status, :quotation_amount,
+             :service_request_id,
              :created_at
+
+  def service_request_id
+    object.service_request_id
+  end
 
   def reference_number
     object.reference_number || object.service_request&.reference_number

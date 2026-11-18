@@ -50,8 +50,12 @@ class ServiceRequestSerializer < ActiveModel::Serializer
              :service_id, :service_name, :service_category, :pricing_type, :fixed_price,
              :provider_id, :provider_name,
              :has_quotation, :quotation_status, :quotation_amount,
-             :has_booking, :booking_status,
+             :has_booking, :booking_status, :booking_id,
              :created_at
+
+  def booking_id
+    object.booking&.id
+  end
 
   def customer_name
     object.user.name

@@ -96,40 +96,47 @@ export const CustomerSupportButtons: React.FC<CustomerSupportButtonsProps> = ({
 };
 
 interface AdminCommunicationButtonsProps {
-  customerPhone: string;
-  referenceNumber: string;
+  customerPhone?: string | null;
+  referenceNumber?: string;
   onOpenLogModal?: () => void;
   className?: string;
 }
 
 export const AdminCommunicationButtons: React.FC<AdminCommunicationButtonsProps> = ({
   customerPhone,
-  referenceNumber,
+  referenceNumber = '',
   onOpenLogModal,
   className = '',
 }) => {
   const { getAdminWhatsAppUrl } = useSupport();
+  const phone = customerPhone ? String(customerPhone).trim() : '';
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <a
-        href={`tel:${customerPhone}`}
-        className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
-        title="Open phone dialer"
-      >
-        <Phone className="w-3.5 h-3.5 text-slate-500" />
-        <span>Call</span>
-      </a>
-      <a
-        href={getAdminWhatsAppUrl(customerPhone, referenceNumber)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
-        title="Chat on WhatsApp"
-      >
-        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-        <span>WhatsApp</span>
-      </a>
+      {phone ? (
+        <>
+          <a
+            href={`tel:${phone}`}
+            className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
+            title="Open phone dialer"
+          >
+            <Phone className="w-3.5 h-3.5 text-slate-500" />
+            <span>Call</span>
+          </a>
+          <a
+            href={getAdminWhatsAppUrl(phone, referenceNumber)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-medium transition"
+            title="Chat on WhatsApp"
+          >
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+            <span>WhatsApp</span>
+          </a>
+        </>
+      ) : (
+        <span className="text-[11px] text-slate-400 font-mono italic">No phone</span>
+      )}
       {onOpenLogModal && (
         <button
           onClick={onOpenLogModal}

@@ -189,7 +189,7 @@ function MainNavigator() {
           onSelectRequest={(rId) => {
             setIsNotificationsOpen(false);
             setSelectedRequestId(rId);
-            setActiveTab('requests');
+            setActiveTab('bookings');
           }}
         />
       </SafeAreaView>
@@ -215,7 +215,7 @@ function MainNavigator() {
                   setActiveTab('bookings');
                 } else {
                   setSelectedRequestId(req.id);
-                  setActiveTab('requests');
+                  setActiveTab('bookings');
                 }
               }}
             />
@@ -264,17 +264,27 @@ function MainNavigator() {
         );
 
       case 'requests':
+      case 'bookings':
         if (!user) {
           return (
             <GuestGatePrompt
-              icon={<FileText size={32} color={colors.primary} />}
-              title="Track Your Requests"
-              description="Sign in to monitor live estimates, technician dispatches, and schedule updates in Prayagraj."
+              icon={<Calendar size={32} color={colors.primary} />}
+              title="Track Orders & Bookings"
+              description="Sign in to view quotes, scheduled technician appointments, live dispatches, and invoices in Prayagraj."
               onSignIn={() => {
                 setAuthIntent('tab');
                 setIsAuthOpen(true);
               }}
               onExplore={() => setActiveTab('explore')}
+            />
+          );
+        }
+        if (selectedBookingId) {
+          return (
+            <BookingDetailScreen
+              bookingId={selectedBookingId}
+              onBack={() => setSelectedBookingId(null)}
+              onRefreshList={() => setRefreshKey((k) => k + 1)}
             />
           );
         }
@@ -293,41 +303,10 @@ function MainNavigator() {
           );
         }
         return (
-          <RequestsScreen
-            key={refreshKey}
-            onSelectRequest={(r) => setSelectedRequestId(r.id)}
-            onExploreServices={() => setActiveTab('explore')}
-          />
-        );
-
-      case 'bookings':
-        if (!user) {
-          return (
-            <GuestGatePrompt
-              icon={<Calendar size={32} color={colors.primary} />}
-              title="Manage Your Bookings"
-              description="Sign in to view scheduled technician appointments, reschedule dates, and view invoices."
-              onSignIn={() => {
-                setAuthIntent('tab');
-                setIsAuthOpen(true);
-              }}
-              onExplore={() => setActiveTab('explore')}
-            />
-          );
-        }
-        if (selectedBookingId) {
-          return (
-            <BookingDetailScreen
-              bookingId={selectedBookingId}
-              onBack={() => setSelectedBookingId(null)}
-              onRefreshList={() => setRefreshKey((k) => k + 1)}
-            />
-          );
-        }
-        return (
           <BookingsScreen
             key={refreshKey}
             onSelectBooking={(b) => setSelectedBookingId(b.id)}
+            onSelectRequest={(r) => setSelectedRequestId(r.id)}
             onExploreServices={() => setActiveTab('explore')}
           />
         );
@@ -366,9 +345,8 @@ function MainNavigator() {
       setSelectedService(null);
       setSelectedBookingOptions(undefined);
       setIsCreatingRequest(false);
-    } else if (tab === 'requests') {
+    } else if (tab === 'bookings' || tab === 'requests') {
       setSelectedRequestId(null);
-    } else if (tab === 'bookings') {
       setSelectedBookingId(null);
     }
   };
@@ -610,39 +588,20 @@ function MainNavigator() {
 
           <TouchableOpacity
             style={styles.tabItem}
-            onPress={() => handleTabChange('requests')}
-            activeOpacity={0.7}
-          >
-            <FileText
-              size={22}
-              color={activeTab === 'requests' ? colors.primary : colors.textMuted}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === 'requests' && styles.tabLabelActive,
-              ]}
-            >
-              Requests
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tabItem}
             onPress={() => handleTabChange('bookings')}
             activeOpacity={0.7}
           >
             <Calendar
               size={22}
-              color={activeTab === 'bookings' ? colors.primary : colors.textMuted}
+              color={(activeTab === 'bookings' || activeTab === 'requests') ? colors.primary : colors.textMuted}
             />
             <Text
               style={[
                 styles.tabLabel,
-                activeTab === 'bookings' && styles.tabLabelActive,
+                (activeTab === 'bookings' || activeTab === 'requests') && styles.tabLabelActive,
               ]}
             >
-              Bookings
+              My Bookings
             </Text>
           </TouchableOpacity>
 

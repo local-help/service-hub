@@ -10,6 +10,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG BACKEND_URL=http://backend:3000
 ENV BACKEND_URL=$BACKEND_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -19,6 +21,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3001
 ARG BACKEND_URL=http://backend:3000
 ENV BACKEND_URL=$BACKEND_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
@@ -27,4 +31,3 @@ COPY --from=builder /app/public ./public
 
 EXPOSE 3001
 CMD ["npm", "start", "--", "-p", "3001"]
-

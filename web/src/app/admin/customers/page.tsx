@@ -136,7 +136,7 @@ export default function AdminCustomersPage() {
               {customers.map((c) => {
                 const isSelected = selectedCustomerId === c.id;
                 const cleanPhone = (c.phone || '').replace(/[^0-9]/g, '');
-                const intlPhone = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone.replace(/^0+/, '')}`;
+                const intlPhone = cleanPhone.length >= 10 ? (cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone.replace(/^0+/, '')}`) : '';
 
                 return (
                   <div

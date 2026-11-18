@@ -15,6 +15,7 @@ import {
 import { Phone, Lock, Sparkles, CheckCircle2, Mail, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 
 interface Props {
   onSuccess: () => void;
@@ -243,6 +244,19 @@ export const LoginScreen: React.FC<Props> = ({ onSuccess, onGoToRegister, onCanc
           </View>
         )}
 
+        {/* Social / Google Sign-In */}
+        <View style={styles.socialSection}>
+          <View style={styles.orDividerRow}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>OR CONTINUE WITH</Text>
+            <View style={styles.orLine} />
+          </View>
+          <GoogleSignInButton
+            mode="signin"
+            onSuccess={() => onSuccess()}
+          />
+        </View>
+
         {/* Quick Demo Logins Box */}
         <View style={styles.demoSection}>
           <Text style={styles.demoTitle}>One-Click Demo Credentials</Text>
@@ -424,6 +438,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.primary,
     fontWeight: '600',
+  },
+  socialSection: {
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  orDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  orText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.textLight,
+    letterSpacing: 0.8,
   },
   demoSection: {
     backgroundColor: colors.primaryLight,

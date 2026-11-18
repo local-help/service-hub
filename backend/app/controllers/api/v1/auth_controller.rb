@@ -1,7 +1,15 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:register, :login, :send_otp, :verify_otp, :google, :refresh, :reset_password]
+      skip_before_action :authenticate_user!, only: [:register, :login, :send_otp, :verify_otp, :google, :google_config, :refresh, :reset_password]
+
+      def google_config
+        client_id = ENV['GOOGLE_CLIENT_ID'] || ENV['NEXT_PUBLIC_GOOGLE_CLIENT_ID']
+        render json: {
+          client_id: client_id,
+          configured: client_id.present?
+        }
+      end
 
       def google
         result = Auth::GoogleAuthService.call(params, request)
