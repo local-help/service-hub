@@ -30,6 +30,8 @@ threads threads_count, threads_count
 # Specifies the `port` that Puma will listen on to receive requests; default is 4000.
 port ENV.fetch("PORT", 4000)
 
+silence_single_worker_warning if respond_to?(:silence_single_worker_warning)
+
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 

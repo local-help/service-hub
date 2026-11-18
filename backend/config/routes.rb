@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  # Root & health check endpoints
+  root to: 'api/v1/health#show'
+  get 'up', to: 'api/v1/health#show'
+
   namespace :api do
     namespace :v1 do
       # Health check
