@@ -5,16 +5,22 @@ module Api
         before_action :require_admin!
 
         def index
-          service_request = ServiceRequest.find(params[:service_request_id])
-          communications = service_request.communications.recent
-          render json: communications, each_serializer: CommunicationSerializer
+          scope = if params[:booking_id].present?
+                    Booking.find(params[:booking_id]).communications
+                  else
+                    ServiceRequest.find(params[:service_request_id]).communications
+                  end
+          render json: scope.recent, each_serializer: CommunicationSerializer
         end
 
         def create
-          service_request = ServiceRequest.find(params[:service_request_id])
+          booking = Booking.find_by(id: params[:booking_id]) if params[:booking_id].present?
+          service_request = ServiceRequest.find_by(id: params[:service_request_id]) || booking&.service_request
 
-          communication = service_request.communications.build(
+          communication = Communication.new(
             admin_user: current_user,
+            booking: booking,
+            service_request: service_request,
             channel: params[:channel],
             direction: params[:direction],
             summary: params[:summary],
@@ -30,7 +36,8 @@ module Api
               action: 'record_communication',
               entity: communication,
               metadata: {
-                service_request_id: service_request.id,
+                booking_id: booking&.id,
+                service_request_id: service_request&.id,
                 channel: communication.channel,
                 direction: communication.direction
               }

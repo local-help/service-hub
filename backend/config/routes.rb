@@ -145,6 +145,7 @@ Rails.application.routes.draw do
             post :cancel
             post :assign_provider
           end
+          resources :communications, only: [:index, :create]
         end
         resources :orders, controller: 'bookings', only: [:index, :show, :update] do
           member do
@@ -152,6 +153,7 @@ Rails.application.routes.draw do
             post :cancel
             post :assign_provider
           end
+          resources :communications, only: [:index, :create]
         end
         resources :customers, only: [:index, :show]
         resources :payments, only: [:index] do

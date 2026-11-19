@@ -73,6 +73,10 @@ export default function AdminRequestDetailPage() {
       apiRequest<Provider[]>(`/admin/providers/eligible?city=Prayagraj`).catch(() => []),
     ])
       .then(([reqData, historyData, provData]) => {
+        if (reqData.booking?.id) {
+          router.replace(`/admin/bookings/${reqData.booking.id}`);
+          return;
+        }
         setRequest(reqData);
         setAssignmentHistory(historyData || []);
         setAdminNotes(reqData.admin_notes || '');

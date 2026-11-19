@@ -266,6 +266,23 @@ export interface Booking {
   payments?: Payment[];
   request_attachments?: { id: number; file_url: string; file_name?: string; content_type?: string; file_size?: number }[];
   communications?: Communication[];
+  current_assignment?: {
+    id: number;
+    provider_id: number;
+    provider_name: string;
+    status: string;
+    assigned_at?: string | null;
+    accepted_at?: string | null;
+    internal_notes?: string | null;
+  } | null;
+  status_history?: {
+    id: number;
+    previous_status?: string | null;
+    new_status: string;
+    notes?: string | null;
+    changed_by_name?: string | null;
+    created_at: string;
+  }[];
   service_request_id?: number | null;
   service_request?: ServiceRequest;
 }

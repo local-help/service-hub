@@ -2,8 +2,8 @@ class BookingDetailSerializer < ActiveModel::Serializer
   attributes :id, :reference_number, :status, :scheduled_at, :preferred_at,
              :description, :booking_type, :vehicle_type, :duration_hours, :selected_options,
              :cancellation_reason, :admin_notes, :rating, :feedback,
-             :total_paid, :payment_amount, :fully_paid,
-             :current_assignment, :created_at
+             :total_paid, :payment_amount, :total_amount, :fully_paid,
+             :current_assignment, :status_history, :created_at
 
   belongs_to :user, serializer: UserSerializer
   belongs_to :service, serializer: ServiceDetailSerializer
@@ -47,8 +47,25 @@ class BookingDetailSerializer < ActiveModel::Serializer
     object.payment_amount&.to_f
   end
 
+  def total_amount
+    object.total_amount&.to_f || object.payment_amount&.to_f
+  end
+
   def fully_paid
     object.fully_paid?
+  end
+
+  def status_history
+    object.status_histories.order(created_at: :desc).map do |sh|
+      {
+        id: sh.id,
+        previous_status: sh.previous_status,
+        new_status: sh.new_status,
+        notes: sh.notes,
+        changed_by_name: sh.changed_by_user&.name || 'System / Auto-Dispatch',
+        created_at: sh.created_at.iso8601
+      }
+    end
   end
 
   def scheduled_at

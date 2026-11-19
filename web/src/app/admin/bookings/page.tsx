@@ -19,7 +19,9 @@ import {
   Wrench,
   ShieldCheck,
   User,
-  Phone
+  Phone,
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 import { Booking, Provider } from '../../../types';
 import { apiRequest } from '../../../api/client';
@@ -229,9 +231,14 @@ export default function AdminBookingsPage() {
                 {bookings.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/70 transition group">
                     <td className="py-3.5 px-5">
-                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200/60 inline-block">
-                        {b.reference_number || `BK-${b.id}`}
-                      </span>
+                      <Link
+                        href={`/admin/bookings/${b.id}`}
+                        className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 hover:text-blue-900 px-2 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-1 transition group-hover:border-blue-300"
+                        title="View Order Details"
+                      >
+                        <span>{b.reference_number || `BK-${b.id}`}</span>
+                        <ExternalLink className="w-3 h-3 text-blue-500 opacity-60 group-hover:opacity-100" />
+                      </Link>
                       <span className="text-[10px] text-slate-400 block mt-1">ID #{b.id}</span>
                     </td>
                     <td className="py-3.5 px-5">
@@ -320,6 +327,16 @@ export default function AdminBookingsPage() {
                     </td>
                     <td className="py-3.5 px-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* View Order Details button */}
+                        <Link
+                          href={`/admin/bookings/${b.id}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 text-slate-700 text-xs font-semibold rounded-lg transition"
+                          title="View Order Details"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Details</span>
+                        </Link>
+
                         {/* Record offline payment button */}
                         {!b.fully_paid && (
                           <button
