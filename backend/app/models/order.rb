@@ -5,3 +5,4 @@
 class Order < Booking
   self.table_name = 'bookings'
 end
+

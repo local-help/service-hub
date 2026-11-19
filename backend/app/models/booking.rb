@@ -158,10 +158,19 @@ class Booking < ApplicationRecord
   end
 
   # State event backward compatibility
-  alias_method :assign_provider, :assign_specialist
-  alias_method :assign_provider!, :assign_specialist!
-  alias_method :may_assign_provider?, :may_assign_specialist?
-  alias_method :order_number, :reference_number
+  alias_attribute :order_number, :reference_number
+
+  def assign_provider(*args)
+    assign_specialist(*args)
+  end
+
+  def assign_provider!(*args)
+    assign_specialist!(*args)
+  end
+
+  def may_assign_provider?(*args)
+    may_assign_specialist?(*args)
+  end
 
   def can_transition_to?(new_status)
     aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
