@@ -58,6 +58,24 @@ Rails.application.routes.draw do
           end
         end
       end
+      resources :orders, controller: 'bookings', only: [:index, :show, :create] do
+        member do
+          post :reschedule
+          post :cancel
+          post :feedback
+          post :approve_quotation
+          post :reject_quotation
+        end
+        resource :receipt, only: [:show], controller: 'payment_receipts' do
+          post :request_email
+        end
+        resources :payments, only: [:index] do
+          collection do
+            post :initiate
+            post :verify
+          end
+        end
+      end
       resources :notifications, only: [:index] do
         patch :read, on: :member
         post :read_all, on: :collection
@@ -122,6 +140,13 @@ Rails.application.routes.draw do
           end
         end
         resources :bookings, only: [:index, :show, :update] do
+          member do
+            post :reschedule
+            post :cancel
+            post :assign_provider
+          end
+        end
+        resources :orders, controller: 'bookings', only: [:index, :show, :update] do
           member do
             post :reschedule
             post :cancel

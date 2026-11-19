@@ -88,7 +88,10 @@ class Booking < ApplicationRecord
 
   # Scopes
   scope :by_status, ->(status) { where(status: status) if status.present? }
-  scope :upcoming, -> { where(status: %w[confirmed rescheduled in_progress]).where("scheduled_at >= ? OR scheduled_at IS NULL", Time.current) }
+  scope :upcoming, -> { where(status: %w[pending_assignment specialist_assigned confirmed rescheduled in_progress]).where("scheduled_at >= ? OR scheduled_at IS NULL", Time.current) }
+  scope :pending, -> { where(status: %w[pending_assignment pending_review]) }
+  scope :assigned, -> { where(status: %w[specialist_assigned contacting_provider]) }
+  scope :in_progress, -> { where(status: 'in_progress') }
   scope :past, -> { where(status: %w[completed cancelled]) }
   scope :recent, -> { order(created_at: :desc) }
   scope :for_provider, lambda { |provider_id|
@@ -99,22 +102,50 @@ class Booking < ApplicationRecord
 
   # AASM Finite State Machine
   aasm column: 'status' do
-    state :pending_review, initial: true
-    state :contacting_provider
-    state :quotation_sent
-    state :quotation_approved
+    state :pending_assignment, initial: true
+    state :specialist_assigned
     state :confirmed
     state :in_progress
     state :rescheduled
     state :completed
     state :cancelled
+    # Backward compatibility with legacy request/inquiry states:
+    state :pending_review
+    state :contacting_provider
+    state :quotation_sent
+    state :quotation_approved
+    state :quotation_rejected
 
-    event :assign_provider, after: :log_status_change do
-      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved confirmed], to: :contacting_provider
+    event :assign_specialist, after: :log_status_change do
+      transitions from: %i[pending_assignment pending_review contacting_provider quotation_sent quotation_approved confirmed specialist_assigned rescheduled], to: :specialist_assigned
+    end
+
+    event :unassign_specialist, after: :log_status_change do
+      transitions from: %i[specialist_assigned contacting_provider], to: :pending_assignment
+    end
+
+    event :confirm, after: :log_status_change do
+      transitions from: %i[pending_assignment pending_review contacting_provider quotation_sent quotation_approved specialist_assigned rescheduled], to: :confirmed
+    end
+
+    event :start_service, after: :log_status_change do
+      transitions from: %i[pending_assignment specialist_assigned confirmed contacting_provider rescheduled], to: :in_progress
+    end
+
+    event :reschedule, after: :log_status_change do
+      transitions from: %i[pending_assignment specialist_assigned confirmed rescheduled in_progress], to: :rescheduled
+    end
+
+    event :complete, after: :log_status_change do
+      transitions from: %i[specialist_assigned confirmed in_progress], to: :completed
+    end
+
+    event :cancel, after: :log_status_change do
+      transitions from: %i[pending_assignment pending_review contacting_provider quotation_sent quotation_approved quotation_rejected confirmed specialist_assigned rescheduled in_progress], to: :cancelled
     end
 
     event :send_quotation, after: :log_status_change do
-      transitions from: %i[pending_review contacting_provider], to: :quotation_sent
+      transitions from: %i[pending_assignment pending_review contacting_provider], to: :quotation_sent
     end
 
     event :approve_quotation, after: :log_status_change do
@@ -122,29 +153,15 @@ class Booking < ApplicationRecord
     end
 
     event :reject_quotation, after: :log_status_change do
-      transitions from: :quotation_sent, to: :contacting_provider
-    end
-
-    event :confirm, after: :log_status_change do
-      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved rescheduled], to: :confirmed
-    end
-
-    event :start_service, after: :log_status_change do
-      transitions from: %i[confirmed contacting_provider rescheduled], to: :in_progress
-    end
-
-    event :reschedule, after: :log_status_change do
-      transitions from: %i[confirmed rescheduled], to: :rescheduled
-    end
-
-    event :complete, after: :log_status_change do
-      transitions from: %i[confirmed in_progress], to: :completed
-    end
-
-    event :cancel, after: :log_status_change do
-      transitions from: %i[pending_review contacting_provider quotation_sent quotation_approved confirmed rescheduled in_progress], to: :cancelled
+      transitions from: %i[quotation_sent], to: :pending_assignment
     end
   end
+
+  # State event backward compatibility
+  alias_method :assign_provider, :assign_specialist
+  alias_method :assign_provider!, :assign_specialist!
+  alias_method :may_assign_provider?, :may_assign_specialist?
+  alias_method :order_number, :reference_number
 
   def can_transition_to?(new_status)
     aasm.permitted_transitions.any? { |t| t[:state].to_s == new_status.to_s }
@@ -177,13 +194,15 @@ class Booking < ApplicationRecord
           status: 'assigned',
           internal_notes: notes
         )
-        update!(
-          provider: new_provider,
-          assigned_by: assigned_by.id,
-          assigned_at: Time.current
-        )
-        assign_provider! if may_assign_provider?
       end
+
+      update!(
+        provider: new_provider,
+        assigned_by: assigned_by&.id,
+        assigned_at: Time.current
+      )
+
+      assign_specialist!(changed_by: assigned_by, notes: notes) if may_assign_specialist?
     end
   end
   alias assign_provider_details! assign_to_provider!
@@ -218,18 +237,14 @@ class Booking < ApplicationRecord
     return if reference_number.present?
 
     loop do
-      self.reference_number = "BK-#{SecureRandom.random_number(100_000..999_999)}"
+      self.reference_number = "ORD-#{SecureRandom.random_number(100_000..999_999)}"
       break unless Booking.exists?(reference_number: reference_number)
     end
   end
 
   def set_initial_state
-    if service&.fixed_price? && (status.blank? || status == 'pending_review')
-      self.status = 'confirmed'
-      self.scheduled_at ||= preferred_at || 1.day.from_now
-    elsif status.blank?
-      self.status = 'pending_review'
-    end
+    self.status = 'pending_assignment' if status.blank?
+    self.scheduled_at ||= preferred_at || 1.day.from_now
   end
 
   def log_status_change(*args)

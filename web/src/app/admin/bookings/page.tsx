@@ -139,7 +139,9 @@ export default function AdminBookingsPage() {
   };
 
   const filterTabs = [
-    { id: 'all', label: 'All Bookings' },
+    { id: 'all', label: 'All Orders' },
+    { id: 'pending_assignment', label: 'Pending Assignment' },
+    { id: 'specialist_assigned', label: 'Specialist Assigned' },
     { id: 'confirmed', label: 'Confirmed' },
     { id: 'in_progress', label: 'In Progress' },
     { id: 'rescheduled', label: 'Rescheduled' },
@@ -281,7 +283,11 @@ export default function AdminBookingsPage() {
                     </td>
                     <td className="py-3.5 px-5">
                       <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                        b.status === 'confirmed'
+                        b.status === 'pending_assignment'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200/80'
+                          : b.status === 'specialist_assigned'
+                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80'
+                          : b.status === 'confirmed'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70'
                           : b.status === 'in_progress'
                           ? 'bg-sky-50 text-sky-700 border border-sky-200/70'
@@ -292,12 +298,14 @@ export default function AdminBookingsPage() {
                           : 'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
+                          b.status === 'pending_assignment' ? 'bg-amber-500 animate-pulse' :
+                          b.status === 'specialist_assigned' ? 'bg-indigo-600' :
                           b.status === 'confirmed' ? 'bg-emerald-500' :
                           b.status === 'in_progress' ? 'bg-sky-500 animate-pulse' :
                           b.status === 'rescheduled' ? 'bg-amber-500' :
                           b.status === 'completed' ? 'bg-slate-500' : 'bg-rose-500'
                         }`} />
-                        {b.status}
+                        {b.status.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
@@ -328,7 +336,7 @@ export default function AdminBookingsPage() {
                         )}
 
                         {/* Status updater */}
-                        {b.status === 'confirmed' && (
+                        {(b.status === 'confirmed' || b.status === 'specialist_assigned') && (
                           <button
                             onClick={() => handleUpdateStatus(b.id, 'in_progress')}
                             disabled={actionLoading}

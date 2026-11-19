@@ -68,7 +68,7 @@ module ServiceRequests
             description: desc,
             preferred_at: pref,
             scheduled_at: pref,
-            status: 'confirmed',
+            status: 'pending_assignment',
             vehicle_type: v_type,
             duration_hours: dur,
             selected_options: opts,

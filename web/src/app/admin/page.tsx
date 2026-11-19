@@ -27,6 +27,8 @@ interface DashboardData {
     awaiting_quotation: number;
     quotation_sent: number;
     quotation_approved: number;
+    pending_assignment?: number;
+    specialist_assigned?: number;
     confirmed_bookings: number;
     in_progress_bookings: number;
     completed_bookings: number;
@@ -78,26 +80,28 @@ export default function AdminDashboardPage() {
   const m = data?.metrics;
 
   const pipelineStages = [
-    { label: 'Pending Review', count: m?.pending_review || 0, href: '/admin/requests?status=pending_review', badgeColor: 'bg-amber-100 text-amber-800' },
-    { label: 'Specialist Assigned', count: m?.contacting_provider || 0, href: '/admin/requests?status=contacting_provider', badgeColor: 'bg-sky-100 text-sky-800' },
-    { label: 'Confirmed', count: m?.confirmed_bookings || 0, href: '/admin/bookings?status=confirmed', badgeColor: 'bg-indigo-100 text-indigo-800' },
-    { label: 'In Progress', count: m?.in_progress_bookings || 0, href: '/admin/bookings?status=in_progress', badgeColor: 'bg-blue-100 text-blue-800' },
+    { label: 'Pending Assignment', count: (m?.pending_assignment || 0) + (m?.pending_review || 0), href: '/admin/bookings?status=pending_assignment', badgeColor: 'bg-amber-100 text-amber-800' },
+    { label: 'Specialist Assigned', count: (m?.specialist_assigned || 0) + (m?.contacting_provider || 0), href: '/admin/bookings?status=specialist_assigned', badgeColor: 'bg-indigo-100 text-indigo-800' },
+    { label: 'Confirmed', count: m?.confirmed_bookings || 0, href: '/admin/bookings?status=confirmed', badgeColor: 'bg-blue-100 text-blue-800' },
+    { label: 'In Progress', count: m?.in_progress_bookings || 0, href: '/admin/bookings?status=in_progress', badgeColor: 'bg-sky-100 text-sky-800' },
     { label: 'Completed', count: m?.completed_bookings || 0, href: '/admin/bookings?status=completed', badgeColor: 'bg-emerald-100 text-emerald-800' },
   ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'pending_assignment':
       case 'pending_review':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            Needs Match
+            Pending Assignment
           </span>
         );
+      case 'specialist_assigned':
       case 'contacting_provider':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
             Specialist Assigned
           </span>
         );

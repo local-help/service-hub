@@ -58,6 +58,11 @@ module ProviderAssignments
               internal_notes: notes
             )
           end
+
+          if booking.may_assign_specialist?
+            booking.assign_specialist!(changed_by: assigned_by, notes: notes)
+          end
+
           AdminActivityLog.log!(
             admin: assigned_by,
             action: 'assign_provider',

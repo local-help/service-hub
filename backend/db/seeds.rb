@@ -987,22 +987,24 @@ if car_wash_svc && apex_prov && super_admin
     r.preferred_at = 1.day.from_now
   end
 
-  b1 = Booking.find_or_create_by!(reference_number: 'BK-10101') do |b|
-    b.user = customer
-    b.service_request = sr1
-    b.service = car_wash_svc
-    b.service_variant = hatchback_var
-    b.address = cust_address
-    b.description = sr1.description
-    b.preferred_at = sr1.preferred_at
-    b.scheduled_at = sr1.preferred_at
-    b.status = 'confirmed'
-    b.provider = apex_prov
-    b.assigned_by = super_admin.id
-    b.assigned_at = Time.current
-    b.booking_type = 'direct'
-    b.total_amount = hatchback_var&.price || 499.00
-  end
+  b1 = Booking.find_or_initialize_by(reference_number: 'BK-10101')
+  b1.assign_attributes(
+    user: customer,
+    service_request: sr1,
+    service: car_wash_svc,
+    service_variant: hatchback_var,
+    address: cust_address,
+    description: sr1.description,
+    preferred_at: sr1.preferred_at,
+    scheduled_at: sr1.preferred_at,
+    status: 'specialist_assigned',
+    provider: apex_prov,
+    assigned_by: super_admin.id,
+    assigned_at: Time.current,
+    booking_type: 'direct',
+    total_amount: hatchback_var&.price || 499.00
+  )
+  b1.save!
 
   ProviderAssignment.find_or_create_by!(service_request: sr1, provider: apex_prov) do |a|
     a.booking = b1
@@ -1012,7 +1014,7 @@ if car_wash_svc && apex_prov && super_admin
     a.internal_notes = 'High priority customer in Civil Lines'
   end
 
-  # Request 2: Unassigned Confirmed Fixed Price Booking
+  # Request 2: Unassigned Confirmed Fixed Price Booking (Pending Assignment)
   sr2 = ServiceRequest.find_or_create_by!(reference_number: 'LH-10102') do |r|
     r.user = customer
     r.service = car_wash_svc
@@ -1023,19 +1025,21 @@ if car_wash_svc && apex_prov && super_admin
     r.preferred_at = 2.days.from_now
   end
 
-  Booking.find_or_create_by!(reference_number: 'BK-10102') do |b|
-    b.user = customer
-    b.service_request = sr2
-    b.service = car_wash_svc
-    b.service_variant = hatchback_var
-    b.address = cust_address
-    b.description = sr2.description
-    b.preferred_at = sr2.preferred_at
-    b.scheduled_at = sr2.preferred_at
-    b.status = 'confirmed'
-    b.booking_type = 'direct'
-    b.total_amount = hatchback_var&.price || 499.00
-  end
+  b2 = Booking.find_or_initialize_by(reference_number: 'BK-10102')
+  b2.assign_attributes(
+    user: customer,
+    service_request: sr2,
+    service: car_wash_svc,
+    service_variant: hatchback_var,
+    address: cust_address,
+    description: sr2.description,
+    preferred_at: sr2.preferred_at,
+    scheduled_at: sr2.preferred_at,
+    status: 'pending_assignment',
+    booking_type: 'direct',
+    total_amount: hatchback_var&.price || 499.00
+  )
+  b2.save!
 
   # Auto-heal any existing service requests in database that lack a booking record
   ServiceRequest.where.missing(:booking).find_each do |orphan|
@@ -1048,7 +1052,7 @@ if car_wash_svc && apex_prov && super_admin
       description: orphan.description.presence || 'Fixed Price Doorstep Service',
       preferred_at: orphan.preferred_at,
       scheduled_at: orphan.preferred_at || 1.day.from_now,
-      status: 'confirmed',
+      status: orphan.provider_id.present? ? 'specialist_assigned' : 'pending_assignment',
       booking_type: 'direct',
       provider: orphan.provider,
       assigned_by: orphan.assigned_by,

@@ -210,6 +210,8 @@ export interface Quotation {
 }
 
 export type BookingStatus =
+  | 'pending_assignment'
+  | 'specialist_assigned'
   | 'pending_review'
   | 'contacting_provider'
   | 'quotation_sent'
@@ -219,6 +221,8 @@ export type BookingStatus =
   | 'rescheduled'
   | 'completed'
   | 'cancelled';
+
+export type OrderStatus = BookingStatus;
 
 export interface Booking {
   id: number;
@@ -265,6 +269,8 @@ export interface Booking {
   service_request_id?: number | null;
   service_request?: ServiceRequest;
 }
+
+export type Order = Booking;
 
 export interface Payment {
   id: number;

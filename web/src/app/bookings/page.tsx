@@ -59,6 +59,20 @@ export default function BookingsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'pending_assignment':
+        return (
+          <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span>Matching Specialist</span>
+          </span>
+        );
+      case 'specialist_assigned':
+        return (
+          <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+            <UserCheck className="w-3 h-3 text-indigo-600" />
+            <span>Specialist Assigned</span>
+          </span>
+        );
       case 'confirmed':
         return (
           <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
@@ -102,7 +116,7 @@ export default function BookingsPage() {
 
   const filteredBookings = bookings.filter((b) => {
     if (activeTab === 'active') {
-      return ['confirmed', 'in_progress', 'rescheduled'].includes(b.status);
+      return ['pending_assignment', 'specialist_assigned', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status);
     }
     if (activeTab === 'completed') {
       return b.status === 'completed';
@@ -114,7 +128,7 @@ export default function BookingsPage() {
   });
 
   const activeCount = bookings.filter((b) => 
-    ['confirmed', 'in_progress', 'rescheduled'].includes(b.status)
+    ['pending_assignment', 'specialist_assigned', 'confirmed', 'in_progress', 'rescheduled'].includes(b.status)
   ).length;
 
   const completedCount = bookings.filter((b) => b.status === 'completed').length;

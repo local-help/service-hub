@@ -11,7 +11,9 @@ module Api
           quotation_sent = ServiceRequest.where(status: 'quotation_sent').count
           quotation_approved = ServiceRequest.where(status: 'quotation_approved').count
 
-          confirmed_bookings = Booking.where(status: 'confirmed').count
+          pending_assignment_bookings = Booking.where(status: 'pending_assignment').count
+          specialist_assigned_bookings = Booking.where(status: 'specialist_assigned').count
+          confirmed_bookings = Booking.where(status: %w[confirmed specialist_assigned]).count
           in_progress_bookings = Booking.where(status: 'in_progress').count
           completed_bookings = Booking.where(status: 'completed').count
           cancelled_bookings = Booking.where(status: 'cancelled').count
@@ -30,10 +32,13 @@ module Api
               awaiting_quotation: contacting_provider,
               quotation_sent: quotation_sent,
               quotation_approved: quotation_approved,
+              pending_assignment: pending_assignment_bookings,
+              specialist_assigned: specialist_assigned_bookings,
               confirmed_bookings: confirmed_bookings,
               in_progress_bookings: in_progress_bookings,
               completed_bookings: completed_bookings,
               cancelled_bookings: cancelled_bookings,
+              total_orders: Booking.count,
               total_revenue: total_revenue,
               active_providers: total_providers,
               total_customers: total_customers
