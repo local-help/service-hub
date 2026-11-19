@@ -26,7 +26,11 @@ export default function CategoryPage() {
       .then((data) => {
         setCategory(data);
         setSubcategories(data.subcategories || []);
-        setServices(data.active_services || []);
+        const rawServices = data.active_services || [];
+        const fixedServices = rawServices.filter(
+          (s: Service) => s.booking_type === 'fixed_price' || s.pricing_type === 'fixed_price'
+        );
+        setServices(fixedServices);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

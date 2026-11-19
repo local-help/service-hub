@@ -522,7 +522,7 @@ export default function DynamicServiceBuilderPage() {
                   {/* Guaranteed Total */}
                   <div className="border-t-2 border-slate-900 pt-3 flex items-baseline justify-between">
                     <div>
-                      <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">Estimated Total</span>
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">Guaranteed Fixed Total</span>
                       <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Fixed Price Guarantee</span>

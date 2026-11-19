@@ -96,6 +96,7 @@ Rails.application.routes.draw do
             post :assign_provider
             post :reassign_provider
             get :assignment_history
+            post :convert_to_booking
           end
           resources :communications, only: [:index, :create]
         end

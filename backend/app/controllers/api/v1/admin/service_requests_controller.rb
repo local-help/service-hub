@@ -79,6 +79,30 @@ module Api
           render json: assignments, each_serializer: ProviderAssignmentSerializer
         end
 
+        def convert_to_booking
+          service_request = ServiceRequest.find(params[:id])
+          booking = service_request.booking || service_request.build_booking(
+            user: service_request.user,
+            service: service_request.service,
+            service_variant: service_request.service_variant,
+            address: service_request.address,
+            description: service_request.description.presence || 'Fixed Price Doorstep Service',
+            preferred_at: service_request.preferred_at,
+            scheduled_at: params[:scheduled_at] || service_request.preferred_at || 1.day.from_now,
+            status: 'confirmed',
+            booking_type: 'direct',
+            provider: service_request.provider,
+            assigned_by: current_user.id,
+            assigned_at: Time.current,
+            total_amount: params[:total_amount]&.to_f || service_request.service_variant&.price || service_request.service&.fixed_price || 499.0
+          )
+          booking.save!
+          service_request.current_assignment&.update!(booking: booking)
+          service_request.update_columns(status: 'booking_confirmed')
+
+          render json: booking, serializer: BookingDetailSerializer
+        end
+
         private
 
         def skip_authorization?

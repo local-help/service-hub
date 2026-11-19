@@ -15,6 +15,6 @@ class CategoryDetailSerializer < ActiveModel::Serializer
   end
 
   def active_services
-    object.services.active.sorted
+    object.services.active.where(booking_type: 'fixed_price').sorted
   end
 end

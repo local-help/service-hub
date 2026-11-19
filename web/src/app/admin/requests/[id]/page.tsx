@@ -94,6 +94,24 @@ export default function AdminRequestDetailPage() {
     fetchRequest();
   }, [id, user, isAdmin]);
 
+  const handleConvertToBooking = async () => {
+    setActionLoading(true);
+    try {
+      await apiRequest(`/admin/service_requests/${id}/convert_to_booking`, {
+        method: 'POST',
+        body: JSON.stringify({
+          total_amount: parseFloat(customPrice) || undefined,
+        }),
+      });
+      toast.success('Successfully converted request to confirmed booking!');
+      router.push('/admin/bookings');
+    } catch (err: any) {
+      toast.error(err.error || 'Failed to convert to booking');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleAssignProvider = async () => {
     if (!selectedProviderId) return;
     setActionLoading(true);
@@ -286,6 +304,16 @@ export default function AdminRequestDetailPage() {
             <History className="w-3.5 h-3.5" />
             <span>Log Call</span>
           </button>
+          {!request.booking?.id && (
+            <button
+              onClick={handleConvertToBooking}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Convert to Booking</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -115,7 +115,6 @@ export const Navbar: React.FC = () => {
             {pathname?.startsWith('/admin') ? null : showAdminView ? (
               <>
                 <Link href="/admin" className={linkClass('/admin')}>Overview</Link>
-                <Link href="/admin/requests" className={linkClass('/admin/requests')}>Requests</Link>
                 <Link href="/admin/bookings" className={linkClass('/admin/bookings')}>Bookings</Link>
                 <Link href="/admin/providers" className={linkClass('/admin/providers')}>Providers</Link>
                 <Link href="/admin/customers" className={linkClass('/admin/customers')}>Customers</Link>

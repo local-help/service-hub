@@ -5,6 +5,7 @@ module Api
 
       def index
         services = Service.active.sorted.includes(:category, :subcategory)
+        services = services.where(booking_type: 'fixed_price') unless params[:include_all].to_s == 'true'
         services = services.by_category(params[:category_id]) if params[:category_id].present?
         services = services.by_subcategory(params[:subcategory_id]) if params[:subcategory_id].present?
         services = services.for_vehicle_type(params[:vehicle_type]) if params[:vehicle_type].present?

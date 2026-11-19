@@ -15,9 +15,13 @@ import {
   X,
   Play,
   Check,
-  AlertCircle
+  AlertCircle,
+  Wrench,
+  ShieldCheck,
+  User,
+  Phone
 } from 'lucide-react';
-import { Booking } from '../../../types';
+import { Booking, Provider } from '../../../types';
 import { apiRequest } from '../../../api/client';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
@@ -28,9 +32,15 @@ export default function AdminBookingsPage() {
   const router = useRouter();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Specialist assignment modal state
+  const [assignModalBooking, setAssignModalBooking] = useState<Booking | null>(null);
+  const [assignProviderId, setAssignProviderId] = useState<number | ''>('');
+  const [assignNotes, setAssignNotes] = useState('');
 
   // Offline payment modal state
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -43,10 +53,15 @@ export default function AdminBookingsPage() {
     let url = `/admin/bookings?`;
     if (statusFilter && statusFilter !== 'all') url += `status=${statusFilter}&`;
 
-    apiRequest<{ bookings: Booking[] } | Booking[]>(url)
-      .then((data) => {
-        const list = Array.isArray(data) ? data : (data as any).bookings || [];
+    Promise.all([
+      apiRequest<{ bookings: Booking[] } | Booking[]>(url),
+      apiRequest<Provider[]>(`/admin/providers/eligible?city=Prayagraj`).catch(() => []),
+    ])
+      .then(([bData, pData]) => {
+        const list = Array.isArray(bData) ? bData : (bData as any).bookings || [];
         setBookings(list);
+        const pList = Array.isArray(pData) ? pData : (pData as any).providers || [];
+        setProviders(pList);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -72,6 +87,26 @@ export default function AdminBookingsPage() {
       fetchBookings();
     } catch (err: any) {
       toast.error(err.error || 'Failed to update status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAssignSpecialist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignModalBooking || !assignProviderId) return;
+    setActionLoading(true);
+    try {
+      await apiRequest(`/admin/bookings/${assignModalBooking.id}/assign_provider`, {
+        method: 'POST',
+        body: JSON.stringify({ provider_id: assignProviderId, notes: assignNotes }),
+      });
+      toast.success('Specialist assigned to booking successfully');
+      setAssignModalBooking(null);
+      setAssignNotes('');
+      fetchBookings();
+    } catch (err: any) {
+      toast.error(err.error || 'Failed to assign specialist');
     } finally {
       setActionLoading(false);
     }
@@ -118,13 +153,13 @@ export default function AdminBookingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            Dispatch & Fulfillment Desk
+            Dispatch & Fulfillment Desk • Prayagraj
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
             Bookings & Revenue Operations
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Track confirmed technician appointments, record field cash collections, and manage job completion.
+            Track confirmed technician appointments, dispatch specialists, and record field cash settlements.
           </p>
         </div>
 
@@ -162,7 +197,7 @@ export default function AdminBookingsPage() {
           </div>
           <h3 className="text-base font-extrabold text-slate-900">No Bookings Found</h3>
           <p className="text-xs text-slate-500">
-            Bookings appear here once a customer creates a fixed-price order.
+            Bookings appear here once a customer books a fixed-price service.
           </p>
           {statusFilter !== 'all' && (
             <button
@@ -179,11 +214,12 @@ export default function AdminBookingsPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50/80 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/70">
                 <tr>
-                  <th className="py-3.5 px-5">Booking Reference</th>
-                  <th className="py-3.5 px-5">Service Details</th>
-                  <th className="py-3.5 px-5">Scheduled Appointment</th>
-                  <th className="py-3.5 px-5">Fulfillment Status</th>
-                  <th className="py-3.5 px-5">Financial Settlement</th>
+                  <th className="py-3.5 px-5">Booking Ref</th>
+                  <th className="py-3.5 px-5">Service & Customer</th>
+                  <th className="py-3.5 px-5">Assigned Specialist</th>
+                  <th className="py-3.5 px-5">Scheduled Time</th>
+                  <th className="py-3.5 px-5">Status</th>
+                  <th className="py-3.5 px-5">Guaranteed Total</th>
                   <th className="py-3.5 px-5 text-right">Actions</th>
                 </tr>
               </thead>
@@ -191,18 +227,46 @@ export default function AdminBookingsPage() {
                 {bookings.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/70 transition group">
                     <td className="py-3.5 px-5">
-                      <div className="font-mono font-bold text-slate-900">
-                        #{b.id}
-                      </div>
-                      <span className="font-mono text-[11px] text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200/50 inline-block mt-0.5">
-                        {b.reference_number}
+                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200/60 inline-block">
+                        {b.reference_number || `BK-${b.id}`}
                       </span>
+                      <span className="text-[10px] text-slate-400 block mt-1">ID #{b.id}</span>
                     </td>
                     <td className="py-3.5 px-5">
-                      <div className="font-bold text-slate-900">{b.service_name}</div>
-                      <div className="text-[11px] text-slate-400 capitalize">
-                        {b.booking_type || 'Standard Service'}
+                      <div className="font-bold text-slate-900">{b.service_name || b.service?.name}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {b.user?.name || 'Customer'} {b.user?.phone ? `(${b.user.phone})` : ''}
                       </div>
+                    </td>
+                    <td className="py-3.5 px-5">
+                      {b.provider_name || b.provider?.name ? (
+                        <div>
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 bg-slate-100/90 px-2 py-0.5 rounded-md border border-slate-200/60">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{b.provider_name || b.provider?.name}</span>
+                          </span>
+                          <button
+                            onClick={() => {
+                              setAssignModalBooking(b);
+                              setAssignProviderId(b.provider_id || (b.provider as any)?.id || '');
+                            }}
+                            className="text-[11px] text-blue-600 hover:underline block mt-0.5 font-medium cursor-pointer"
+                          >
+                            Reassign Specialist
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setAssignModalBooking(b);
+                            setAssignProviderId('');
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-800 font-bold bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md border border-amber-200/80 transition cursor-pointer"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          <span>+ Assign Specialist</span>
+                        </button>
+                      )}
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="font-medium text-slate-800 flex items-center gap-1.5">
@@ -238,12 +302,12 @@ export default function AdminBookingsPage() {
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="font-bold text-slate-900">
-                        ₹{b.total_paid} <span className="text-slate-400 font-normal">/ ₹{b.payment_amount}</span>
+                        ₹{b.total_amount || b.payment_amount || 0}
                       </div>
                       <span className={`inline-flex items-center gap-1 text-[10px] font-bold mt-0.5 ${
                         b.fully_paid ? 'text-emerald-700' : 'text-amber-700'
                       }`}>
-                        {b.fully_paid ? '● Fully Settled' : '○ Payment Pending'}
+                        {b.fully_paid ? '● Settled' : '○ Pending'}
                       </span>
                     </td>
                     <td className="py-3.5 px-5 text-right">
@@ -253,7 +317,8 @@ export default function AdminBookingsPage() {
                           <button
                             onClick={() => {
                               setSelectedBooking(b);
-                              setOfflineAmount(((b.payment_amount || 0) - b.total_paid).toString());
+                              const due = Math.max(0, (b.total_amount || b.payment_amount || 0) - (b.total_paid || 0));
+                              setOfflineAmount(due.toString());
                             }}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg transition cursor-pointer"
                           >
@@ -290,6 +355,84 @@ export default function AdminBookingsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Specialist Assignment Modal */}
+      {assignModalBooking && (
+        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Assign Technician Specialist</h3>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Booking #{assignModalBooking.id} ({assignModalBooking.reference_number})
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setAssignModalBooking(null)}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Select 1 verified technician in Prayagraj to service <strong className="text-slate-800">{assignModalBooking.service_name}</strong> at the guaranteed fixed price.
+            </p>
+
+            <form onSubmit={handleAssignSpecialist} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Choose Specialist</label>
+                <select
+                  required
+                  value={assignProviderId}
+                  onChange={(e) => setAssignProviderId(Number(e.target.value) || '')}
+                  className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl outline-none bg-white font-medium text-slate-800 focus:border-slate-900"
+                >
+                  <option value="">-- Choose Specialist from Prayagraj Directory --</option>
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.phone}) — {p.service_area || p.city || 'Prayagraj'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Technician Routing Notes (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Customer prefers morning 10 AM, call before arriving..."
+                  value={assignNotes}
+                  onChange={(e) => setAssignNotes(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setAssignModalBooking(null)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading || !assignProviderId}
+                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  Confirm Assignment
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

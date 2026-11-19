@@ -43,6 +43,10 @@ export default function RequestDetailPage() {
     apiRequest<{ service_request: ServiceRequest } | ServiceRequest>(`/service_requests/${id}`)
       .then((data) => {
         const req = (data as any).service_request || data;
+        if (req.booking?.id) {
+          router.replace(`/bookings/${req.booking.id}`);
+          return;
+        }
         setRequest(req);
       })
       .catch((err) => setError(err.error || 'Failed to load request details'))

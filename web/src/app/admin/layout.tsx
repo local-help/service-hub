@@ -55,7 +55,6 @@ export default function AdminLayout({
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/requests', label: 'Requests', icon: ClipboardList },
     { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
     { href: '/admin/payments', label: 'Receipts', icon: Receipt },
     { href: '/admin/providers', label: 'Providers', icon: Briefcase },

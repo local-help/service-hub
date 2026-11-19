@@ -40,7 +40,8 @@ export default function HomePage() {
       apiRequest<{ services: Service[] } | Service[]>('/services?per_page=100')
     ]).then(([catData, svcData]) => {
       setCategories(catData || []);
-      const svcs = Array.isArray(svcData) ? svcData : (svcData as any).services || [];
+      const rawSvcs: Service[] = Array.isArray(svcData) ? svcData : (svcData as any).services || [];
+      const svcs = rawSvcs.filter((s: Service) => s.booking_type === 'fixed_price' || s.pricing_type === 'fixed_price');
       setAllServices(svcs);
     }).catch(console.error)
       .finally(() => setLoading(false));
